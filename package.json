@@ -1,0 +1,20 @@
+{
+  "name": "komparsendrehplanung",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace apps/server",
+    "dev:web": "npm run dev --workspace apps/web",
+    "build:shared": "npm run build --workspace packages/shared",
+    "build:server": "npm run build --workspace apps/server",
+    "build:web": "npm run build --workspace apps/web",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,1 @@
+ALTER TABLE `role_category_count` ADD `is_new` integer DEFAULT true NOT NULL;

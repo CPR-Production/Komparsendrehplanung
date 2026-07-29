@@ -1,0 +1,126 @@
+/* Color hierarchy matching the Excel template: Set > Scene > Role > Komparsen-count.
+   Bootstrap's table cells read `background-color: var(--bs-table-bg)` via its own
+   low-specificity selector, so we set that variable rather than fighting it with
+   a higher-specificity background-color override. */
+.schedule-table thead th {
+  --bs-table-bg: #000;
+  background-color: #000;
+  color: #fff;
+  vertical-align: middle;
+  text-align: center;
+  position: sticky;
+  top: var(--app-header-height, 56px);
+  z-index: 2;
+}
+
+.schedule-set-spacer td {
+  border: none;
+  height: 1.5rem;
+}
+
+.cell-set {
+  --bs-table-bg: #f4c896;
+}
+
+.cell-scene {
+  --bs-table-bg: #fff176;
+  vertical-align: top;
+}
+
+.cell-role {
+  --bs-table-bg: #a5c882;
+  vertical-align: top;
+}
+
+.cell-count {
+  --bs-table-bg: #5b9bd5;
+}
+
+.schedule-table td input,
+.schedule-table td select,
+.schedule-table td textarea {
+  background: transparent;
+  border: 1px solid transparent;
+  width: 100%;
+}
+
+.schedule-table td input:focus,
+.schedule-table td select:focus,
+.schedule-table td textarea:focus {
+  background: #fff;
+  border-color: #666;
+  outline: none;
+}
+
+.cell-synopsis {
+  padding-top: 0.15rem;
+  padding-bottom: 0.15rem;
+  display: table-cell;
+}
+
+.cell-synopsis-label {
+  font-style: italic;
+  font-weight: 600;
+  margin-right: 0.4rem;
+  white-space: nowrap;
+}
+
+.cell-synopsis input {
+  display: inline;
+  width: calc(100% - 5rem);
+  font-style: italic;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: #666;
+  margin-right: 0.25rem;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.cell-count {
+  text-align: center;
+}
+
+.isnew-toggle {
+  display: block;
+  margin: 0.15rem auto 0;
+  border: none;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  line-height: 1;
+  padding: 0.15rem 0.35rem;
+  cursor: pointer;
+}
+
+.isnew-toggle.is-new {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.isnew-toggle.is-reused {
+  background: #bdbdbd;
+  color: #333;
+}
+
+.cell-change {
+  --bs-table-bg: #f0e6f6;
+}
+
+.cell-change-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cell-change-row strong {
+  white-space: nowrap;
+}
+
+.scene-add-row .btn {
+  margin: 0 0.25rem;
+}

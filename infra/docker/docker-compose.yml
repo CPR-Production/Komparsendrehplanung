@@ -1,0 +1,13 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - komparsen-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  komparsen-data:
