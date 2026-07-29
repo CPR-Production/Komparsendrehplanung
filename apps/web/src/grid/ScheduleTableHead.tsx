@@ -1,5 +1,10 @@
 import type { Category } from "../api.js";
-import { groupCategories, ROLE_META_COLUMN_COUNT, SCENE_COLUMN_COUNT } from "./scheduleLayout.js";
+import {
+  groupCategories,
+  ROLE_META_COLUMN_COUNT,
+  SCENE_COLUMN_COUNT,
+  SCENE_NUMBER_COLUMN_WIDTH,
+} from "./scheduleLayout.js";
 
 export function ScheduleTableHead({ categories }: { categories: Category[] }) {
   const groups = groupCategories(categories);
@@ -17,11 +22,10 @@ export function ScheduleTableHead({ categories }: { categories: Category[] }) {
         <th />
       </tr>
       <tr>
-        <th style={{ width: 40 }}>#</th>
+        <th style={{ width: SCENE_NUMBER_COLUMN_WIDTH }}>#</th>
         <th style={{ width: 110 }}>In/Ex</th>
         <th style={{ width: 110 }}>D/N</th>
-        <th style={{ width: 80 }}>Script Time</th>
-        <th style={{ width: 80 }}>Bis</th>
+        <th style={{ width: 140 }}>Script Time</th>
         <th style={{ width: 160 }}>Location</th>
         <th style={{ width: 70 }}>Total/Scene</th>
         <th style={{ width: 80 }}>Fuzzle ID</th>

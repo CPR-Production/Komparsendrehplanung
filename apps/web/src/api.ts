@@ -139,6 +139,7 @@ export const api = {
     request<SceneRow>("POST", `/sets/${setId}/scenes`, data),
   updateScene: (sceneId: string, data: Partial<SceneRow>) =>
     request<SceneRow>("PATCH", `/scenes/${sceneId}`, data),
+  deleteScene: (sceneId: string) => request<void>("DELETE", `/scenes/${sceneId}`),
   reorderScenes: (setId: string, ids: string[]) =>
     request<void>("POST", `/sets/${setId}/scenes/reorder`, { ids }),
 
@@ -149,6 +150,7 @@ export const api = {
     request<RoleRow>("POST", `/scenes/${sceneId}/roles`, { name }),
   updateRole: (roleId: string, data: { name?: string; fuzzleId?: string }) =>
     request<RoleRow>("PATCH", `/roles/${roleId}`, data),
+  deleteRole: (roleId: string) => request<void>("DELETE", `/roles/${roleId}`),
   setRoleCounts: (roleId: string, counts: { categoryId: string; count: number; isNew: boolean }[]) =>
     request<{ counts: RoleCategoryCount[] }>("PUT", `/roles/${roleId}/counts`, { counts }),
 

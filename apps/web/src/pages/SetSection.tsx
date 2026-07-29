@@ -1,9 +1,9 @@
 import { calcSetTotalShoots } from "@komparsen/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { HTMLAttributes } from "react";
+import type { HTMLAttributes, TdHTMLAttributes } from "react";
 import { useEffect, useRef, useState } from "react";
 import { api, type Category, type ChangeRow, type SceneRow, type SetLocation, type ShootSet } from "../api.js";
-import { moveBefore } from "../dragReorder.js";
+import { moveBefore, SCENE_DRAG_TYPE } from "../dragReorder.js";
 import { ScheduleTable } from "../grid/ScheduleTable.js";
 import { useDebouncedSave } from "../useDebouncedSave.js";
 
@@ -12,9 +12,16 @@ interface SetSectionProps {
   setId: string;
   categories: Category[];
   setDragHandleProps: HTMLAttributes<HTMLSpanElement>;
+  setDropProps: TdHTMLAttributes<HTMLTableCellElement>;
 }
 
-export function SetSection({ projectId, setId, categories, setDragHandleProps }: SetSectionProps) {
+export function SetSection({
+  projectId,
+  setId,
+  categories,
+  setDragHandleProps,
+  setDropProps,
+}: SetSectionProps) {
   const queryClient = useQueryClient();
 
   const fullSetQuery = useQuery({
@@ -73,13 +80,33 @@ export function SetSection({ projectId, setId, categories, setDragHandleProps }:
       return nextIds.map((id) => prev.find((s) => s.id === id)!);
     });
   };
+  // Only the handle starts a drag; the drop targets are the Scene's cells (see
+  // getSceneDropProps), so the user does not have to hit the handle glyph again
+  // to drop. The payload rides in dataTransfer so the drag also initiates in
+  // browsers that require it, and so a Set drag is never taken for a Scene drag.
   const getSceneDragHandleProps = (sceneId: string): HTMLAttributes<HTMLSpanElement> => ({
     draggable: true,
-    onDragStart: () => setDraggedSceneId(sceneId),
-    onDragOver: (e) => e.preventDefault(),
-    onDrop: (e) => {
+    onDragStart: (e) => {
+      e.dataTransfer.setData(SCENE_DRAG_TYPE, sceneId);
+      e.dataTransfer.effectAllowed = "move";
+      setDraggedSceneId(sceneId);
+    },
+    onDragEnd: () => setDraggedSceneId(null),
+  });
+
+  const getSceneDropProps = (sceneId: string): TdHTMLAttributes<HTMLTableCellElement> => ({
+    onDragOver: (e) => {
+      // dataTransfer payloads are unreadable during dragover, but `types` is
+      // exposed — enough to accept only Scene drags.
+      if (!e.dataTransfer.types.includes(SCENE_DRAG_TYPE)) return;
       e.preventDefault();
-      if (draggedSceneId) moveScene(draggedSceneId, sceneId);
+      e.dataTransfer.dropEffect = "move";
+    },
+    onDrop: (e) => {
+      const draggedId = e.dataTransfer.getData(SCENE_DRAG_TYPE);
+      if (!draggedId) return;
+      e.preventDefault();
+      moveScene(draggedId, sceneId);
       setDraggedSceneId(null);
     },
   });
@@ -91,6 +118,24 @@ export function SetSection({ projectId, setId, categories, setDragHandleProps }:
     setScenes((prev) =>
       prev.map((scene) => (scene.id === sceneId ? { ...scene, roles: [...scene.roles, role] } : scene)),
     );
+  };
+
+  const removeRole = async (roleId: string) => {
+    setScenes((prev) =>
+      prev.map((scene) => ({ ...scene, roles: scene.roles.filter((r) => r.id !== roleId) })),
+    );
+    await api.deleteRole(roleId);
+  };
+
+  // Deleting a Scene is only offered once its Roles are gone, so a stray click
+  // can never take a whole cast list with it.
+  const removeScene = async (sceneId: string) => {
+    const scene = scenesRef.current.find((s) => s.id === sceneId);
+    if (!scene || scene.roles.length > 0) return;
+    setScenes((prev) => prev.filter((s) => s.id !== sceneId));
+    setChanges((prev) => prev.filter((c) => c.anchorAfterSceneId !== sceneId));
+    await api.deleteScene(sceneId);
+    void queryClient.invalidateQueries({ queryKey: ["sceneLocations", projectId] });
   };
 
   const debouncedSaveCounts = useDebouncedSave((roleId: string) => {
@@ -255,7 +300,10 @@ export function SetSection({ projectId, setId, categories, setDragHandleProps }:
       categories={categories}
       totalShoots={totalShoots}
       setDragHandleProps={setDragHandleProps}
+      setDropProps={setDropProps}
       getSceneDragHandleProps={getSceneDragHandleProps}
+      getSceneDropProps={getSceneDropProps}
+      draggedSceneId={draggedSceneId}
       onSetFieldChange={onSetFieldChange}
       onLocationFieldChange={onLocationFieldChange}
       onAddLocation={() => addLocationMutation.mutate()}
@@ -267,6 +315,8 @@ export function SetSection({ projectId, setId, categories, setDragHandleProps }:
       onFuzzleIdChange={onFuzzleIdChange}
       onSceneFieldChange={onSceneFieldChange}
       onAddRole={addRole}
+      onRemoveRole={(roleId) => void removeRole(roleId)}
+      onRemoveScene={(sceneId) => void removeScene(sceneId)}
       onAddChange={(sceneId) => void addChange(sceneId)}
       onChangeDescriptionChange={onChangeDescriptionChange}
       onRemoveChange={(changeId) => void removeChange(changeId)}

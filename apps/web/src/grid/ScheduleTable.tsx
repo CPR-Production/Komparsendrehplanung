@@ -1,7 +1,7 @@
 import { calcSceneTotal } from "@komparsen/shared";
-import { Fragment, type HTMLAttributes } from "react";
+import { Fragment, type HTMLAttributes, type TdHTMLAttributes } from "react";
 import type { Category, ChangeRow, RoleRow, SceneRow, SetLocation, ShootSet } from "../api.js";
-import { groupCategories, totalColumnCount } from "./scheduleLayout.js";
+import { groupCategories, SCENE_NUMBER_COLUMN_WIDTH, totalColumnCount } from "./scheduleLayout.js";
 
 export const SCENE_LOCATIONS_DATALIST_ID = "scene-locations";
 
@@ -13,7 +13,10 @@ interface ScheduleTableProps {
   categories: Category[];
   totalShoots: number;
   setDragHandleProps: HTMLAttributes<HTMLSpanElement>;
+  setDropProps: TdHTMLAttributes<HTMLTableCellElement>;
   getSceneDragHandleProps: (sceneId: string) => HTMLAttributes<HTMLSpanElement>;
+  getSceneDropProps: (sceneId: string) => TdHTMLAttributes<HTMLTableCellElement>;
+  draggedSceneId: string | null;
   onSetFieldChange: (field: keyof ShootSet, value: string) => void;
   onLocationFieldChange: (locationId: string, field: "name" | "address", value: string) => void;
   onAddLocation: () => void;
@@ -25,6 +28,8 @@ interface ScheduleTableProps {
   onFuzzleIdChange: (roleId: string, fuzzleId: string) => void;
   onSceneFieldChange: (sceneId: string, field: keyof SceneRow, value: string) => void;
   onAddRole: (sceneId: string) => void;
+  onRemoveRole: (roleId: string) => void;
+  onRemoveScene: (sceneId: string) => void;
   onAddChange: (sceneId: string) => void;
   onChangeDescriptionChange: (changeId: string, description: string) => void;
   onRemoveChange: (changeId: string) => void;
@@ -99,7 +104,10 @@ export function ScheduleTable({
   categories,
   totalShoots,
   setDragHandleProps,
+  setDropProps,
   getSceneDragHandleProps,
+  getSceneDropProps,
+  draggedSceneId,
   onSetFieldChange,
   onLocationFieldChange,
   onAddLocation,
@@ -111,6 +119,8 @@ export function ScheduleTable({
   onFuzzleIdChange,
   onSceneFieldChange,
   onAddRole,
+  onRemoveRole,
+  onRemoveScene,
   onAddChange,
   onChangeDescriptionChange,
   onRemoveChange,
@@ -129,7 +139,7 @@ export function ScheduleTable({
   return (
     <tbody>
       <tr>
-        <td colSpan={totalColumns} className="cell-set">
+        <td colSpan={totalColumns} className="cell-set" {...setDropProps}>
           <div className="d-flex flex-wrap gap-3 align-items-end mb-2">
             <span className="drag-handle" title="Set verschieben" {...setDragHandleProps}>
               ⠿
@@ -138,6 +148,7 @@ export function ScheduleTable({
               SD
               <input
                 className="form-control form-control-sm"
+                style={{ width: SCENE_NUMBER_COLUMN_WIDTH }}
                 value={set.sdNumber ?? ""}
                 onChange={(e) => onSetFieldChange("sdNumber", e.target.value)}
               />
@@ -145,7 +156,7 @@ export function ScheduleTable({
             <input
               type="date"
               aria-label="Drehdatum"
-              className="form-control form-control-sm"
+              className="form-control form-control-sm set-date-input"
               value={set.shootDate ?? ""}
               onChange={(e) => onSetFieldChange("shootDate", e.target.value)}
             />
@@ -212,11 +223,19 @@ export function ScheduleTable({
         const total = sceneTotal(scene);
         const isLastScene = sceneIndex === scenes.length - 1;
         const sceneChanges = changes.filter((c) => c.anchorAfterSceneId === scene.id);
+        // Every rowSpan'd Scene cell accepts the drop, so the drop zone is the
+        // whole Scene block rather than just the drag handle glyph.
+        const dropProps = getSceneDropProps(scene.id);
+        const sceneCellClass = `cell-scene${draggedSceneId === scene.id ? " is-dragging" : ""}`;
 
         return (
           <Fragment key={scene.id}>
             <tr>
-              <td colSpan={totalColumns} className="cell-scene cell-synopsis">
+              <td
+                colSpan={totalColumns}
+                className={`${sceneCellClass} cell-synopsis`}
+                {...dropProps}
+              >
                 <span className="cell-synopsis-label">Synopsis</span>
                 <input
                   value={scene.synopsis ?? ""}
@@ -232,21 +251,36 @@ export function ScheduleTable({
                 <tr key={role?.id ?? `${scene.id}-row-${rowIndex}`}>
                   {rowIndex === 0 && (
                     <>
-                      <td rowSpan={sceneRowSpan} className="cell-scene">
-                        <span
-                          className="drag-handle"
-                          title="Szene verschieben"
-                          {...getSceneDragHandleProps(scene.id)}
-                        >
-                          ⠿
-                        </span>
+                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
+                        <div className="scene-cell-tools">
+                          <span
+                            className="drag-handle"
+                            title="Szene verschieben"
+                            {...getSceneDragHandleProps(scene.id)}
+                          >
+                            ⠿
+                          </span>
+                          <button
+                            type="button"
+                            className="row-delete"
+                            disabled={roleCount > 0}
+                            title={
+                              roleCount > 0
+                                ? "Erst alle Rollen dieser Szene löschen"
+                                : "Szene löschen"
+                            }
+                            onClick={() => onRemoveScene(scene.id)}
+                          >
+                            &times;
+                          </button>
+                        </div>
                         <input
                           placeholder="#"
                           value={scene.sceneNumber ?? ""}
                           onChange={(e) => onSceneFieldChange(scene.id, "sceneNumber", e.target.value)}
                         />
                       </td>
-                      <td rowSpan={sceneRowSpan} className="cell-scene">
+                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
                         <RadioGroup
                           name={`intExt-${scene.id}`}
                           value={scene.intExt}
@@ -254,7 +288,7 @@ export function ScheduleTable({
                           onChange={(value) => onSceneFieldChange(scene.id, "intExt", value)}
                         />
                       </td>
-                      <td rowSpan={sceneRowSpan} className="cell-scene">
+                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
                         <RadioGroup
                           name={`dayNight-${scene.id}`}
                           value={scene.dayNight}
@@ -262,23 +296,30 @@ export function ScheduleTable({
                           onChange={(value) => onSceneFieldChange(scene.id, "dayNight", value)}
                         />
                       </td>
-                      <td rowSpan={sceneRowSpan} className="cell-scene">
-                        <input
-                          type="time"
-                          value={scene.scriptTime ?? ""}
-                          onChange={(e) => onSceneFieldChange(scene.id, "scriptTime", e.target.value)}
-                        />
-                      </td>
-                      <td rowSpan={sceneRowSpan} className="cell-scene">
-                        {isLastScene && (
+                      {/* Von and Bis share one column; Bis only applies to the
+                          last Scene, which is what closes out the shooting day. */}
+                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
+                        <div className="scene-time-range">
                           <input
                             type="time"
-                            value={scene.endTime ?? ""}
-                            onChange={(e) => onSceneFieldChange(scene.id, "endTime", e.target.value)}
+                            aria-label="Script Time von"
+                            value={scene.scriptTime ?? ""}
+                            onChange={(e) => onSceneFieldChange(scene.id, "scriptTime", e.target.value)}
                           />
-                        )}
+                          {isLastScene && (
+                            <>
+                              <span className="scene-time-separator">&ndash;</span>
+                              <input
+                                type="time"
+                                aria-label="Script Time bis"
+                                value={scene.endTime ?? ""}
+                                onChange={(e) => onSceneFieldChange(scene.id, "endTime", e.target.value)}
+                              />
+                            </>
+                          )}
+                        </div>
                       </td>
-                      <td rowSpan={sceneRowSpan} className="cell-scene">
+                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
                         <input
                           list={SCENE_LOCATIONS_DATALIST_ID}
                           value={scene.location ?? ""}
@@ -354,7 +395,19 @@ export function ScheduleTable({
                             );
                           }),
                         )}
-                        <td className="cell-role text-center">{roleTotal(role)}</td>
+                        <td className="cell-role">
+                          <div className="role-total-cell">
+                            <span>{roleTotal(role)}</span>
+                            <button
+                              type="button"
+                              className="row-delete"
+                              title="Rolle löschen"
+                              onClick={() => onRemoveRole(role.id)}
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        </td>
                       </>
                     )
                   )}

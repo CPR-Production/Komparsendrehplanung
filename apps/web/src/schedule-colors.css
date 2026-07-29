@@ -71,15 +71,58 @@
   font-style: italic;
 }
 
+/* Sized as a real hit area, not a bare glyph — the handle is the only place a
+   drag can start, so it has to be comfortably grabbable with a mouse. */
 .drag-handle {
+  display: inline-block;
   cursor: grab;
-  color: #666;
+  color: #555;
+  padding: 0.2rem 0.4rem;
   margin-right: 0.25rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  border-radius: 3px;
   user-select: none;
+}
+
+.drag-handle:hover {
+  background: rgba(0, 0, 0, 0.12);
+  color: #000;
 }
 
 .drag-handle:active {
   cursor: grabbing;
+}
+
+.cell-scene.is-dragging {
+  opacity: 0.45;
+}
+
+/* Von and Bis sit side by side in the merged Script Time column. The native
+   picker indicator is hidden so two time inputs plus the dash fit the width. */
+.scene-time-range {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.schedule-table td .scene-time-range input {
+  width: auto;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.schedule-table td .scene-time-range input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.scene-time-separator {
+  color: #333;
+}
+
+/* Needs to outrank the `.schedule-table td input { width: 100% }` rule above. */
+.schedule-table td input.set-date-input {
+  width: 9.5rem;
 }
 
 .cell-count {
@@ -88,12 +131,13 @@
 
 .isnew-toggle {
   display: block;
-  margin: 0.15rem auto 0;
+  width: 100%;
+  margin-top: 0.15rem;
   border: none;
   border-radius: 3px;
   font-size: 0.65rem;
   line-height: 1;
-  padding: 0.15rem 0.35rem;
+  padding: 0.2rem 0.35rem;
   cursor: pointer;
 }
 
@@ -105,6 +149,44 @@
 .isnew-toggle.is-reused {
   background: #bdbdbd;
   color: #333;
+}
+
+/* Inline delete affordance for Scene and Role rows, matching the Change row's ×.
+   Disabled on a Scene that still holds Roles. */
+.row-delete {
+  border: 1px solid transparent;
+  background: transparent;
+  color: #a11;
+  border-radius: 3px;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.1rem 0.3rem;
+  cursor: pointer;
+}
+
+.row-delete:hover:not(:disabled) {
+  background: #a11;
+  border-color: #a11;
+  color: #fff;
+}
+
+.row-delete:disabled {
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.scene-cell-tools,
+.role-total-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.15rem;
+}
+
+.role-total-cell {
+  justify-content: center;
+  font-weight: 400;
 }
 
 .cell-change {

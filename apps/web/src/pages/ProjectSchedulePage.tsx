@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CSSProperties, HTMLAttributes } from "react";
+import type { CSSProperties, HTMLAttributes, TdHTMLAttributes } from "react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, type ShootSet } from "../api.js";
-import { moveBefore } from "../dragReorder.js";
+import { moveBefore, SET_DRAG_TYPE } from "../dragReorder.js";
 import { SCENE_LOCATIONS_DATALIST_ID } from "../grid/ScheduleTable.js";
 import { ScheduleTableHead } from "../grid/ScheduleTableHead.js";
 import { SetSection } from "./SetSection.js";
@@ -44,7 +44,6 @@ export function ProjectSchedulePage() {
     mutationFn: (ids: string[]) => api.reorderSets(projectId!, ids),
   });
 
-  const [draggedSetId, setDraggedSetId] = useState<string | null>(null);
   const moveSet = (draggedId: string, targetId: string) => {
     const current = setsQuery.data;
     if (!current) return;
@@ -56,14 +55,27 @@ export function ProjectSchedulePage() {
     );
     reorderSetsMutation.mutate(nextIds);
   };
+  // Mirrors the Scene drag wiring in SetSection: the handle starts the drag, the
+  // Set header cell accepts the drop, and the id travels in dataTransfer.
   const getSetDragHandleProps = (setId: string): HTMLAttributes<HTMLSpanElement> => ({
     draggable: true,
-    onDragStart: () => setDraggedSetId(setId),
-    onDragOver: (e) => e.preventDefault(),
-    onDrop: (e) => {
+    onDragStart: (e) => {
+      e.dataTransfer.setData(SET_DRAG_TYPE, setId);
+      e.dataTransfer.effectAllowed = "move";
+    },
+  });
+
+  const getSetDropProps = (setId: string): TdHTMLAttributes<HTMLTableCellElement> => ({
+    onDragOver: (e) => {
+      if (!e.dataTransfer.types.includes(SET_DRAG_TYPE)) return;
       e.preventDefault();
-      if (draggedSetId) moveSet(draggedSetId, setId);
-      setDraggedSetId(null);
+      e.dataTransfer.dropEffect = "move";
+    },
+    onDrop: (e) => {
+      const draggedId = e.dataTransfer.getData(SET_DRAG_TYPE);
+      if (!draggedId) return;
+      e.preventDefault();
+      moveSet(draggedId, setId);
     },
   });
 
@@ -126,6 +138,7 @@ export function ProjectSchedulePage() {
               setId={set.id}
               categories={categoriesQuery.data ?? []}
               setDragHandleProps={getSetDragHandleProps(set.id)}
+              setDropProps={getSetDropProps(set.id)}
             />
           ))}
         </table>
