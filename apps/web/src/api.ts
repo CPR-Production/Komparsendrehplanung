@@ -15,6 +15,9 @@ export interface Project {
   id: string;
   name: string;
   code: string | null;
+  // SQLite current_timestamp, UTC and space-separated: "2026-07-28 20:03:44".
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ShootSet {

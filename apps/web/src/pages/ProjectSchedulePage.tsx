@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CSSProperties, HTMLAttributes, TdHTMLAttributes } from "react";
-import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { api, type ShootSet } from "../api.js";
+import { LanguageSwitcher } from "../components/LanguageSwitcher.js";
 import { moveBefore, SET_DRAG_TYPE } from "../dragReorder.js";
 import { SCENE_LOCATIONS_DATALIST_ID } from "../grid/ScheduleTable.js";
 import { ScheduleTableHead } from "../grid/ScheduleTableHead.js";
@@ -11,6 +12,7 @@ import { SetSection } from "./SetSection.js";
 const APP_HEADER_HEIGHT = 56;
 
 export function ProjectSchedulePage() {
+  const { t } = useTranslation();
   const { projectId } = useParams<{ projectId: string }>();
   const queryClient = useQueryClient();
 
@@ -90,31 +92,29 @@ export function ProjectSchedulePage() {
         } as CSSProperties
       }
     >
+      {/* Height and stickiness stay inline: the sticky table head offsets itself
+          by --app-header-height, so the two have to agree on one number. */}
       <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          height: APP_HEADER_HEIGHT,
-          padding: "0 1rem",
-          borderBottom: "1px solid #ccc",
-          position: "sticky",
-          top: 0,
-          background: "white",
-          zIndex: 3,
-        }}
+        className="d-flex justify-content-between align-items-center px-3 border-bottom bg-white"
+        style={{ height: APP_HEADER_HEIGHT, position: "sticky", top: 0, zIndex: 3 }}
       >
-        <Link to="/" style={{ fontSize: "1.25rem", fontWeight: "bold", color: "inherit" }}>
+        <Link to="/" className="h5 mb-0 link-dark text-decoration-none">
           {projectQuery.data?.name}
         </Link>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <button type="button" onClick={() => createSetMutation.mutate()}>
-            + Set
+        <div className="d-flex align-items-center gap-2">
+          <LanguageSwitcher />
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-dark"
+            onClick={() => createSetMutation.mutate()}
+          >
+            {t("nav.addSet")}
           </button>
           <Link
             to={`/projects/${projectId}/settings`}
-            title="Einstellungen"
-            style={{ fontSize: "1.25rem", textDecoration: "none" }}
+            className="btn btn-sm btn-outline-secondary"
+            title={t("nav.settings")}
+            aria-label={t("nav.settings")}
           >
             ⚙
           </Link>

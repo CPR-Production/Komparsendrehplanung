@@ -98,6 +98,24 @@
   opacity: 0.45;
 }
 
+/* Intern/Extern and Tag/Nacht share one column, stacked. Both groups stretch to
+   the full column width so the four buttons line up as a 2x2 block. */
+.scene-flags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.scene-flags .btn-group {
+  width: 100%;
+}
+
+.scene-flags .btn {
+  flex: 1 1 0;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
 /* Von and Bis sit side by side in the merged Script Time column. The native
    picker indicator is hidden so two time inputs plus the dash fit the width. */
 .scene-time-range {
@@ -151,16 +169,24 @@
   color: #333;
 }
 
-/* Inline delete affordance for Scene and Role rows, matching the Change row's ×.
-   Disabled on a Scene that still holds Roles. */
+/* The single delete affordance across the grid — Set-Name, Scene, Role and
+   Wechsel rows all use it, so × always looks and behaves the same. Sized as a
+   fixed square rather than by its glyph so it lines up next to inputs of any
+   height. Disabled on a Scene that still holds Roles. */
 .row-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.6rem;
+  height: 1.6rem;
   border: 1px solid transparent;
   background: transparent;
   color: #a11;
   border-radius: 3px;
   font-size: 1rem;
   line-height: 1;
-  padding: 0.1rem 0.3rem;
+  padding: 0;
   cursor: pointer;
 }
 
@@ -186,6 +212,35 @@
 
 .role-total-cell {
   justify-content: center;
+  font-weight: 400;
+}
+
+/* Total-Shoots breakdown, aligned to the category columns it sums. The row
+   closes out the Set header block, so it keeps the Set background and gains a
+   divider on top rather than reading as a Scene. */
+.set-totals-row td {
+  border-top: 2px solid rgba(0, 0, 0, 0.35);
+}
+
+.set-totals-label {
+  text-align: right;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b4d24;
+  white-space: nowrap;
+}
+
+.set-totals-value {
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Categories nobody is shooting today stay in place — the columns have to line
+   up with the grid below — but recede so the real numbers carry the row. */
+.set-totals-value.is-zero {
+  opacity: 0.4;
   font-weight: 400;
 }
 

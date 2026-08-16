@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api.js";
+import { LanguageSwitcher } from "../components/LanguageSwitcher.js";
 
 export function SettingsPage() {
+  const { t } = useTranslation();
   const { projectId } = useParams<{ projectId: string }>();
   const queryClient = useQueryClient();
   const [newGroupName, setNewGroupName] = useState("");
@@ -59,11 +62,14 @@ export function SettingsPage() {
   if (!projectId) return null;
 
   return (
-    <main style={{ fontFamily: "sans-serif", padding: "1rem", maxWidth: 700 }}>
-      <Link to={`/projects/${projectId}`}>&larr; Zurück zum Drehplan</Link>
-      <h1>Einstellungen</h1>
+    <main className="container py-3" style={{ maxWidth: 700 }}>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <Link to={`/projects/${projectId}`}>&larr; {t("nav.backToSchedule")}</Link>
+        <LanguageSwitcher />
+      </div>
+      <h1 className="h3">{t("settings.title")}</h1>
 
-      <h2 style={{ fontSize: "1.1rem" }}>Kategorien</h2>
+      <h2 className="h5">{t("settings.categories")}</h2>
       {groupsQuery.data?.map((group) => (
         <fieldset key={group.id} style={{ marginBottom: "1rem" }}>
           <legend>

@@ -1,0 +1,52 @@
+/* Project tiles. The whole card is the link, so the hover lift and the focus
+   ring both have to live on the card itself rather than on an inner element. */
+.project-card {
+  color: inherit;
+  overflow: hidden;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.project-card:hover,
+.project-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-card {
+    transition: none;
+  }
+
+  .project-card:hover,
+  .project-card:focus-visible {
+    transform: none;
+  }
+}
+
+/* The icon carries the project's identity: a deterministic colour keyed off its
+   id (set inline) plus its initials, so tiles stay distinguishable at a glance
+   without anyone having to upload artwork. */
+.project-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 10;
+  color: #fff;
+}
+
+/* Scales with the tile so two-up on a phone and four-up on a desktop both keep
+   the initials as the dominant element. */
+.project-card-initials {
+  font-size: clamp(1.75rem, 5.5vw, 3rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Project names are user input and can be a single long unbroken string. */
+.project-card-name {
+  overflow-wrap: anywhere;
+}

@@ -23,3 +23,20 @@ export function calcSetTotalShoots(set: SetWithScenes): number {
   }
   return total;
 }
+
+// Breakdown of Total Shoots per category — same "neu only" rule, kept split by
+// category so the Set header can show where the day's Komparsen actually go
+// (e.g. Supporting artists/normal vs. Stunt). Categories with no new slots are
+// absent from the map; callers fall back to 0 so they can list every category.
+export function calcSetNewCountsByCategory(set: SetWithScenes): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const scene of set.scenes) {
+    for (const role of scene.roles) {
+      for (const cell of role.counts) {
+        if (!cell.isNew) continue;
+        totals.set(cell.categoryId, (totals.get(cell.categoryId) ?? 0) + cell.count);
+      }
+    }
+  }
+  return totals;
+}

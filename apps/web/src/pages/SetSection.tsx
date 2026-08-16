@@ -1,4 +1,4 @@
-import { calcSetTotalShoots } from "@komparsen/shared";
+import { calcSetNewCountsByCategory, calcSetTotalShoots } from "@komparsen/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { HTMLAttributes, TdHTMLAttributes } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -280,7 +280,7 @@ export function SetSection({
 
   if (!setDraft) return null;
 
-  const totalShoots = calcSetTotalShoots({
+  const setForTotals = {
     id: setId,
     scenes: scenes.map((scene) => ({
       id: scene.id,
@@ -289,7 +289,9 @@ export function SetSection({
         counts: r.counts.map((c) => ({ categoryId: c.categoryId, count: c.count, isNew: c.isNew })),
       })),
     })),
-  });
+  };
+  const totalShoots = calcSetTotalShoots(setForTotals);
+  const newCountsByCategory = calcSetNewCountsByCategory(setForTotals);
 
   return (
     <ScheduleTable
@@ -299,6 +301,7 @@ export function SetSection({
       changes={changes}
       categories={categories}
       totalShoots={totalShoots}
+      newCountsByCategory={newCountsByCategory}
       setDragHandleProps={setDragHandleProps}
       setDropProps={setDropProps}
       getSceneDragHandleProps={getSceneDragHandleProps}

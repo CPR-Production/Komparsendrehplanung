@@ -23,8 +23,8 @@ export function ScheduleTableHead({ categories }: { categories: Category[] }) {
       </tr>
       <tr>
         <th style={{ width: SCENE_NUMBER_COLUMN_WIDTH }}>#</th>
-        <th style={{ width: 110 }}>In/Ex</th>
-        <th style={{ width: 110 }}>D/N</th>
+        {/* In/Ex and D/N share one column, stacked — see .scene-flags. */}
+        <th style={{ width: 130 }}>In/Ex · D/N</th>
         <th style={{ width: 140 }}>Script Time</th>
         <th style={{ width: 160 }}>Location</th>
         <th style={{ width: 70 }}>Total/Scene</th>

@@ -1,7 +1,12 @@
 import { calcSceneTotal } from "@komparsen/shared";
 import { Fragment, type HTMLAttributes, type TdHTMLAttributes } from "react";
 import type { Category, ChangeRow, RoleRow, SceneRow, SetLocation, ShootSet } from "../api.js";
-import { groupCategories, SCENE_NUMBER_COLUMN_WIDTH, totalColumnCount } from "./scheduleLayout.js";
+import {
+  COLUMNS_BEFORE_ROLE_NAME,
+  groupCategories,
+  SCENE_NUMBER_COLUMN_WIDTH,
+  totalColumnCount,
+} from "./scheduleLayout.js";
 
 export const SCENE_LOCATIONS_DATALIST_ID = "scene-locations";
 
@@ -12,6 +17,7 @@ interface ScheduleTableProps {
   changes: ChangeRow[];
   categories: Category[];
   totalShoots: number;
+  newCountsByCategory: Map<string, number>;
   setDragHandleProps: HTMLAttributes<HTMLSpanElement>;
   setDropProps: TdHTMLAttributes<HTMLTableCellElement>;
   getSceneDragHandleProps: (sceneId: string) => HTMLAttributes<HTMLSpanElement>;
@@ -103,6 +109,7 @@ export function ScheduleTable({
   changes,
   categories,
   totalShoots,
+  newCountsByCategory,
   setDragHandleProps,
   setDropProps,
   getSceneDragHandleProps,
@@ -192,7 +199,8 @@ export function ScheduleTable({
               />
               <button
                 type="button"
-                className="btn btn-sm btn-outline-secondary"
+                className="row-delete"
+                title="Set-Name löschen"
                 onClick={() => onRemoveLocation(location.id)}
               >
                 &times;
@@ -205,6 +213,28 @@ export function ScheduleTable({
             </button>
           )}
         </td>
+      </tr>
+
+      {/* Set totals, laid out on the grid rather than as free text: each sum
+          sits in its own category column, so it reads straight down from the
+          category header and — via the group header above it — per group. */}
+      <tr className="set-totals-row">
+        <td colSpan={COLUMNS_BEFORE_ROLE_NAME} className="cell-set" />
+        <td className="cell-set set-totals-label">Summe neu</td>
+        {groups.flatMap((group) =>
+          group.categories.map((category) => {
+            const count = newCountsByCategory.get(category.id) ?? 0;
+            return (
+              <td
+                key={category.id}
+                className={`cell-set set-totals-value${count === 0 ? " is-zero" : ""}`}
+              >
+                {count}
+              </td>
+            );
+          }),
+        )}
+        <td className="cell-set set-totals-value">{totalShoots}</td>
       </tr>
 
       {scenes.length === 0 && (
@@ -280,21 +310,23 @@ export function ScheduleTable({
                           onChange={(e) => onSceneFieldChange(scene.id, "sceneNumber", e.target.value)}
                         />
                       </td>
+                      {/* Intern/Extern and Tag/Nacht share one column, stacked
+                          with In/Ex on top. */}
                       <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
-                        <RadioGroup
-                          name={`intExt-${scene.id}`}
-                          value={scene.intExt}
-                          options={INT_EXT_OPTIONS}
-                          onChange={(value) => onSceneFieldChange(scene.id, "intExt", value)}
-                        />
-                      </td>
-                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
-                        <RadioGroup
-                          name={`dayNight-${scene.id}`}
-                          value={scene.dayNight}
-                          options={DAY_NIGHT_OPTIONS}
-                          onChange={(value) => onSceneFieldChange(scene.id, "dayNight", value)}
-                        />
+                        <div className="scene-flags">
+                          <RadioGroup
+                            name={`intExt-${scene.id}`}
+                            value={scene.intExt}
+                            options={INT_EXT_OPTIONS}
+                            onChange={(value) => onSceneFieldChange(scene.id, "intExt", value)}
+                          />
+                          <RadioGroup
+                            name={`dayNight-${scene.id}`}
+                            value={scene.dayNight}
+                            options={DAY_NIGHT_OPTIONS}
+                            onChange={(value) => onSceneFieldChange(scene.id, "dayNight", value)}
+                          />
+                        </div>
                       </td>
                       {/* Von and Bis share one column; Bis only applies to the
                           last Scene, which is what closes out the shooting day. */}
@@ -426,7 +458,8 @@ export function ScheduleTable({
                     />
                     <button
                       type="button"
-                      className="btn btn-sm btn-outline-secondary"
+                      className="row-delete"
+                      title="Wechsel löschen"
                       onClick={() => onRemoveChange(change.id)}
                     >
                       &times;
