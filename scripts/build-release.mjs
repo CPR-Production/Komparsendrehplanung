@@ -4,7 +4,7 @@
 // der Platte liest. Cross-Kompilieren geht bewusst nicht — das native Addon von
 // better-sqlite3 entsteht nur auf der Zielplattform, deshalb die Runner-Matrix
 // im Release-Workflow.
-import { execFileSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,6 +34,15 @@ function run(command, commandArgs, options = {}) {
   execFileSync(command, commandArgs, { stdio: "inherit", cwd: repoRoot, ...options });
 }
 
+// Unter Windows ist npm eine .cmd, und seit dem Sicherheitsfix in Node
+// (CVE-2024-27980) verweigert execFile das Starten von .cmd und .bat. execSync
+// geht immer über die Shell und umgeht das; ein Argument-Array wäre dort der
+// nächste Stolperstein (DEP0190), deshalb ein fertiger Befehl. Es kommt nichts
+// von außen hinein — der Skriptname steht hier als Literal.
+function runNpm(script) {
+  execSync(`npm run ${script}`, { stdio: "inherit", cwd: repoRoot });
+}
+
 function step(message) {
   console.log(`\n▸ ${message}`);
 }
@@ -42,10 +51,9 @@ function step(message) {
 
 if (!args.has("skip-build")) {
   step("Workspaces bauen");
-  const npm = isWindows ? "npm.cmd" : "npm";
-  run(npm, ["run", "build:shared"]);
-  run(npm, ["run", "build:web"]);
-  run(npm, ["run", "build:server"]);
+  runNpm("build:shared");
+  runNpm("build:web");
+  runNpm("build:server");
 }
 
 // --- Server bündeln --------------------------------------------------------
