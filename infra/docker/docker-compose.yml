@@ -5,6 +5,10 @@ services:
       dockerfile: infra/docker/Dockerfile
     ports:
       - "3001:3001"
+    environment:
+      # Schaltet Update-Hinweis und Feedback-Formular frei; beides braucht nur
+      # ein öffentliches Repository, keinen Token.
+      - GITHUB_REPO=CPR-Production/Komparsendrehplanung
     volumes:
       - komparsen-data:/app/data
     restart: unless-stopped

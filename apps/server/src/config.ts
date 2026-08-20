@@ -2,11 +2,18 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Release builds stamp the version in via the environment. The package.json
-// read is the dev fallback; in a packaged binary that file may not be on disk,
-// hence the last-resort literal rather than a throw.
+// Der Release-Build ersetzt diesen Bezeichner per esbuild-Define durch die
+// Version aus dem Git-Tag — in der gepackten Binary liegt keine package.json
+// mehr auf der Platte, aus der man sie lesen könnte. Im Dev-Betrieb existiert
+// er nicht, daher das typeof-Gate statt eines direkten Zugriffs.
+declare const __APP_VERSION__: string | undefined;
+
+// Docker stempelt die Version weiterhin über die Umgebung ein. Die
+// package.json-Lesung ist der Dev-Fallback, das Literal die letzte Rettung
+// statt eines Absturzes beim Start.
 function resolveVersion(): string {
   if (process.env.APP_VERSION) return process.env.APP_VERSION;
+  if (typeof __APP_VERSION__ === "string") return __APP_VERSION__;
   try {
     const here = dirname(fileURLToPath(import.meta.url));
     const pkg = readFileSync(join(here, "../package.json"), "utf8");

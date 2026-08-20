@@ -123,6 +123,45 @@ mit. Beide Buttons in `SettingsPage` fragen deshalb per `window.confirm` nach
 und benennen die Folge. Wer dort etwas umbaut, darf die Rückfrage nicht
 wegoptimieren.
 
+## Release-Bauweise
+
+Ein Tag `v*` löst `.github/workflows/release.yml` aus: vier Runner bauen je eine
+Ordner-Nutzlast, verpacken sie zu einem Installer, und ein zweiter Job hängt
+alles mit `SHA256SUMS.txt` und Herkunftsbescheinigung an ein GitHub-Release.
+
+Die Nutzlast entsteht in `scripts/build-release.mjs` und ist bewusst **kein
+Einzeldatei-Binary**:
+
+```
+komparsen(.exe)       Node-SEA: Runtime + gebündelter Server
+better_sqlite3.node   das native Addon
+web/                  gebautes Frontend
+migrations/           Drizzle-SQL samt _journal.json
+```
+
+Drei Kopplungen, die man kennen muss:
+
+- **Die Runner-Matrix ist keine Bequemlichkeit.** `better-sqlite3` ist ein
+  natives Addon und entsteht nur auf der Zielplattform; das Addon und die
+  eingebettete Node-Runtime müssen dieselbe ABI haben, deshalb kommen beide vom
+  selben Runner.
+- **`apps/server/src/paths.ts` ist die einzige Stelle, die den gepackten Betrieb
+  kennt.** `isSea()` entscheidet, ob Migrationen, Web-Assets und Addon neben der
+  Binary oder im Quellbaum gesucht werden, und ob die Datenbank ins
+  Benutzerverzeichnis wandert. Wer eine weitere Datei zur Laufzeit von der
+  Platte liest, muss sie hier eintragen **und** in die Nutzlast kopieren lassen.
+- **Eine SEA kann nur CommonJS.** Das Bundle wird deshalb nach CJS gebaut, was
+  zwei Kunstgriffe erzwingt: `import.meta.url` wird per Define auf einen
+  Banner-Ausdruck umgebogen, und die Version kommt über `__APP_VERSION__` statt
+  aus der `package.json`, die im Release nicht mehr auf der Platte liegt.
+  `better-sqlite3` bekommt sein Addon als geladenes Objekt durchgereicht, weil
+  das `require()` der SEA-Runtime nur Builtins auflöst.
+
+Lokal probieren: `npm run build:release` (optional `--version=1.2.3`), dann
+`bash scripts/smoke-test.sh`. Der Rauchtest läuft auch im Workflow und legt
+testweise ein Projekt an — nur ein Schreibvorgang beweist, dass die Migrationen
+durchliefen.
+
 ## Offene Referenz: „Architektur-Plan"
 
 `docs/self-hosting.md` verweist auf einen Architektur-Plan mit Phasen (dort

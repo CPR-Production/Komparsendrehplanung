@@ -13,9 +13,14 @@
     "build:shared": "npm run build --workspace packages/shared",
     "build:server": "npm run build --workspace apps/server",
     "build:web": "npm run build --workspace apps/web",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "build:release": "node scripts/build-release.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.12"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "postject": "^1.0.0-alpha.6"
   }
 }

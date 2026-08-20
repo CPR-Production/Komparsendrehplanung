@@ -1,0 +1,127 @@
+# Tag → Nutzlast je Plattform → Installer → Release mit Prüfsummen.
+#
+# Die Matrix ist nicht bequem, sondern nötig: better-sqlite3 ist ein natives
+# Addon und entsteht nur auf der Zielplattform. macOS läuft doppelt, weil Intel
+# und Apple Silicon getrennte Binaries brauchen.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      # Ein gescheiterter Runner soll die anderen Installer nicht mitnehmen —
+      # dann fehlt eine Plattform statt aller.
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            platform: macos
+          - runner: macos-13
+            platform: macos
+          - runner: ubuntu-22.04
+            platform: linux
+          - runner: windows-2022
+            platform: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      # Diese Version landet in der Binary: die SEA entsteht aus dem Node des
+      # Runners, und das Addon wird gegen dieselbe ABI installiert.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Version aus dem Tag ableiten
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Abhängigkeiten installieren
+        shell: bash
+        run: npm ci
+
+      - name: Tests
+        shell: bash
+        run: npm run test --workspace packages/shared
+
+      - name: Nutzlast bauen
+        shell: bash
+        run: npm run build:release -- --version="$VERSION"
+
+      - name: Installer bauen (macOS)
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: bash infra/installer/macos/package.sh "$VERSION"
+
+      - name: Installer bauen (Linux)
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: bash infra/installer/linux/package.sh "$VERSION"
+
+      - name: Installer bauen (Windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc "/DAppVersion=$env:VERSION" "infra\installer\windows\komparsen.iss"
+
+      - name: Rauchtest der gepackten Binary
+        shell: bash
+        run: bash scripts/smoke-test.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.runner }}
+          path: build/release/dist/*
+          if-no-files-found: error
+
+  release:
+    name: Release veröffentlichen
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      # Für die Herkunftsbescheinigung der Artefakte.
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      # Vor den Prüfsummen, damit die SHA256SUMS.txt nicht selbst mitbescheinigt
+      # wird — bescheinigt gehören die Installer.
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/*"
+
+      - name: Prüfsummen bilden
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # Ein Tag mit Suffix (v1.2.0-rc1) wird Vorabversion. Der Update-Check
+          # in apps/server/src/routes/updates.ts überspringt die, das Banner
+          # bleibt bei Testreleases also still.
+          prerelease=""
+          case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            $prerelease
