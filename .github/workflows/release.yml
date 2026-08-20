@@ -17,26 +17,35 @@ jobs:
   build:
     name: ${{ matrix.runner }}
     runs-on: ${{ matrix.runner }}
+    # Ohne das wartet ein Job auf ein nicht mehr existierendes Runner-Label bis
+    # zum Standard-Limit von sechs Stunden — und der Veröffentlichungs-Job
+    # hängt die ganze Zeit mit dran.
+    timeout-minutes: 45
     strategy:
       # Ein gescheiterter Runner soll die anderen Installer nicht mitnehmen —
       # dann fehlt eine Plattform statt aller.
       fail-fast: false
       matrix:
         include:
-          - runner: macos-14
+          # Apple Silicon. Nicht macos-14: GitHub pflegt nur die zwei neuesten
+          # Images, und das ist inzwischen das drittneueste.
+          - runner: macos-15
             platform: macos
-          - runner: macos-13
+          # Intel-Macs. macos-13 wurde am 4.12.2025 abgeschaltet; das Label
+          # existiert seitdem nicht mehr, ein Job darauf wartet endlos auf einen
+          # Runner, der nie kommt. Intel gibt es auf GitHub bis Herbst 2027.
+          - runner: macos-15-intel
             platform: macos
           - runner: ubuntu-22.04
             platform: linux
           - runner: windows-2022
             platform: windows
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Diese Version landet in der Binary: die SEA entsteht aus dem Node des
       # Runners, und das Addon wird gegen dieselbe ABI installiert.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -99,7 +108,7 @@ jobs:
         shell: bash
         run: bash scripts/smoke-test.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: installer-${{ matrix.runner }}
           path: build/release/dist/*
@@ -115,14 +124,14 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
 
       # Vor den Prüfsummen, damit die SHA256SUMS.txt nicht selbst mitbescheinigt
       # wird — bescheinigt gehören die Installer.
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@v4
         with:
           subject-path: "dist/*"
 

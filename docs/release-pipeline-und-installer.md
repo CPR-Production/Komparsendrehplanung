@@ -35,8 +35,8 @@ Workflow bricht deshalb ab, wenn Tag und `package.json` nicht übereinstimmen.
 
 | Datei | Runner | Enthält |
 | --- | --- | --- |
-| `Komparsendrehplanung-<v>-macos-arm64.dmg` | `macos-14` | App-Bundle für Apple Silicon |
-| `Komparsendrehplanung-<v>-macos-x86_64.dmg` | `macos-13` | App-Bundle für Intel-Macs |
+| `Komparsendrehplanung-<v>-macos-arm64.dmg` | `macos-15` | App-Bundle für Apple Silicon |
+| `Komparsendrehplanung-<v>-macos-x86_64.dmg` | `macos-15-intel` | App-Bundle für Intel-Macs |
 | `Komparsendrehplanung-<v>-windows-x64.exe` | `windows-2022` | Inno-Setup-Installer |
 | `Komparsendrehplanung-<v>-linux-x86_64.tar.gz` | `ubuntu-22.04` | Archiv mit `install.sh` |
 | `payload-<v>-<platform>-<arch>.tar.gz` | alle vier | reine Nutzlast, für das Selbst-Update |
@@ -231,6 +231,13 @@ gehört in jede Weitergabe des Programms.
 Update-Check als auch den Updater auf eine andere Adresse um. Gedacht für
 GitHub-Enterprise-Installationen, brauchbar auch, um den Ablauf gegen eine
 lokale Nachbildung durchzuspielen, ohne ein echtes Release zu veröffentlichen.
+
+**Ein Job wartet ewig auf einen Runner** — dann gibt es das Label nicht (mehr).
+GitHub pflegt je Betriebssystem nur die zwei neuesten Images; ein abgeschaltetes
+Label lässt den Job nicht scheitern, sondern warten, und der
+Veröffentlichungs-Job hängt über `needs: build` mit dran. Die gültigen Labels
+stehen in der GitHub-Dokumentation zu den gehosteten Runnern. `timeout-minutes`
+begrenzt den Schaden auf 45 Minuten statt sechs Stunden.
 
 **Das Banner erscheint nicht** — es braucht ein veröffentlichtes Release, das
 keine Vorabversion ist, und eine gesetzte `GITHUB_REPO`. Der Server hält das
