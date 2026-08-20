@@ -44,6 +44,22 @@ jobs:
         shell: bash
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
 
+      # Der Docker-Weg stempelt keine Version ein, er liest sie aus der
+      # package.json. Läuft die aus dem Tritt, meldet jede Docker-Installation
+      # dauerhaft ein verfügbares Update — auch direkt nach dem Update. Deshalb
+      # bricht das Release lieber ab, als eine falsche Version auszuliefern.
+      - name: Version gegen die package.json prüfen
+        shell: bash
+        run: |
+          for file in package.json apps/server/package.json; do
+            declared="$(node -p "require('./$file').version")"
+            if [ "$declared" != "$VERSION" ]; then
+              echo "::error::$file steht auf $declared, der Tag lautet v$VERSION."
+              echo "Vor dem Tag beide Dateien auf $VERSION ziehen (siehe docs/release-pipeline-und-installer.md)."
+              exit 1
+            fi
+          done
+
       - name: Abhängigkeiten installieren
         shell: bash
         run: npm ci
@@ -111,7 +127,7 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Release anlegen
+      - name: Release anlegen oder ergänzen
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -121,7 +137,19 @@ jobs:
           # bleibt bei Testreleases also still.
           prerelease=""
           case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" dist/* \
-            --title "$GITHUB_REF_NAME" \
-            --generate-notes \
-            $prerelease
+
+          # Zwei Wege führen hierher: ein gepushter Tag (dann gibt es noch kein
+          # Release) oder ein über die GitHub-Oberfläche angelegtes Release
+          # (dann schon). Dasselbe gilt für einen Wiederholungslauf nach einem
+          # gescheiterten Runner. Deshalb anlegen nur, wenn es noch nichts gibt,
+          # sonst die Dateien anhängen — --clobber, damit ein zweiter Lauf die
+          # Datei desselben Namens ersetzt statt zu scheitern.
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME existiert bereits — hänge die Dateien an."
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes \
+              $prerelease
+          fi

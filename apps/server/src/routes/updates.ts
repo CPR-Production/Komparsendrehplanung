@@ -1,5 +1,11 @@
 import { Router } from "express";
-import { APP_VERSION, GITHUB_REPO } from "../config.js";
+import { APP_VERSION, GITHUB_API_BASE, GITHUB_REPO } from "../config.js";
+import {
+  getUpdateProgress,
+  startUpdate,
+  updateCapability,
+  type UpdateCapability,
+} from "../services/updater.js";
 
 export const updatesRouter = Router();
 
@@ -13,13 +19,17 @@ export interface UpdateStatus {
   // Set when the check itself failed (offline, rate limited). The UI stays
   // quiet in that case rather than claiming the app is up to date.
   checkFailed: boolean;
+  // Ob diese Installation sich selbst austauschen kann. Docker- und
+  // Entwicklungsbetrieb können es nicht, dort bleibt es beim Link.
+  canSelfUpdate: boolean;
+  selfUpdateReason: UpdateCapability["reason"];
 }
 
 // Unauthenticated GitHub API calls are limited to 60/hour per IP, and every
 // open browser tab would otherwise trigger one. One shared result per hour is
 // far more than enough for a check that looks for a new release.
 const CACHE_TTL_MS = 60 * 60 * 1000;
-let cached: { at: number; status: UpdateStatus } | null = null;
+let cached: { at: number; status: CachedStatus } | null = null;
 
 // Compares "1.10.0" above "1.9.0" — a plain string compare gets that wrong.
 // Anything non-numeric (pre-release suffixes) is ignored for ordering.
@@ -35,8 +45,18 @@ function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-async function fetchLatestRelease(): Promise<UpdateStatus> {
-  const base: UpdateStatus = {
+type CachedStatus = Omit<UpdateStatus, "canSelfUpdate" | "selfUpdateReason">;
+
+// Die Eignung zum Selbst-Update hängt nicht am GitHub-Ergebnis und gehört
+// deshalb nicht in den stündlichen Cache — sie kommt bei jeder Antwort frisch
+// dazu, sonst überlebte etwa ein Rechteproblem eine Stunde lang seine Ursache.
+function withCapability(status: CachedStatus): UpdateStatus {
+  const capability = updateCapability();
+  return { ...status, canSelfUpdate: capability.supported, selfUpdateReason: capability.reason };
+}
+
+async function fetchLatestRelease(): Promise<CachedStatus> {
+  const base: CachedStatus = {
     configured: true,
     current: APP_VERSION,
     latest: null,
@@ -47,7 +67,7 @@ async function fetchLatestRelease(): Promise<UpdateStatus> {
   };
 
   try {
-    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+    const res = await fetch(`${GITHUB_API_BASE}/repos/${GITHUB_REPO}/releases/latest`, {
       headers: { Accept: "application/vnd.github+json", "User-Agent": "komparsendrehplanung" },
       signal: AbortSignal.timeout(10_000),
     });
@@ -86,20 +106,22 @@ updatesRouter.get("/version", (_req, res) => {
 
 updatesRouter.get("/update/status", async (_req, res) => {
   if (!GITHUB_REPO) {
-    res.json({
-      configured: false,
-      current: APP_VERSION,
-      latest: null,
-      updateAvailable: false,
-      releaseUrl: null,
-      publishedAt: null,
-      checkFailed: false,
-    } satisfies UpdateStatus);
+    res.json(
+      withCapability({
+        configured: false,
+        current: APP_VERSION,
+        latest: null,
+        updateAvailable: false,
+        releaseUrl: null,
+        publishedAt: null,
+        checkFailed: false,
+      }),
+    );
     return;
   }
 
   if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
-    res.json(cached.status);
+    res.json(withCapability(cached.status));
     return;
   }
 
@@ -107,5 +129,22 @@ updatesRouter.get("/update/status", async (_req, res) => {
   // A failed check is not cached, so a brief outage doesn't blind the app for
   // an hour; a successful one is.
   if (!status.checkFailed) cached = { at: Date.now(), status };
-  res.json(status);
+  res.json(withCapability(status));
+});
+
+updatesRouter.get("/update/progress", (_req, res) => {
+  res.json(getUpdateProgress());
+});
+
+updatesRouter.post("/update/start", async (_req, res) => {
+  try {
+    // Bewusst abgewartet: Erst wenn Download, Prüfsumme und Austausch durch
+    // sind, antwortet der Server — der Neustart hängt danach an einem Timer,
+    // sodass diese Antwort den Client noch erreicht.
+    await startUpdate();
+    res.json(getUpdateProgress());
+  } catch {
+    // Der Grund steht bereits im Fortschritt, den der Client hier bekommt.
+    res.status(409).json(getUpdateProgress());
+  }
 });

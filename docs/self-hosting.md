@@ -74,8 +74,17 @@ gh attestation verify Komparsendrehplanung-<version>-windows-x64.exe --repo CPR-
 
 ### Update
 
-Neues Paket von der Releases-Seite laden und wie beim ersten Mal installieren —
-über die vorhandene Installation drüber. Die Datenbank liegt außerhalb und
+Sobald eine neuere Version vorliegt, erscheint oben im Fenster ein Banner mit
+dem Knopf **Jetzt installieren**. Er lädt die neue Version, prüft ihre
+Prüfsumme, tauscht sie aus und startet die Anwendung neu — danach lädt sich die
+Seite von selbst neu. Passt die Prüfsumme nicht, wird nichts ausgetauscht.
+
+Der Knopf fehlt, wenn das Programmverzeichnis dem eigenen Konto nicht gehört —
+etwa bei einer Installation, die jemand anderes mit Administratorrechten
+angelegt hat. Dann geht es wie beim ersten Mal: neues Paket von der
+Releases-Seite laden und über die vorhandene Installation drüber installieren.
+
+Die Datenbank liegt in beiden Fällen außerhalb des Programmverzeichnisses und
 bleibt unberührt; Migrationen laufen beim ersten Start der neuen Version
 automatisch.
 
@@ -110,8 +119,11 @@ Migrationsschritt nötig.
 ## Update-Hinweis und Feedback
 
 Beides hängt an einer einzigen Einstellung: `GITHUB_REPO` im Format `owner/repo`.
-In `infra/docker/docker-compose.yml` ist sie gesetzt, in den Installer-Paketen
-ist sie fest eingebaut.
+Sie ist auf das Repository dieses Projekts vorbelegt und muss nirgends
+eingetragen werden — weder im Docker- noch im Installer-Betrieb. Wer die App
+geforkt hat, setzt die Umgebungsvariable `GITHUB_REPO` auf sein eigenes
+Repository; ein leerer Wert (`GITHUB_REPO=`) schaltet Banner und
+Feedback-Formular ab.
 
 Ist sie gesetzt, fragt der Server stündlich das neueste Release über die
 GitHub-API ab und blendet bei einer neueren Version oben ein Banner ein. Unter

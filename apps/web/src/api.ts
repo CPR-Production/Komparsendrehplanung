@@ -112,6 +112,16 @@ export interface UpdateStatus {
   releaseUrl: string | null;
   publishedAt: string | null;
   checkFailed: boolean;
+  // Ob der Server sich selbst austauschen kann. Im Docker- und Dev-Betrieb
+  // nicht — dort bleibt es beim Link auf die Releases-Seite.
+  canSelfUpdate: boolean;
+  selfUpdateReason: "container" | "notPackaged" | "readOnly" | null;
+}
+
+export interface UpdateProgress {
+  phase: "idle" | "downloading" | "verifying" | "installing" | "restarting" | "failed";
+  version: string | null;
+  error: string | null;
 }
 
 export interface VersionInfo {
@@ -122,6 +132,8 @@ export interface VersionInfo {
 export const api = {
   getVersion: () => request<VersionInfo>("GET", "/version"),
   getUpdateStatus: () => request<UpdateStatus>("GET", "/update/status"),
+  getUpdateProgress: () => request<UpdateProgress>("GET", "/update/progress"),
+  startUpdate: () => request<UpdateProgress>("POST", "/update/start"),
 
   listProjects: () => request<Project[]>("GET", "/projects"),
   getProject: (id: string) => request<Project>("GET", `/projects/${id}`),

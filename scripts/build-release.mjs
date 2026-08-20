@@ -136,4 +136,21 @@ cpSync(join(repoRoot, "apps/server/src/db/migrations"), join(payloadDir, "migrat
   recursive: true,
 });
 
+// --- Nutzlast-Archiv für das Selbst-Update -------------------------------
+
+// Das Update lädt bewusst nicht den Installer nach: aus einem DMG, einem
+// Inno-Setup und einem tar.gz zu aktualisieren wären drei Mechanismen. Mit
+// diesem Archiv ist es überall derselbe Weg — entpacken und austauschen.
+// Der Name trägt Plattform und Architektur so, wie Node sie meldet, damit der
+// Updater ihn ohne Übersetzungstabelle bilden kann.
+step("Nutzlast-Archiv für Selbst-Updates");
+const distDir = join(repoRoot, "build", "release", "dist");
+mkdirSync(distDir, { recursive: true });
+const archiveName = `payload-${version}-${process.platform}-${process.arch}.tar.gz`;
+run("tar", ["-czf", join(distDir, archiveName), "-C", payloadDir, "."], {
+  // Ohne das legt das tar von macOS zu jeder Datei eine ._-Beidatei ins Archiv.
+  env: { ...process.env, COPYFILE_DISABLE: "1" },
+});
+
 console.log(`\n✓ Nutzlast ${version} für ${process.platform}-${process.arch} in ${payloadDir}`);
+console.log(`✓ Archiv ${archiveName}`);

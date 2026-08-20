@@ -162,6 +162,21 @@ Lokal probieren: `npm run build:release` (optional `--version=1.2.3`), dann
 testweise ein Projekt an — nur ein Schreibvorgang beweist, dass die Migrationen
 durchliefen.
 
+### Selbst-Update
+
+`services/updater.ts` tauscht die Nutzlast im laufenden Betrieb aus. Es lädt
+dafür nicht den Installer nach, sondern das `payload-`-Archiv desselben
+Releases — sonst wären DMG, Inno-Setup und tar.gz drei Mechanismen.
+
+Der Kern ist eine Reihenfolge, an der man nichts drehen sollte: erst Prüfsumme,
+dann austauschen. Und ausgetauscht wird durch **Umbenennen der laufenden
+Dateien**, nicht durch Überschreiben — Windows lässt eine laufende `.exe` nicht
+überschreiben, wohl aber umbenennen. Schlägt ein Schritt fehl, dreht `swapIn`
+das bereits Bewegte zurück; halb getauscht liefe gar nicht mehr.
+
+`GITHUB_API_BASE` biegt Update-Check und Updater auf eine andere Adresse um —
+gedacht für GitHub Enterprise, brauchbar, um den Ablauf lokal durchzuspielen.
+
 ## Offene Referenz: „Architektur-Plan"
 
 `docs/self-hosting.md` verweist auf einen Architektur-Plan mit Phasen (dort

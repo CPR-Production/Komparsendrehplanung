@@ -25,6 +25,17 @@ function resolveVersion(): string {
 
 export const APP_VERSION = resolveVersion();
 
-// "owner/repo". Drives both the update check and the feedback issue links —
-// empty means the app simply hides both features rather than guessing a repo.
-export const GITHUB_REPO = process.env.GITHUB_REPO ?? "";
+// "owner/repo". Drives both the update check and the feedback issue links.
+// Vorbelegt mit dem Repository des Projekts, damit beides in jeder Installation
+// ohne Konfiguration funktioniert — im Dev-Betrieb, im Container und in der
+// gepackten Binary gleichermaßen, die gar keine Umgebung mitbekommt. Ein Fork
+// setzt die Variable auf sein eigenes Repository, ein leerer Wert schaltet
+// Banner und Feedback-Formular ab.
+export const GITHUB_REPO = process.env.GITHUB_REPO ?? "CPR-Production/Komparsendrehplanung";
+
+// Überschreibbar für GitHub-Enterprise-Installationen und für den Prüflauf des
+// Updaters gegen eine lokale Nachbildung.
+export const GITHUB_API_BASE = (process.env.GITHUB_API_BASE ?? "https://api.github.com").replace(
+  /\/$/,
+  "",
+);

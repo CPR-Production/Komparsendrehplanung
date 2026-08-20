@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { runMigrations } from "./db/client.js";
 import { isPackaged, webDistDir } from "./paths.js";
+import { cleanUpAfterUpdate, registerServer } from "./services/updater.js";
 import { categoriesRouter } from "./routes/categories.js";
 import { categoryGroupsRouter } from "./routes/categoryGroups.js";
 import { changesRouter } from "./routes/changes.js";
@@ -14,6 +15,10 @@ import { scenesRouter } from "./routes/scenes.js";
 import { setLocationsRouter } from "./routes/setLocations.js";
 import { setsRouter } from "./routes/sets.js";
 import { updatesRouter } from "./routes/updates.js";
+
+// Vor den Migrationen: Reste eines vorangegangenen Updates liegen noch im
+// Programmverzeichnis, weil Windows die alte .exe erst mit dem Prozess freigibt.
+cleanUpAfterUpdate();
 
 runMigrations();
 
@@ -57,8 +62,11 @@ function openBrowser(url: string) {
 }
 
 const port = Number(process.env.PORT ?? 3001);
-app.listen(port, () => {
+const server = app.listen(port, () => {
   const url = `http://localhost:${port}`;
   console.log(`Server listening on ${url}`);
   openBrowser(url);
 });
+
+// Der Updater schließt den Listener selbst, bevor er den Nachfolger startet.
+registerServer(server);
