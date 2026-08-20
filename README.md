@@ -113,6 +113,5 @@ Installation**. Beides setzt voraus, dass das Repository öffentlich ist.
 
 ## Lizenz
 
-Bislang ist keine Lizenz festgelegt. Ohne Lizenzangabe gilt das volle
-Urheberrecht — andere dürfen den Code weder nutzen noch verändern oder
-weitergeben, auch wenn das Repository öffentlich einsehbar ist.
+[MIT](LICENSE) — nutzen, ändern und weitergeben ist erlaubt, auch kommerziell,
+solange der Copyright-Hinweis erhalten bleibt.
