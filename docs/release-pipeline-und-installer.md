@@ -22,6 +22,9 @@ Der erste Befehl fasst auch die `package-lock.json` an; sie gehört mit in
 denselben Commit, sonst scheitert das `npm ci` im Workflow. Das `-a` oben nimmt
 sie mit.
 
+Für eine Vorabversion entfällt der Versionssprung, solange der Kern schon
+stimmt: `v1.2.0-rc1` passt zu einer `package.json` auf `1.2.0`.
+
 **Der Versionssprung im ersten Befehl ist nicht optional.** Der Docker-Weg
 stempelt keine Version ein, sondern liest sie aus `apps/server/package.json`.
 Steht die auf einem älteren Stand, meldet jede Docker-Installation dauerhaft
@@ -68,6 +71,8 @@ entsteht — es lässt sich nicht kreuzweise bauen.
 3. **Tag setzen und pushen.** Schema `v<major>.<minor>.<patch>`, also `v1.2.0`.
    Ein Tag mit Suffix — `v1.2.0-rc1` — wird als Vorabversion veröffentlicht und
    löst bei niemandem das Update-Banner aus. Gut zum Ausprobieren der Pipeline.
+   Die `package.json` bleibt dabei auf dem Kern `1.2.0` stehen; die Sperre
+   vergleicht nur den Kern, den Suffix trägt allein der Tag.
 4. **Den Lauf beobachten** unter *Actions → Release*. Vier Build-Jobs laufen
    parallel, danach der Veröffentlichungs-Job.
 5. **Ergebnis prüfen** auf der Releases-Seite: vier Pakete plus

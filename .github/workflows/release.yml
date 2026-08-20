@@ -51,11 +51,16 @@ jobs:
       - name: Version gegen die package.json prüfen
         shell: bash
         run: |
+          # Verglichen wird nur der Kern der Version: Eine Vorabversion trägt
+          # denselben Kern wie das Release, das aus ihr wird — v0.2.0-rc1 gehört
+          # zu package.json 0.2.0. Die dort auf "0.2.0-rc1" zu ziehen wäre
+          # Ballast, der gleich wieder zurückmüsste.
+          core="${VERSION%%-*}"
           for file in package.json apps/server/package.json; do
             declared="$(node -p "require('./$file').version")"
-            if [ "$declared" != "$VERSION" ]; then
-              echo "::error::$file steht auf $declared, der Tag lautet v$VERSION."
-              echo "Vor dem Tag beide Dateien auf $VERSION ziehen (siehe docs/release-pipeline-und-installer.md)."
+            if [ "$declared" != "$core" ]; then
+              echo "::error::$file steht auf $declared, der Tag lautet v$VERSION — erwartet wird $core."
+              echo "Vor dem Tag beide Dateien auf $core ziehen (siehe docs/release-pipeline-und-installer.md)."
               exit 1
             fi
           done

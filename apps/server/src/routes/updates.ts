@@ -32,17 +32,35 @@ const CACHE_TTL_MS = 60 * 60 * 1000;
 let cached: { at: number; status: CachedStatus } | null = null;
 
 // Compares "1.10.0" above "1.9.0" — a plain string compare gets that wrong.
-// Anything non-numeric (pre-release suffixes) is ignored for ordering.
+// Der Suffix einer Vorabversion zählt dabei mit: Wer eine 0.2.0-rc1 laufen
+// hat, soll erfahren, dass 0.2.0 erschienen ist. Ohne diese Unterscheidung
+// gälten beide als gleich und das Banner bliebe genau bei den Testern aus,
+// für die die Vorabversion gedacht war.
 function compareVersions(a: string, b: string): number {
-  const parse = (v: string) => v.replace(/^v/, "").split(/[.\-+]/).map(Number);
+  const parse = (value: string) => {
+    // Baumetadaten (+sha) spielen für die Reihenfolge keine Rolle.
+    const clean = value.replace(/^v/, "").split("+")[0];
+    const dash = clean.indexOf("-");
+    return {
+      core: (dash === -1 ? clean : clean.slice(0, dash)).split(".").map(Number),
+      pre: dash === -1 ? "" : clean.slice(dash + 1),
+    };
+  };
   const left = parse(a);
   const right = parse(b);
-  for (let i = 0; i < Math.max(left.length, right.length); i++) {
-    const l = Number.isFinite(left[i]) ? left[i] : 0;
-    const r = Number.isFinite(right[i]) ? right[i] : 0;
+
+  for (let i = 0; i < Math.max(left.core.length, right.core.length); i++) {
+    const l = Number.isFinite(left.core[i]) ? left.core[i] : 0;
+    const r = Number.isFinite(right.core[i]) ? right.core[i] : 0;
     if (l !== r) return l > r ? 1 : -1;
   }
-  return 0;
+
+  // Gleicher Kern: die fertige Version steht über der Vorabversion.
+  if (left.pre && !right.pre) return -1;
+  if (!left.pre && right.pre) return 1;
+  // Zwei Vorabversionen desselben Kerns nach Text — reicht für rc1 vor rc2 und
+  // ist die einzige Stelle, an der die Ordnung nicht exakt semver folgt.
+  return left.pre === right.pre ? 0 : left.pre > right.pre ? 1 : -1;
 }
 
 type CachedStatus = Omit<UpdateStatus, "canSelfUpdate" | "selfUpdateReason">;
