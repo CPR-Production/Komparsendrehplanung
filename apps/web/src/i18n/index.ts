@@ -21,6 +21,19 @@ const resources = {
       "project.create.submit": "Projekt anlegen",
       "settings.title": "Einstellungen",
       "settings.categories": "Kategorien",
+      "settings.group.name": "Gruppenname",
+      "settings.group.delete": "Gruppe löschen",
+      "settings.group.newPlaceholder": "Neue Kategorie-Gruppe (z. B. Drivers)",
+      "settings.group.add": "+ Gruppe",
+      "settings.group.confirmDelete":
+        "Gruppe „{{name}}“ mit allen ihren Kategorien löschen? Die dafür im Drehplan eingetragenen Zahlen gehen mit verloren.",
+      "settings.category.name": "Kategoriename",
+      "settings.category.delete": "Kategorie löschen",
+      "settings.category.newPlaceholder": "Neue Kategorie",
+      "settings.category.add": "+ Kategorie",
+      "settings.category.confirmDelete":
+        "Kategorie „{{name}}“ löschen? Die dafür im Drehplan eingetragenen Zahlen gehen mit verloren.",
+      "settings.category.empty": "Noch keine Kategorien in dieser Gruppe.",
     },
   },
   en: {
@@ -38,6 +51,19 @@ const resources = {
       "project.create.submit": "Create project",
       "settings.title": "Settings",
       "settings.categories": "Categories",
+      "settings.group.name": "Group name",
+      "settings.group.delete": "Delete group",
+      "settings.group.newPlaceholder": "New category group (e.g. Drivers)",
+      "settings.group.add": "+ Group",
+      "settings.group.confirmDelete":
+        "Delete group “{{name}}” and all its categories? The numbers entered for them in the schedule will go with it.",
+      "settings.category.name": "Category name",
+      "settings.category.delete": "Delete category",
+      "settings.category.newPlaceholder": "New category",
+      "settings.category.add": "+ Category",
+      "settings.category.confirmDelete":
+        "Delete category “{{name}}”? The numbers entered for it in the schedule will go with it.",
+      "settings.category.empty": "No categories in this group yet.",
     },
   },
 };

@@ -59,39 +59,64 @@ export function SettingsPage() {
     onSuccess: invalidate,
   });
 
+  // Both deletions cascade into role_category_count, so a stray click wipes the
+  // numbers entered for that category across the whole project's schedule. The
+  // × is a far smaller target than the old "Gruppe löschen" button, so the
+  // consequence gets spelled out before it happens.
+  const confirmDeleteGroup = (id: string, name: string) => {
+    if (window.confirm(t("settings.group.confirmDelete", { name }))) {
+      deleteGroupMutation.mutate(id);
+    }
+  };
+
+  const confirmDeleteCategory = (id: string, name: string) => {
+    if (window.confirm(t("settings.category.confirmDelete", { name }))) {
+      deleteCategoryMutation.mutate(id);
+    }
+  };
+
   if (!projectId) return null;
 
   return (
-    <main className="container py-3" style={{ maxWidth: 700 }}>
+    <main className="container py-4" style={{ maxWidth: 760 }}>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Link to={`/projects/${projectId}`}>&larr; {t("nav.backToSchedule")}</Link>
         <LanguageSwitcher />
       </div>
-      <h1 className="h3">{t("settings.title")}</h1>
+      <h1 className="h3 mb-4">{t("settings.title")}</h1>
 
-      <h2 className="h5">{t("settings.categories")}</h2>
-      {groupsQuery.data?.map((group) => (
-        <fieldset key={group.id} style={{ marginBottom: "1rem" }}>
-          <legend>
-            <input
-              defaultValue={group.name}
-              onBlur={(e) => {
-                if (e.target.value !== group.name) {
-                  renameGroupMutation.mutate({ id: group.id, name: e.target.value });
-                }
-              }}
-            />
-            <button type="button" onClick={() => deleteGroupMutation.mutate(group.id)}>
-              Gruppe löschen
-            </button>
-          </legend>
+      <h2 className="h5 mb-3">{t("settings.categories")}</h2>
+      {groupsQuery.data?.map((group) => {
+        const groupCategories = categoriesQuery.data?.filter((c) => c.categoryGroupId === group.id) ?? [];
+        return (
+          <div key={group.id} className="card mb-3">
+            <div className="card-header d-flex align-items-center gap-2">
+              <input
+                className="form-control form-control-sm fw-semibold"
+                aria-label={t("settings.group.name")}
+                defaultValue={group.name}
+                onBlur={(e) => {
+                  if (e.target.value !== group.name) {
+                    renameGroupMutation.mutate({ id: group.id, name: e.target.value });
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="row-delete"
+                title={t("settings.group.delete")}
+                onClick={() => confirmDeleteGroup(group.id, group.name)}
+              >
+                &times;
+              </button>
+            </div>
 
-          <ul>
-            {categoriesQuery.data
-              ?.filter((c) => c.categoryGroupId === group.id)
-              .map((category) => (
-                <li key={category.id} style={{ display: "flex", gap: "0.5rem", marginBottom: "0.25rem" }}>
+            <ul className="list-group list-group-flush">
+              {groupCategories.map((category) => (
+                <li key={category.id} className="list-group-item d-flex align-items-center gap-2">
                   <input
+                    className="form-control form-control-sm"
+                    aria-label={t("settings.category.name")}
                     defaultValue={category.name}
                     onBlur={(e) => {
                       if (e.target.value !== category.name) {
@@ -99,46 +124,79 @@ export function SettingsPage() {
                       }
                     }}
                   />
-                  <button type="button" onClick={() => deleteCategoryMutation.mutate(category.id)}>
+                  <button
+                    type="button"
+                    className="row-delete"
+                    title={t("settings.category.delete")}
+                    onClick={() => confirmDeleteCategory(category.id, category.name)}
+                  >
                     &times;
                   </button>
                 </li>
               ))}
-          </ul>
+              {groupCategories.length === 0 && (
+                <li className="list-group-item text-body-secondary small">
+                  {t("settings.category.empty")}
+                </li>
+              )}
+            </ul>
 
-          <input
-            placeholder="Neue Kategorie"
-            value={newCategoryNameByGroup[group.id] ?? ""}
-            onChange={(e) =>
-              setNewCategoryNameByGroup((prev) => ({ ...prev, [group.id]: e.target.value }))
-            }
-          />
-          <button
-            type="button"
-            onClick={() => {
-              const name = newCategoryNameByGroup[group.id]?.trim();
-              if (name) createCategoryMutation.mutate({ groupId: group.id, name });
+            {/* A form, not a bare button, so Enter submits — same as the project
+                create form on the list page. */}
+            <div className="card-footer">
+              <form
+                className="d-flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const name = newCategoryNameByGroup[group.id]?.trim();
+                  if (name) createCategoryMutation.mutate({ groupId: group.id, name });
+                }}
+              >
+                <input
+                  className="form-control form-control-sm"
+                  placeholder={t("settings.category.newPlaceholder")}
+                  value={newCategoryNameByGroup[group.id] ?? ""}
+                  onChange={(e) =>
+                    setNewCategoryNameByGroup((prev) => ({ ...prev, [group.id]: e.target.value }))
+                  }
+                />
+                <button
+                  type="submit"
+                  className="btn btn-sm btn-outline-secondary text-nowrap"
+                  disabled={!newCategoryNameByGroup[group.id]?.trim()}
+                >
+                  {t("settings.category.add")}
+                </button>
+              </form>
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="card">
+        <div className="card-body">
+          <form
+            className="d-flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (newGroupName.trim()) createGroupMutation.mutate(newGroupName.trim());
             }}
           >
-            + Kategorie
-          </button>
-        </fieldset>
-      ))}
-
-      <div style={{ display: "flex", gap: "0.5rem" }}>
-        <input
-          placeholder="Neue Kategorie-Gruppe (z. B. Drivers)"
-          value={newGroupName}
-          onChange={(e) => setNewGroupName(e.target.value)}
-        />
-        <button
-          type="button"
-          onClick={() => {
-            if (newGroupName.trim()) createGroupMutation.mutate(newGroupName.trim());
-          }}
-        >
-          + Gruppe
-        </button>
+            <input
+              className="form-control form-control-sm"
+              placeholder={t("settings.group.newPlaceholder")}
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="btn btn-sm btn-primary text-nowrap"
+              disabled={!newGroupName.trim()}
+            >
+              {t("settings.group.add")}
+            </button>
+          </form>
+        </div>
       </div>
     </main>
   );

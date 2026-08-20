@@ -169,39 +169,6 @@
   color: #333;
 }
 
-/* The single delete affordance across the grid — Set-Name, Scene, Role and
-   Wechsel rows all use it, so × always looks and behaves the same. Sized as a
-   fixed square rather than by its glyph so it lines up next to inputs of any
-   height. Disabled on a Scene that still holds Roles. */
-.row-delete {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 1.6rem;
-  height: 1.6rem;
-  border: 1px solid transparent;
-  background: transparent;
-  color: #a11;
-  border-radius: 3px;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0;
-  cursor: pointer;
-}
-
-.row-delete:hover:not(:disabled) {
-  background: #a11;
-  border-color: #a11;
-  color: #fff;
-}
-
-.row-delete:disabled {
-  color: #999;
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 .scene-cell-tools,
 .role-total-cell {
   display: flex;

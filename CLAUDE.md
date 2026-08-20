@@ -65,8 +65,10 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Total/Scene | Fuzz
   Set (orange) > Scene (gelb) > Role (grün) > Count (blau).
 - Bootstrap liest Zellhintergründe über `--bs-table-bg`. Deshalb **diese Variable
   setzen**, statt mit höherer Spezifität gegen `background-color` anzukämpfen.
-- Löschen im Grid ist einheitlich `.row-delete` (rotes ×, festes Quadrat) — für
-  Set-Name, Szene, Rolle und Wechsel. Nicht durch `btn btn-outline-*` ersetzen.
+- Löschen ist app-weit einheitlich `.row-delete` (rotes ×, festes Quadrat) — im
+  Grid für Set-Name, Szene, Rolle und Wechsel, in den Settings für Gruppe und
+  Kategorie. Die Regel steht in `controls.css`, **nicht** in `schedule-colors.css`,
+  weil sie nicht mehr grid-spezifisch ist. Nicht durch `btn btn-outline-*` ersetzen.
 - Der sticky `<thead>` versetzt sich um `--app-header-height`; der Wert kommt aus
   `APP_HEADER_HEIGHT` in `ProjectSchedulePage`. Beide müssen übereinstimmen.
 
@@ -86,7 +88,7 @@ keine ganze Besetzungsliste mitnehmen.
 redeploy-freie, editierbare Übersetzungen — die `translation`-Tabelle steht im
 Schema bereits bereit.
 
-Abgedeckt ist nur die App-Hülle (Nav, Projektliste, Settings-Überschriften).
+Abgedeckt ist die App-Hülle (Nav, Projektliste, Settings-Seite komplett).
 **Das Drehplan-Grid trägt weiterhin fest verdrahtete deutsche Labels**
 („Synopsis", „+ Rolle", „+ Szene", „+ Wechsel", „Total Shoots", „Summe neu",
 „neu"/„wdh.", Tooltips). Wer das Grid übersetzen will, zieht diese Strings nach
@@ -107,11 +109,27 @@ Seiten sind unterschiedlich weit:
 | `ScheduleTable` | weitgehend umgestellt (form-control-sm, btn-group, d-flex) + eigenes CSS |
 | `ProjectSchedulePage` Header | umgestellt; Höhe/Sticky bleiben inline (Kopplung an `--app-header-height`) |
 | `ScheduleTableHead` | inline `width`-Styles je Spalte — bewusst, steuert das feste Tabellenraster |
-| `SettingsPage` | **offen** — rohe `fieldset`/`legend`/`ul`, ungestylte native `input`/`button` |
+| `SettingsPage` | umgestellt (card + list-group je Gruppe, `form-control`/`btn`, `.row-delete`) |
 | `SetSection` | reine Logik, kein Markup |
 
-Nächster sinnvoller Schritt wäre `SettingsPage` (Karten/Listengruppen statt
-`fieldset`, `form-control`/`btn`, `.row-delete` für die ×-Buttons).
+Damit ist die Umstellung durch. Übrig sind nur noch bewusste Inline-Styles:
+die Spaltenbreiten in `ScheduleTableHead` und Höhe/Sticky des App-Headers.
+
+### Löschen mit Kaskade
+
+`DELETE` auf Kategorie-Gruppe oder Kategorie kaskadiert bis in
+`role_category_count` — die im Drehplan eingetragenen Zahlen verschwinden also
+mit. Beide Buttons in `SettingsPage` fragen deshalb per `window.confirm` nach
+und benennen die Folge. Wer dort etwas umbaut, darf die Rückfrage nicht
+wegoptimieren.
+
+## Offene Referenz: „Architektur-Plan"
+
+`docs/self-hosting.md` verweist auf einen Architektur-Plan mit Phasen (dort
+Phase 6 = Backup-Job), `i18n/index.ts` auf Phase 5 (DB-gestützte Übersetzungen).
+**Dieses Dokument liegt nicht im Repo** und war auch nie eingecheckt. Wer die
+Phasen kennt, sollte es ablegen — bis dahin sind die beiden Verweise ins Leere
+gerichtet und die Phasennummern nicht überprüfbar.
 
 ## Konventionen
 
