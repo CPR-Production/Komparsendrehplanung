@@ -2,7 +2,6 @@ import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { accessSync, constants, existsSync, mkdirSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { APP_VERSION, GITHUB_API_BASE, GITHUB_REPO } from "../config.js";
@@ -60,6 +59,10 @@ export function updateCapability(): UpdateCapability {
   }
   return { supported: true, reason: null };
 }
+
+// Liegt innerhalb des Programmverzeichnisses, weil das Austauschen über
+// renameSync läuft — über Dateisystemgrenzen hinweg scheitert das.
+const STAGING_DIR = ".update-staging";
 
 // Denselben Namen bildet scripts/build-release.mjs beim Verpacken.
 function archiveName(version: string): string {
@@ -142,7 +145,7 @@ export function cleanUpAfterUpdate() {
     for (const name of readdirSync(appDir)) {
       if (name.endsWith(".old")) rmSync(join(appDir, name), { recursive: true, force: true });
     }
-    rmSync(join(appDir, ".update-staging"), { recursive: true, force: true });
+    rmSync(join(appDir, STAGING_DIR), { recursive: true, force: true });
   } catch (error) {
     // Kein Grund, den Start abzubrechen — beim nächsten Mal klappt es.
     console.warn("Aufräumen nach Update unvollständig:", error instanceof Error ? error.message : error);
@@ -173,7 +176,7 @@ export async function startUpdate(): Promise<void> {
   }
 
   progress = { phase: "downloading", version: null, error: null };
-  const staging = join(appDir, ".update-staging");
+  const staging = join(appDir, STAGING_DIR);
 
   try {
     const release = await fetchLatestRelease();
@@ -199,9 +202,13 @@ export async function startUpdate(): Promise<void> {
     // über renameSync läuft — über Dateisystemgrenzen hinweg scheitert das.
     rmSync(staging, { recursive: true, force: true });
     mkdirSync(staging, { recursive: true });
-    const archivePath = join(tmpdir(), wanted);
+    // Beide Pfade relativ zum Programmverzeichnis: Liegt unter Windows eine
+    // GNU tar im Pfad (Git for Windows bringt eine mit), liest sie ein
+    // "C:\..." als host:path im rsh-Stil und scheitert. Ein
+    // Laufwerksbuchstabe darf im Argument also nicht vorkommen.
+    const archivePath = join(appDir, wanted);
     writeFileSync(archivePath, archive);
-    await execFileAsync("tar", ["-xzf", archivePath, "-C", staging]);
+    await execFileAsync("tar", ["-xzf", wanted, "-C", STAGING_DIR], { cwd: appDir });
     rmSync(archivePath, { force: true });
 
     swapIn(staging);

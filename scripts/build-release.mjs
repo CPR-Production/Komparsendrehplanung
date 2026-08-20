@@ -155,7 +155,12 @@ step("Nutzlast-Archiv für Selbst-Updates");
 const distDir = join(repoRoot, "build", "release", "dist");
 mkdirSync(distDir, { recursive: true });
 const archiveName = `payload-${version}-${process.platform}-${process.arch}.tar.gz`;
-run("tar", ["-czf", join(distDir, archiveName), "-C", payloadDir, "."], {
+// Nur relative Pfade, und zwar mit Schrägstrich: Die GNU tar, die unter
+// Windows über Git im Pfad liegt, liest ein "D:\..." als host:path im
+// rsh-Stil und versucht, sich zu einem Rechner namens D zu verbinden. Ein
+// Laufwerksbuchstabe darf hier also gar nicht erst auftauchen.
+run("tar", ["-czf", `../dist/${archiveName}`, "."], {
+  cwd: payloadDir,
   // Ohne das legt das tar von macOS zu jeder Datei eine ._-Beidatei ins Archiv.
   env: { ...process.env, COPYFILE_DISABLE: "1" },
 });
