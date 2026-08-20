@@ -34,6 +34,32 @@ const resources = {
       "settings.category.confirmDelete":
         "Kategorie „{{name}}“ löschen? Die dafür im Drehplan eingetragenen Zahlen gehen mit verloren.",
       "settings.category.empty": "Noch keine Kategorien in dieser Gruppe.",
+      "nav.backToProjects": "Zurück zu den Projekten",
+      "nav.help": "Hilfe & Feedback",
+      "update.available": "Version {{version}} ist verfügbar (installiert: {{current}}).",
+      "update.action": "Update ansehen",
+      "update.dismiss": "Später",
+      "help.title": "Hilfe & Feedback",
+      "help.intro":
+        "Feedback läuft über die Issues des Projekts auf GitHub. Das Formular bereitet die Meldung vor und öffnet sie auf GitHub — abgeschickt wird sie erst dort von dir, unter deinem eigenen Konto.",
+      "help.noRepo":
+        "Für diese Installation ist kein GitHub-Repository hinterlegt. Ohne die Einstellung GITHUB_REPO gibt es kein Ziel für Meldungen.",
+      "help.kindLabel": "Art der Meldung",
+      "help.kind.bug": "Fehler",
+      "help.kind.idea": "Idee oder Wunsch",
+      "help.kind.question": "Frage",
+      "help.titleLabel": "Titel",
+      "help.titlePlaceholder": "Kurz in einem Satz",
+      "help.descriptionLabel": "Beschreibung",
+      "help.descriptionPlaceholder":
+        "Was hast du gemacht, was ist passiert, was hättest du erwartet?",
+      "help.attachedLabel": "Wird mit angehängt",
+      "help.attachedHint":
+        "Ein GitHub-Issue ist öffentlich sichtbar. Auf GitHub kannst du alles noch ändern, bevor du absendest.",
+      "help.submit": "Auf GitHub melden",
+      "help.submitHint": "Öffnet GitHub mit vorausgefülltem Formular.",
+      "help.browseIssues": "Bereits gemeldete Punkte ansehen",
+      "help.version": "Installierte Version: {{version}}",
     },
   },
   en: {
@@ -64,6 +90,31 @@ const resources = {
       "settings.category.confirmDelete":
         "Delete category “{{name}}”? The numbers entered for it in the schedule will go with it.",
       "settings.category.empty": "No categories in this group yet.",
+      "nav.backToProjects": "Back to projects",
+      "nav.help": "Help & feedback",
+      "update.available": "Version {{version}} is available (installed: {{current}}).",
+      "update.action": "View update",
+      "update.dismiss": "Later",
+      "help.title": "Help & feedback",
+      "help.intro":
+        "Feedback goes through the project's GitHub issues. This form prepares the report and opens it on GitHub — you submit it there yourself, under your own account.",
+      "help.noRepo":
+        "No GitHub repository is configured for this installation. Without the GITHUB_REPO setting there is nowhere to send reports.",
+      "help.kindLabel": "Type of report",
+      "help.kind.bug": "Bug",
+      "help.kind.idea": "Idea or request",
+      "help.kind.question": "Question",
+      "help.titleLabel": "Title",
+      "help.titlePlaceholder": "One short sentence",
+      "help.descriptionLabel": "Description",
+      "help.descriptionPlaceholder": "What did you do, what happened, what did you expect?",
+      "help.attachedLabel": "Attached to the report",
+      "help.attachedHint":
+        "A GitHub issue is publicly visible. You can still edit everything on GitHub before submitting.",
+      "help.submit": "Report on GitHub",
+      "help.submitHint": "Opens GitHub with the form prefilled.",
+      "help.browseIssues": "Browse reports already filed",
+      "help.version": "Installed version: {{version}}",
     },
   },
 };

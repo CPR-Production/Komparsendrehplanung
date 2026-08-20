@@ -102,7 +102,27 @@ export interface FullProject extends Project {
   sets: FullSet[];
 }
 
+export interface UpdateStatus {
+  // False when no GITHUB_REPO is configured on the server — the UI then hides
+  // the update banner and the feedback links instead of guessing a repo.
+  configured: boolean;
+  current: string;
+  latest: string | null;
+  updateAvailable: boolean;
+  releaseUrl: string | null;
+  publishedAt: string | null;
+  checkFailed: boolean;
+}
+
+export interface VersionInfo {
+  version: string;
+  repo: string | null;
+}
+
 export const api = {
+  getVersion: () => request<VersionInfo>("GET", "/version"),
+  getUpdateStatus: () => request<UpdateStatus>("GET", "/update/status"),
+
   listProjects: () => request<Project[]>("GET", "/projects"),
   getProject: (id: string) => request<Project>("GET", `/projects/${id}`),
   getFullProject: (id: string) => request<FullProject>("GET", `/projects/${id}/full`),

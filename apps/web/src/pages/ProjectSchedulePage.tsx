@@ -110,6 +110,9 @@ export function ProjectSchedulePage() {
           >
             {t("nav.addSet")}
           </button>
+          <Link to="/help" className="btn btn-sm btn-outline-secondary" title={t("nav.help")}>
+            ?
+          </Link>
           <Link
             to={`/projects/${projectId}/settings`}
             className="btn btn-sm btn-outline-secondary"

@@ -59,7 +59,12 @@ export function ProjectListPage() {
     <main className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h3 mb-0">{t("project.list.title")}</h1>
-        <LanguageSwitcher />
+        <div className="d-flex align-items-center gap-2">
+          <LanguageSwitcher />
+          <Link to="/help" className="btn btn-sm btn-outline-secondary">
+            {t("nav.help")}
+          </Link>
+        </div>
       </div>
 
       <form

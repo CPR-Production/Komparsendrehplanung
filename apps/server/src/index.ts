@@ -12,6 +12,7 @@ import { rolesRouter } from "./routes/roles.js";
 import { scenesRouter } from "./routes/scenes.js";
 import { setLocationsRouter } from "./routes/setLocations.js";
 import { setsRouter } from "./routes/sets.js";
+import { updatesRouter } from "./routes/updates.js";
 
 runMigrations();
 
@@ -31,6 +32,7 @@ app.use("/api", setLocationsRouter);
 app.use("/api", scenesRouter);
 app.use("/api", rolesRouter);
 app.use("/api", changesRouter);
+app.use("/api", updatesRouter);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const webDist = join(__dirname, "../../web/dist");
