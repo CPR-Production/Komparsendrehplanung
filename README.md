@@ -96,6 +96,8 @@ Details, Update- und Backup-Hinweise stehen in
 
 ## Entwicklung
 
+Was als Nächstes ansteht, sammelt [docs/backlog.md](docs/backlog.md).
+
 Node 20 oder neuer.
 
 ```bash

@@ -1,0 +1,166 @@
+# Offene Punkte und Ideen
+
+Gesammelt am 21.08.2026 beim Durchklicken von 0.2.3. Reihenfolge ist keine
+Priorität. Jeder Punkt nennt, was heute da ist, damit man später nicht erst
+wieder suchen muss.
+
+Vorbild ist durchgehend **Fuzzle** — die Software, die im Betrieb schon benutzt
+wird. Wo hier „Fuzzle macht das so" steht, ist das ein Soll, kein Vorschlag.
+
+---
+
+## 1. Farben aus Fuzzle übernehmen, samt Einstellungen
+
+**Heute:** Die Farbhierarchie steht fest verdrahtet in
+`apps/web/src/schedule-colors.css` — Set `#f4c896`, Szene `#fff176`, Rolle
+`#a5c882`, Anzahl `#5b9bd5`. Sie bildet die Excel-Vorlage nach und ist nicht
+einstellbar.
+
+**Soll:** Fuzzle färbt nicht nach Hierarchie, sondern **nach Inhalt der Szene**,
+und lässt den Nutzer die Zuordnung selbst festlegen. Einstellbar sind dort zwei
+Dinge getrennt: **Background Color** und **Text Color**.
+
+Vorgabewerte, an denen wir uns ausrichten sollen:
+
+| Zustand | Hintergrund |
+| --- | --- |
+| aktuell ausgewählt | rot |
+| Int/Night | hellblau |
+| Ext/Day | gelb |
+| Ext/Night | dunkelblau |
+| Int+Ext/Night | dunkleres blau |
+| … | weitere folgen |
+
+**Damit fallen die heutigen Entwicklungsfarben weg.** Das ist der Punkt, an dem
+die Anlehnung an die Excel-Vorlage endet — wer `schedule-colors.css` anfasst,
+sollte vorher hier hereinsehen.
+
+Hängt zusammen mit Punkt 7: „Int+Ext/Night" setzt voraus, dass eine Szene
+gleichzeitig Int **und** Ext sein kann.
+
+**Offen:** Farben pro Projekt oder global? Die Kategorien liegen pro Projekt,
+die Farben würden dazu passen — dann braucht es aber eine Tabelle statt CSS.
+
+## 2. Export nach CSV, Excel und JSON
+
+**Heute:** Gar nicht vorhanden. Der Drehplan lebt nur in der Oberfläche und in
+der SQLite-Datei.
+
+**Soll:** Ein Export je Projekt. JSON als vollständige Abbildung (auch für
+Sicherungen und für einen späteren Import), CSV und Excel als das, was man
+weitergibt.
+
+**Offen:** Exportiert wird der Drehplan wie er auf dem Bildschirm steht, also
+mit Kategorie-Spalten je Projekt — die Spaltenköpfe sind damit pro Projekt
+verschieden. Für Excel wäre die Farbgebung aus Punkt 1 mitzunehmen.
+
+## 3. Sperre gegen versehentliche Änderungen
+
+**Heute:** Jedes Feld im Grid ist immer schreibbar, Änderungen laufen sofort
+über `useDebouncedSave` in die Datenbank.
+
+**Soll:** Ein Schloss-Knopf in der Navigationsleiste, der zwischen Ansehen und
+Bearbeiten umschaltet. Wer den Plan nur liest, soll nicht aus Versehen etwas
+verstellen.
+
+**Offen:** Nur Oberfläche oder auch serverseitig? Für den Zweck („nicht aus
+Versehen") reicht die Oberfläche.
+
+## 4. Versionsnummer in der Navigationsleiste
+
+**Heute:** Die Version liefert `/api/version`, angezeigt wird sie nur im
+Update-Banner, wenn es eines gibt.
+
+**Soll:** Dauerhaft sichtbar in der Navigationsleiste. Bei Rückfragen aus dem
+Betrieb ist das die erste Frage.
+
+## 5. Total Shoots steht doppelt da
+
+**Heute:** Zweimal dieselbe Zahl im Set-Kopf:
+
+- `grid/ScheduleTable.tsx:182` — `Total Shoots: {totalShoots}` als Fließtext
+  rechts in der Kopfzeile
+- `grid/ScheduleTable.tsx:223` — die Zeile „Summe neu" mit derselben Summe,
+  aufgeschlüsselt nach Kategorie-Spalten
+
+Dazu direkt daneben „Locations aus Szenen", ebenfalls als Fließtext.
+
+**Soll:** Eine Darstellung, nicht zwei. Die spaltenbündige Zeile ist die
+nützlichere — sie steht unter ihren Kategorie-Köpfen. Zu klären ist, ob die
+Gesamtsumme im Kopf ganz verschwindet oder die Zeile ersetzt.
+
+## 6. Spaltenbreiten sollen dem Inhalt folgen
+
+**Heute:** `grid/ScheduleTableHead.tsx` setzt je Spalte eine feste Breite als
+Inline-Style. Das ist bewusst so (siehe CLAUDE.md) und hält das Raster über
+alle Sets hinweg gleich — alle Sets teilen sich **eine** Tabelle.
+
+**Soll:** Breiten nach Inhalt statt gleichmäßig.
+
+**Achtung, das ist ein Zielkonflikt:** Sobald Breiten am Inhalt hängen, driften
+die Sets auseinander, wenn nicht alle dieselbe Tabelle bleiben. Entweder man
+misst über alle Sets hinweg und setzt das Ergebnis fest, oder man gibt das
+gemeinsame Raster auf. Vor der Umsetzung entscheiden.
+
+## 7. Int und Ext gleichzeitig, und mehr als Tag/Nacht
+
+**Heute:** Zwei Umschaltgruppen mit je zwei sich ausschließenden Werten
+(`ScheduleTable.tsx:44-51`): Intern/Extern und Tag/Nacht. In der Datenbank sind
+das zwei Textspalten, `scene.int_ext` und `scene.day_night`.
+
+**Soll:** Fuzzle kennt Kombinationen — die Farbtabelle in Punkt 1 nennt
+ausdrücklich **Int+Ext/Night**. Und die Tageszeit hat dort mehr Stufen als
+zwei: im Screenshot stehen **Morn**, **Day**, **Eve** und **Night**.
+
+Zwei Wege für die Bedienung wurden genannt: Umschaltung mit gedrückter
+Umschalttaste mehrfach auswählbar machen, oder schlicht Auswahlkästchen statt
+Umschaltung. Kästchen sind erklärungsfrei — Umschalttaste weiß niemand, dem man
+es nicht sagt.
+
+**Offen:** Datenmodell. Zwei Textspalten reichen für Kombinationen nicht sauber.
+
+## 8. Location je Szene soll die Sets des Drehtags anbieten
+
+**Heute:** Das Feld ist ein Freitext mit `datalist`
+(`SCENE_LOCATIONS_DATALIST_ID`), gefüllt aus den Werten, die in diesem Projekt
+schon eingetippt wurden — nicht aus den Sets.
+
+**Soll:** Die Auswahl soll die **Sets** des Drehtags anbieten. Ein Set ist der
+Ort; die Szene wählt einen davon aus, statt ihn neu zu tippen.
+
+Räumt nebenbei den doppelten „Locations aus Szenen"-Text aus Punkt 5 ab: Wenn
+die Szene auf ein Set zeigt, muss der Kopf sie nicht mehr einsammeln.
+
+## 9. Set trägt Namen und Adresse
+
+**Heute:** In der Datenbank vorhanden — `shoot_set_location` hat `name` und
+`address`, und die Oberfläche zeigt beide Felder im Set-Kopf (Platzhalter
+„Set-Name 1"). Fehlt also nicht, ist aber begrifflich unklar: Die Tabelle heißt
+`setLocations`, die Szene hat daneben ein eigenes Feld `location`, und beide
+heißen im Text „Location".
+
+**Soll:** Begriffe geraderücken. Ein **Set** hat einen Namen und eine Adresse;
+die Szene zeigt auf ein Set. Zusammen mit Punkt 8 zu machen — getrennt bringt
+es nichts.
+
+## 10. Übersetzung greift nicht überall
+
+**Heute:** Übersetzt ist die App-Hülle: Navigation, Projektliste und die
+Einstellungsseite. **Das Drehplan-Grid trägt fest verdrahtete deutsche Labels** —
+„Synopsis", „+ Rolle", „+ Szene", „+ Wechsel", „Total Shoots", „Summe neu",
+„neu"/„wdh." und die Tooltips.
+
+**Soll:** Diese Strings nach `apps/web/src/i18n/index.ts` ziehen, dann greift
+der Umschalter überall.
+
+Steht so schon in CLAUDE.md; hier nur, damit es nicht zwischen den anderen
+Punkten untergeht.
+
+## 11. Einstellungsseite um Farben erweitern
+
+Die Oberfläche zu Punkt 1: In den Einstellungen sollen Hintergrund- und
+Textfarbe je Zustand einstellbar sein, mit den Fuzzle-Werten als Vorgabe.
+
+Die Einstellungsseite ist bereits umgestellt (Karte plus Listengruppe je
+Gruppe) und hat mit den Kategorie-Gruppen ein Muster, an dem sich ein
+Farbabschnitt orientieren kann.
