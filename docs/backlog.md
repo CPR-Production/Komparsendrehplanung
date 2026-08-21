@@ -44,8 +44,20 @@ Int/Day bis Int+Ext/Eve. Diese Liste ist damit zugleich die Zeilenliste der
 Farbeinstellung. Solange es die Zustände nicht gibt, gibt es auch nichts zu
 färben.
 
-**Offen:** Farben pro Projekt oder global? Die Kategorien liegen pro Projekt,
-die Farben würden dazu passen — dann braucht es aber eine Tabelle statt CSS.
+**Erledigt.** Die fünfzehn Zustände stehen in `packages/shared`, die Farben pro
+Projekt in `scene_color` — die offene Frage ist damit zugunsten „pro Projekt"
+entschieden, passend zu den Kategorien. Gespeichert wird nur, was von der
+Vorgabe abweicht; zurücksetzen löscht die Zeile, statt den Vorgabewert
+hineinzuschreiben. Hintergrund und Text sind getrennt einstellbar.
+
+**Eingefärbt werden nur die Szenenzellen.** Set, Rolle und Anzahl behalten ihre
+Hierarchiefarben — für sie nennt dieser Punkt keinen Zustand, aus dem sich eine
+Farbe ergäbe. Das Szenen-Gelb greift nur noch, solange eine Szene weder In/Ex
+noch Tageszeit gesetzt hat.
+
+**Nicht dabei: „aktuell ausgewählt = rot".** Eine Szenenauswahl gibt es im Grid
+nicht, und eine Einstellung, die nichts färbt, wäre eine Attrappe. Der Zustand
+kommt wieder, sobald es eine Auswahl gibt.
 
 ## 2. Export nach CSV, Excel und JSON ([#6](https://github.com/CPR-Production/Komparsendrehplanung/issues/6))
 
@@ -206,3 +218,12 @@ Textfarbe je Zustand einstellbar sein, mit den Fuzzle-Werten als Vorgabe.
 Die Einstellungsseite ist bereits umgestellt (Karte plus Listengruppe je
 Gruppe) und hat mit den Kategorie-Gruppen ein Muster, an dem sich ein
 Farbabschnitt orientieren kann.
+
+**Erledigt, zusammen mit Punkt 1.** Der Abschnitt folgt genau diesem Muster:
+je eine Karte für Int, Ex und Int+Ex, darin fünf Zeilen. Jede Zeile zeigt sich
+in ihren eigenen beiden Farben — die einzige ehrliche Vorschau — und trägt zwei
+Farbwähler und einen Knopf zurück auf die Vorgabe.
+
+**Kein zusätzlicher Eintrag in der Navigation.** Die Seite hat jetzt zwei
+Themen und bekommt Sprungmarken an den Kopf; die Abschnitte gehören zu den
+Einstellungen, nicht neben Drehplan und Projekte.

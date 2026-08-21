@@ -45,6 +45,17 @@ export interface CategoryGroup {
   sortOrder: number;
 }
 
+export interface SceneColor {
+  stateKey: string;
+  intExt: string[];
+  timeOfDay: string;
+  backgroundColor: string;
+  textColor: string;
+  // False while the state still follows the default from @komparsen/shared —
+  // the settings page only offers "reset" for the ones a project has changed.
+  isCustom: boolean;
+}
+
 export interface RoleCategoryCount {
   id: string;
   roleId: string;
@@ -169,6 +180,19 @@ export const api = {
   updateCategory: (categoryId: string, name: string) =>
     request<Category>("PATCH", `/categories/${categoryId}`, { name }),
   deleteCategory: (categoryId: string) => request<void>("DELETE", `/categories/${categoryId}`),
+
+  listSceneColors: (projectId: string) =>
+    request<SceneColor[]>("GET", `/projects/${projectId}/scene-colors`),
+  setSceneColor: (projectId: string, stateKey: string, colors: { backgroundColor: string; textColor: string }) =>
+    request<SceneColor>(
+      "PUT",
+      `/projects/${projectId}/scene-colors/${encodeURIComponent(stateKey)}`,
+      colors,
+    ),
+  resetSceneColor: (projectId: string, stateKey: string) =>
+    request<void>("DELETE", `/projects/${projectId}/scene-colors/${encodeURIComponent(stateKey)}`),
+  resetAllSceneColors: (projectId: string) =>
+    request<void>("DELETE", `/projects/${projectId}/scene-colors`),
 
   createScene: (setId: string, data: Partial<SceneRow>) =>
     request<SceneRow>("POST", `/sets/${setId}/scenes`, data),

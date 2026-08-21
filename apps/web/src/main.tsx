@@ -6,6 +6,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./controls.css";
 import "./project-list.css";
 import "./schedule-colors.css";
+import "./settings.css";
 import "./i18n/index.js";
 import { UpdateBanner } from "./components/UpdateBanner.js";
 import { HelpPage } from "./pages/HelpPage.js";

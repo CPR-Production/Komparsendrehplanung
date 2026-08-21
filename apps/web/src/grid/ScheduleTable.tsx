@@ -1,6 +1,22 @@
-import { calcSceneTotal } from "@komparsen/shared";
-import { Fragment, type HTMLAttributes, type TdHTMLAttributes } from "react";
-import type { Category, ChangeRow, RoleRow, SceneRow, SetLocation, ShootSet } from "../api.js";
+import {
+  calcSceneTotal,
+  formatIntExt,
+  type IntExt,
+  isDarkColor,
+  parseIntExt,
+  sceneColorKey,
+  type TimeOfDay,
+} from "@komparsen/shared";
+import { Fragment, type CSSProperties, type HTMLAttributes, type TdHTMLAttributes } from "react";
+import type {
+  Category,
+  ChangeRow,
+  RoleRow,
+  SceneColor,
+  SceneRow,
+  SetLocation,
+  ShootSet,
+} from "../api.js";
 import {
   COLUMNS_BEFORE_ROLE_NAME,
   groupCategories,
@@ -16,6 +32,7 @@ interface ScheduleTableProps {
   scenes: SceneRow[];
   changes: ChangeRow[];
   categories: Category[];
+  sceneColors: SceneColor[];
   totalShoots: number;
   newCountsByCategory: Map<string, number>;
   setDragHandleProps: HTMLAttributes<HTMLSpanElement>;
@@ -41,7 +58,7 @@ interface ScheduleTableProps {
   onRemoveChange: (changeId: string) => void;
 }
 
-const INT_EXT_OPTIONS = [
+const INT_EXT_OPTIONS: { value: IntExt; label: string }[] = [
   { value: "intern", label: "Intern" },
   { value: "extern", label: "Extern" },
 ];
@@ -50,7 +67,7 @@ const INT_EXT_OPTIONS = [
    course of a day, because the planned digit shortcuts number the entries in
    exactly that order. "Dim" stays untranslated: „halb dunkel" is too long for
    the column and does not shorten well. */
-const TIME_OF_DAY_OPTIONS = [
+const TIME_OF_DAY_OPTIONS: { value: TimeOfDay; label: string }[] = [
   { value: "tag", label: "Tag" },
   { value: "nacht", label: "Nacht" },
   { value: "morgen", label: "Morgen" },
@@ -60,40 +77,33 @@ const TIME_OF_DAY_OPTIONS = [
 
 /* Intern and Extern do not exclude each other — a Scene can start inside and
    end outside, and the reference plan uses that combination. Both values go
-   into the existing `scene.int_ext` text column, separated by ";", so no new
-   column and no migration are needed. */
-const INT_EXT_SEPARATOR = ";";
+   into the existing `scene.int_ext` text column, separated by ";".
 
-function parseIntExt(value: string | null): string[] {
-  return (value ?? "")
-    .split(INT_EXT_SEPARATOR)
-    .map((part) => part.trim())
-    .filter(Boolean);
-}
-
-function toggleIntExt(value: string | null, option: string): string {
+   The format itself lives in @komparsen/shared, next to the colour key that has
+   to read a Scene's state from exactly the same string. */
+function toggleIntExt(value: string | null, option: IntExt): string {
   const selected = parseIntExt(value);
   const next = selected.includes(option)
     ? selected.filter((entry) => entry !== option)
     : [...selected, option];
 
-  // Order follows the option list, not the clicking order, so the stored value
-  // stays "intern;extern" no matter which box was ticked first.
-  return INT_EXT_OPTIONS.filter((o) => next.includes(o.value))
-    .map((o) => o.value)
-    .join(INT_EXT_SEPARATOR);
+  // formatIntExt orders by the shared value list, so the stored value stays
+  // "intern;extern" no matter which box was ticked first.
+  return formatIntExt(next);
 }
 
-function CheckboxGroup({
+// Generic over the option value so the caller keeps its narrow value type —
+// otherwise the toggle handler would hand a bare string back to toggleIntExt.
+function CheckboxGroup<T extends string>({
   name,
   selected,
   options,
   onToggle,
 }: {
   name: string;
-  selected: string[];
-  options: { value: string; label: string }[];
-  onToggle: (value: string) => void;
+  selected: readonly T[];
+  options: { value: T; label: string }[];
+  onToggle: (value: T) => void;
 }) {
   return (
     <div className="btn-group btn-group-sm" role="group">
@@ -142,6 +152,7 @@ export function ScheduleTable({
   scenes,
   changes,
   categories,
+  sceneColors,
   totalShoots,
   newCountsByCategory,
   setDragHandleProps,
@@ -169,6 +180,7 @@ export function ScheduleTable({
   const groups = groupCategories(categories);
   const totalColumns = totalColumnCount(categories);
   const sceneLocations = distinctSceneLocations(scenes);
+  const colorByState = new Map(sceneColors.map((color) => [color.stateKey, color]));
 
   // Drehzeit is derived, not entered directly on the Set: "Von" comes from the
   // first Scene's Script Time, "Bis" from the last Scene's own end time (the
@@ -290,7 +302,29 @@ export function ScheduleTable({
         // Every rowSpan'd Scene cell accepts the drop, so the drop zone is the
         // whole Scene block rather than just the drag handle glyph.
         const dropProps = getSceneDropProps(scene.id);
-        const sceneCellClass = `cell-scene${draggedSceneId === scene.id ? " is-dragging" : ""}`;
+        // Coloured by what the Scene shows, not by where it sits in the
+        // hierarchy. Bootstrap reads the cell background from --bs-table-bg, so
+        // that is what gets set. A Scene without In/Ex or a time of day has no
+        // state yet and keeps the neutral Scene colour from the stylesheet.
+        const stateColor = colorByState.get(sceneColorKey(scene.intExt, scene.dayNight) ?? "");
+        const sceneCellStyle = stateColor
+          ? ({
+              "--bs-table-bg": stateColor.backgroundColor,
+              color: stateColor.textColor,
+            } as CSSProperties)
+          : undefined;
+        // The controls inside the cell carry fixed colours of their own — a red
+        // ×, a grey handle, dark button outlines — and a dark background
+        // swallows all three. Only then do they give way to the cell's text
+        // colour: on a light state the red still reads, and losing it would
+        // weaken the one delete affordance the app has.
+        const sceneCellClass = [
+          "cell-scene",
+          draggedSceneId === scene.id ? "is-dragging" : "",
+          stateColor && isDarkColor(stateColor.backgroundColor) ? "has-dark-state" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
 
         return (
           <Fragment key={scene.id}>
@@ -298,6 +332,7 @@ export function ScheduleTable({
               <td
                 colSpan={totalColumns}
                 className={`${sceneCellClass} cell-synopsis`}
+                style={sceneCellStyle}
                 {...dropProps}
               >
                 <span className="cell-synopsis-label">Synopsis</span>
@@ -315,7 +350,12 @@ export function ScheduleTable({
                 <tr key={role?.id ?? `${scene.id}-row-${rowIndex}`}>
                   {rowIndex === 0 && (
                     <>
-                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
+                      <td
+                        rowSpan={sceneRowSpan}
+                        className={sceneCellClass}
+                        style={sceneCellStyle}
+                        {...dropProps}
+                      >
                         <div className="scene-cell-tools">
                           <span
                             className="drag-handle"
@@ -346,7 +386,12 @@ export function ScheduleTable({
                       </td>
                       {/* Intern/Extern and the time of day share one column,
                           stacked with In/Ex on top. */}
-                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
+                      <td
+                        rowSpan={sceneRowSpan}
+                        className={sceneCellClass}
+                        style={sceneCellStyle}
+                        {...dropProps}
+                      >
                         <div className="scene-flags">
                           <CheckboxGroup
                             name={`intExt-${scene.id}`}
@@ -377,7 +422,12 @@ export function ScheduleTable({
                       </td>
                       {/* Von and Bis share one column; Bis only applies to the
                           last Scene, which is what closes out the shooting day. */}
-                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
+                      <td
+                        rowSpan={sceneRowSpan}
+                        className={sceneCellClass}
+                        style={sceneCellStyle}
+                        {...dropProps}
+                      >
                         <div className="scene-time-range">
                           <input
                             type="time"
@@ -398,7 +448,12 @@ export function ScheduleTable({
                           )}
                         </div>
                       </td>
-                      <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
+                      <td
+                        rowSpan={sceneRowSpan}
+                        className={sceneCellClass}
+                        style={sceneCellStyle}
+                        {...dropProps}
+                      >
                         <input
                           list={SCENE_LOCATIONS_DATALIST_ID}
                           value={scene.location ?? ""}

@@ -31,6 +31,11 @@ export function ProjectSchedulePage() {
     queryFn: () => api.listCategories(projectId!),
     enabled: !!projectId,
   });
+  const sceneColorsQuery = useQuery({
+    queryKey: ["sceneColors", projectId],
+    queryFn: () => api.listSceneColors(projectId!),
+    enabled: !!projectId,
+  });
   const sceneLocationsQuery = useQuery({
     queryKey: ["sceneLocations", projectId],
     queryFn: () => api.listProjectSceneLocations(projectId!),
@@ -140,6 +145,7 @@ export function ProjectSchedulePage() {
               projectId={projectId}
               setId={set.id}
               categories={categoriesQuery.data ?? []}
+              sceneColors={sceneColorsQuery.data ?? []}
               setDragHandleProps={getSetDragHandleProps(set.id)}
               setDropProps={getSetDropProps(set.id)}
             />

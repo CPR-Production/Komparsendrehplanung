@@ -162,6 +162,30 @@ export const changeLinks = sqliteTable("change_link", {
     .references(() => roleAssignments.id, { onDelete: "cascade" }),
 });
 
+/* Only the states a project has actually changed are stored; everything else
+   falls back to the defaults in @komparsen/shared. That way existing projects
+   need no backfill, and a later change to the defaults still reaches everyone
+   who never touched them. */
+export const sceneColors = sqliteTable(
+  "scene_color",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    stateKey: text("state_key").notNull(),
+    backgroundColor: text("background_color").notNull(),
+    textColor: text("text_color").notNull(),
+    ...timestamps(),
+  },
+  (table) => ({
+    projectStateUnique: uniqueIndex("scene_color_project_state_unique").on(
+      table.projectId,
+      table.stateKey,
+    ),
+  }),
+);
+
 export const translations = sqliteTable(
   "translation",
   {

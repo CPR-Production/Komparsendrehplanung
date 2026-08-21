@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import { LanguageSwitcher } from "../components/LanguageSwitcher.js";
+import { SceneColorSettings } from "./SceneColorSettings.js";
 
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -83,9 +84,23 @@ export function SettingsPage() {
         <Link to={`/projects/${projectId}`}>&larr; {t("nav.backToSchedule")}</Link>
         <LanguageSwitcher />
       </div>
-      <h1 className="h3 mb-4">{t("settings.title")}</h1>
+      <h1 className="h3 mb-3">{t("settings.title")}</h1>
 
-      <h2 className="h5 mb-3">{t("settings.categories")}</h2>
+      {/* The page carries more than one topic now. Plain anchors rather than a
+          second entry in the app nav — these belong to the settings, not next
+          to Drehplan and Projekte. */}
+      <nav className="nav nav-pills gap-2 mb-4" aria-label={t("settings.sections")}>
+        <a className="nav-link py-1 px-3 border" href="#kategorien">
+          {t("settings.categories")}
+        </a>
+        <a className="nav-link py-1 px-3 border" href="#farben">
+          {t("settings.colors")}
+        </a>
+      </nav>
+
+      <h2 id="kategorien" className="h5 mb-3 settings-section-anchor">
+        {t("settings.categories")}
+      </h2>
       {groupsQuery.data?.map((group) => {
         const groupCategories = categoriesQuery.data?.filter((c) => c.categoryGroupId === group.id) ?? [];
         return (
@@ -198,6 +213,11 @@ export function SettingsPage() {
           </form>
         </div>
       </div>
+
+      <h2 id="farben" className="h5 mb-3 mt-5 settings-section-anchor">
+        {t("settings.colors")}
+      </h2>
+      <SceneColorSettings projectId={projectId} />
     </main>
   );
 }

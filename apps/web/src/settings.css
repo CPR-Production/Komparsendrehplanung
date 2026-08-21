@@ -1,0 +1,26 @@
+/* The preview carries the row's own background and text colour together, which
+   is the only honest way to judge a pairing — a swatch the size of a checkbox
+   shows the background but says nothing about whether the text still reads. */
+.scene-color-preview {
+  flex: 0 0 auto;
+  min-width: 9rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  font-size: 0.85rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.scene-color-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+/* Anchored headings sit flush against the top of the viewport after a jump
+   otherwise, which reads as if the section above it were missing. */
+.settings-section-anchor {
+  scroll-margin-top: 1rem;
+}

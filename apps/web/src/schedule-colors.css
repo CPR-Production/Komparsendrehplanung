@@ -42,6 +42,9 @@
   background: transparent;
   border: 1px solid transparent;
   width: 100%;
+  /* The Scene's text colour is set on the cell; form fields do not inherit a
+     colour on their own and would fall back to the browser default. */
+  color: inherit;
 }
 
 .schedule-table td input:focus,
@@ -50,6 +53,16 @@
   background: #fff;
   border-color: #666;
   outline: none;
+  /* The focused field turns white, so a light inherited text colour would
+     vanish on it. Dark is the only pairing that holds for every Scene colour. */
+  color: #212529;
+}
+
+/* The dropdown is drawn outside the cell on some platforms and inherits from it
+   on others — spelling both out keeps the list readable either way. */
+.schedule-table td select option {
+  background: #fff;
+  color: #212529;
 }
 
 .cell-synopsis {
@@ -117,6 +130,23 @@
   padding-right: 0.25rem;
 }
 
+/* A Scene coloured by its state can be anything from white to night blue, and
+   the controls in the cell carry fixed colours that were chosen against the old
+   yellow: the red delete ×, the grey drag handle, the dark button outlines. On a
+   dark background all three disappear, so there they take the cell's own text
+   colour, which was picked to read on it — the red still arrives on hover, where
+   the button paints its own background. Light states keep the red, and Scenes
+   with no state set look exactly as they did before. */
+.cell-scene.has-dark-state .drag-handle,
+.cell-scene.has-dark-state .row-delete:not(:disabled) {
+  color: inherit;
+}
+
+.cell-scene.has-dark-state .scene-flags .btn-check:not(:checked) + .btn {
+  color: inherit;
+  border-color: currentColor;
+}
+
 /* Von and Bis sit side by side in the merged Script Time column. The native
    picker indicator is hidden so two time inputs plus the dash fit the width. */
 .scene-time-range {
@@ -136,7 +166,7 @@
 }
 
 .scene-time-separator {
-  color: #333;
+  color: inherit;
 }
 
 /* Needs to outrank the `.schedule-table td input { width: 100% }` rule above. */

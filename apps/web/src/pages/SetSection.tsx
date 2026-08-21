@@ -2,7 +2,15 @@ import { calcSetNewCountsByCategory, calcSetTotalShoots } from "@komparsen/share
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { HTMLAttributes, TdHTMLAttributes } from "react";
 import { useEffect, useRef, useState } from "react";
-import { api, type Category, type ChangeRow, type SceneRow, type SetLocation, type ShootSet } from "../api.js";
+import {
+  api,
+  type Category,
+  type ChangeRow,
+  type SceneColor,
+  type SceneRow,
+  type SetLocation,
+  type ShootSet,
+} from "../api.js";
 import { moveBefore, SCENE_DRAG_TYPE } from "../dragReorder.js";
 import { ScheduleTable } from "../grid/ScheduleTable.js";
 import { useDebouncedSave } from "../useDebouncedSave.js";
@@ -11,6 +19,7 @@ interface SetSectionProps {
   projectId: string;
   setId: string;
   categories: Category[];
+  sceneColors: SceneColor[];
   setDragHandleProps: HTMLAttributes<HTMLSpanElement>;
   setDropProps: TdHTMLAttributes<HTMLTableCellElement>;
 }
@@ -19,6 +28,7 @@ export function SetSection({
   projectId,
   setId,
   categories,
+  sceneColors,
   setDragHandleProps,
   setDropProps,
 }: SetSectionProps) {
@@ -300,6 +310,7 @@ export function SetSection({
       scenes={scenes}
       changes={changes}
       categories={categories}
+      sceneColors={sceneColors}
       totalShoots={totalShoots}
       newCountsByCategory={newCountsByCategory}
       setDragHandleProps={setDragHandleProps}

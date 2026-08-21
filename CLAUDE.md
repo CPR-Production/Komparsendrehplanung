@@ -34,8 +34,10 @@ Der wichtigste fachliche Punkt: **`isNew` entscheidet, ob ein Slot zählt.**
 - `calcSetNewCountsByCategory` — dieselbe „nur neu"-Regel, aber pro Kategorie
   aufgeschlüsselt; speist die Summenzeile im Set-Header
 
-Diese drei sind die einzige Stelle mit Tests. Bei Änderungen an der Zähllogik
-immer `npm run test --workspace packages/shared` laufen lassen.
+Bei Änderungen an der Zähllogik immer
+`npm run test --workspace packages/shared` laufen lassen. Getestet ist dort
+außerdem `sceneColors.ts` (siehe „Szenenfarben"); `packages/shared` bleibt der
+einzige Ort mit Tests.
 
 ## Grid-Layout
 
@@ -78,10 +80,50 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Total/Scene | Fuzz
   den jeweiligen Kategorie-Spalten, Gesamtsumme in Total. Bewusst spaltenbündig
   statt als Fließtext, damit sie unter ihrem Kategorie- und Gruppen-Header steht.
 
+### Szenenfarben
+
+Eine Szene wird **nach ihrem Zustand** eingefärbt, nicht nach ihrer Stelle in der
+Hierarchie: Int, Ex oder beides, mal fünf Tageszeiten — fünfzehn Zustände. Set,
+Rolle und Anzahl behalten ihre Hierarchiefarben, weil es für sie keinen Zustand
+gibt, aus dem sich etwas ableiten ließe.
+
+`packages/shared/src/sceneColors.ts` ist die einzige Liste. Sie muss geteilt
+sein: der Server prüft gegen sie, die Einstellungsseite zeigt sie als Zeilen,
+das Grid schlägt darin nach. Dort liegen auch `parseIntExt`/`formatIntExt` —
+das `;`-Format von `scene.int_ext` gehört neben `sceneColorKey`, weil beide
+den Zustand aus demselben String lesen.
+
+Vier Kopplungen:
+
+- **Gespeichert wird nur, was abweicht.** `scene_color` (pro Projekt) hält
+  ausschließlich geänderte Zustände, `GET` legt sie über die Vorgaben aus dem
+  Code. Deshalb brauchte kein Bestandsprojekt eine Nachbefüllung, und eine
+  spätere Änderung an den Vorgaben erreicht alle, die nichts angefasst haben.
+  **Zurücksetzen ist ein `DELETE`, kein Schreiben des Vorgabewerts** — sonst
+  würde der Zustand den Vorgaben nicht mehr folgen.
+- **Der Zustandsschlüssel ist ein URL-Pfadsegment** (`PUT …/scene-colors/:key`).
+  Er darf deshalb kein `/` enthalten: Int und Ex hängen mit `+` aneinander, die
+  Tageszeit folgt nach `-` (`intern+extern-nacht`). Der Client kodiert ihn
+  zusätzlich.
+- **`--bs-table-bg` per Inline-Style**, wie überall im Grid — die Farbe ist
+  Daten, keine Klasse.
+- **`has-dark-state` ist kein Schönheitsklassen-Name.** Die Bedienelemente in
+  der Zelle tragen feste Farben, die gegen das alte Gelb gewählt waren: rotes
+  ×, grauer Anfasser, dunkle Knopfränder. Auf einem Nachtblau verschwinden alle
+  drei. Nur dort weichen sie der Textfarbe der Zelle; auf hellen Zuständen
+  bleibt das Rot, weil es dort liest und das Löschen sonst sein einziges Signal
+  verlöre. `isDarkColor` entscheidet das.
+
+Die Vorgabepalette nennt die Vorlage nur an vier Stellen; der Rest füllt
+dazwischen auf. **Ein Test in `packages/shared` hält jede Paarung auf WCAG AA**
+— die Farben werden ausgeliefert, bevor sie jemand anfasst.
+
 ### Styling-Konventionen
 
 - Farbhierarchie in `schedule-colors.css`, angelehnt an die Excel-Vorlage:
-  Set (orange) > Scene (gelb) > Role (grün) > Count (blau).
+  Set (orange) > Role (grün) > Count (blau). Das Szenen-Gelb greift nur noch,
+  solange eine Szene weder In/Ex noch Tageszeit gesetzt hat — sonst siehe
+  „Szenenfarben".
 - Bootstrap liest Zellhintergründe über `--bs-table-bg`. Deshalb **diese Variable
   setzen**, statt mit höherer Spezifität gegen `background-color` anzukämpfen.
 - Löschen ist app-weit einheitlich `.row-delete` (rotes ×, festes Quadrat) — im
@@ -128,7 +170,7 @@ Seiten sind unterschiedlich weit:
 | `ScheduleTable` | weitgehend umgestellt (form-control-sm, btn-group, d-flex) + eigenes CSS |
 | `ProjectSchedulePage` Header | umgestellt; Höhe/Sticky bleiben inline (Kopplung an `--app-header-height`) |
 | `ScheduleTableHead` | inline `width`-Styles je Spalte — bewusst, steuert das feste Tabellenraster |
-| `SettingsPage` | umgestellt (card + list-group je Gruppe, `form-control`/`btn`, `.row-delete`) |
+| `SettingsPage` | umgestellt (card + list-group je Gruppe, `form-control`/`btn`, `.row-delete`); trägt jetzt zwei Abschnitte, Kategorien und Farben, über Sprungmarken statt über einen zweiten Nav-Eintrag |
 | `SetSection` | reine Logik, kein Markup |
 
 Damit ist die Umstellung durch. Übrig sind nur noch bewusste Inline-Styles:
