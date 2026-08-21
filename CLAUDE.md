@@ -51,7 +51,26 @@ zusammenlegt, muss diese Konstanten mitziehen** — sonst brechen alle `colSpan`
 
 Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Total/Scene | Fuzzle ID | Name | <Kategorien…> | Total`
 
-- **In/Ex und Tag/Nacht teilen sich eine Spalte** (gestapelt, In/Ex oben) — `.scene-flags`
+- **In/Ex und Tageszeit teilen sich eine Spalte** (gestapelt, In/Ex oben) —
+  `.scene-flags`. Der Spaltenkopf heißt weiterhin „In/Ex · D/N".
+  - **Intern und Extern schließen sich nicht aus**: eine Szene kann drinnen
+    beginnen und draußen enden, deshalb sind es Checkboxen, keine Umschalter.
+    Beide Werte stehen mit `;` getrennt in derselben Textspalte `scene.int_ext`
+    (`"intern;extern"`) — keine neue Spalte, keine Migration. `parseIntExt` und
+    `toggleIntExt` in `ScheduleTable.tsx` sind die einzige Stelle, die das Format
+    kennt; `toggleIntExt` sortiert nach der Optionsliste, damit der gespeicherte
+    Wert nicht von der Klickfolge abhängt.
+  - **Die Tageszeit hat fünf Stufen**, nicht zwei: Tag, Nacht, Morgen, Dim,
+    Abend (`TIME_OF_DAY_OPTIONS`). Fünf sich ausschließende Werte passen nicht
+    mehr als Knopfleiste in die Spalte, deshalb ist es eine Auswahlliste — so
+    macht es die Vorlage ohnehin. **Die Reihenfolge ist die der Vorlage**
+    (Day, Night, Morn, Dim, Eve), nicht der Tagesverlauf, weil die noch
+    ausstehenden Ziffernkürzel aus Issue #11 genau so durchnummerieren. Die
+    Anfangsbuchstaben T, N, M, D, A sind verschieden — damit wählt ein Tastendruck
+    einen Eintrag, was beim Erfassen zählt. **`Dim` bleibt unübersetzt**;
+    „halb dunkel" ist zu lang und lässt sich nicht gut kürzen.
+  - Die Spalte heißt in der Datenbank weiterhin `scene.day_night` — historisch,
+    eine Umbenennung wäre eine Migration ohne Gegenwert.
 - **Script Time** führt Von und Bis in einer Spalte; Bis erscheint nur bei der
   letzten Szene, weil sie den Drehtag abschließt. Die Drehzeit im Set-Header ist
   daraus abgeleitet, kein eigenes Feld.

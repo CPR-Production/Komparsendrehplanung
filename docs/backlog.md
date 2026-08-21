@@ -138,9 +138,28 @@ Eine Kombination trägt einfach mehr davon, mit `;` getrennt, und lässt sich
 wieder auftrennen — `int_ext` = `"Int;Ext"`. Es braucht also weder neue Spalten
 noch eine aufwendige Migration.
 
-**Offen:** Ob die Kombination Int+Ext überhaupt als eigenes Merkmal geführt
-werden muss, ist noch nicht entschieden — vorerst nur aufgenommen. Ebenfalls
-offen: wie **Dim** auf Deutsch heißen soll.
+**Erledigt, aber anders aufgeteilt als beschrieben.** Statt einer einzigen
+Auswahlliste über alle fünfzehn Kombinationen sind es zwei Bedienelemente in
+derselben Spalte:
+
+- **Int+Ext** sind zwei Checkboxen, beide gleichzeitig wählbar. Die Kombination
+  steht in der Vorlagedatei, die offene Frage ist damit entschieden.
+  Gespeichert wird wie beschrieben in `scene.int_ext`, mit `;` verkettet; die
+  Werte bleiben die bestehenden `intern`/`extern`, damit vorhandene Drehpläne
+  ohne Migration weiterlesen.
+- **Die Tageszeit** ist eine Auswahlliste mit den fünf Stufen plus „–": Tag,
+  Nacht, Morgen, Dim, Abend, in der Reihenfolge der Vorlage. **`Dim` bleibt
+  unübersetzt** — „halb dunkel" ist zu lang und lässt sich nicht gut kürzen.
+
+Die Trennung kostet nichts, was die Liste geleistet hätte: Int/Ext und Tageszeit
+sind unabhängig, und die Anfangsbuchstaben T, N, M, D, A wählen je mit einem
+Tastendruck.
+
+**Offen bleibt:** die Ziffernkürzel — deren Nummerierung im Original über die
+Kombination läuft (Int/Day = 0 … Ext/Eve = 9) und sich durch die Aufteilung in
+zwei Bedienelemente nicht mehr eins zu eins übertragen lässt; hier ist zu
+entscheiden, ob die Ziffer künftig nur die Tageszeit meint oder beides zugleich
+setzt. Die Farbliste aus Punkt 1 kann jetzt loslegen: die Zustände gibt es.
 
 ## 8. Location je Szene soll die Sets des Drehtags anbieten ([#12](https://github.com/CPR-Production/Komparsendrehplanung/issues/12))
 

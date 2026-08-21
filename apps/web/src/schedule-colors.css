@@ -98,8 +98,9 @@
   opacity: 0.45;
 }
 
-/* Intern/Extern and Tag/Nacht share one column, stacked. Both groups stretch to
-   the full column width so the four buttons line up as a 2x2 block. */
+/* Intern/Extern and the time of day share one column, stacked: the two
+   checkboxes on top, the list below. Both stretch to the full column width so
+   the two rows end flush. */
 .scene-flags {
   display: flex;
   flex-direction: column;

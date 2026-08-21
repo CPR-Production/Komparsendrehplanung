@@ -45,34 +45,68 @@ const INT_EXT_OPTIONS = [
   { value: "intern", label: "Intern" },
   { value: "extern", label: "Extern" },
 ];
-const DAY_NIGHT_OPTIONS = [
+/* Five stages, not two — the column `scene.day_night` keeps its historic name.
+   Order follows the reference plan (Day, Night, Morn, Dim, Eve) rather than the
+   course of a day, because the planned digit shortcuts number the entries in
+   exactly that order. "Dim" stays untranslated: „halb dunkel" is too long for
+   the column and does not shorten well. */
+const TIME_OF_DAY_OPTIONS = [
   { value: "tag", label: "Tag" },
   { value: "nacht", label: "Nacht" },
+  { value: "morgen", label: "Morgen" },
+  { value: "dim", label: "Dim" },
+  { value: "abend", label: "Abend" },
 ];
 
-function RadioGroup({
+/* Intern and Extern do not exclude each other — a Scene can start inside and
+   end outside, and the reference plan uses that combination. Both values go
+   into the existing `scene.int_ext` text column, separated by ";", so no new
+   column and no migration are needed. */
+const INT_EXT_SEPARATOR = ";";
+
+function parseIntExt(value: string | null): string[] {
+  return (value ?? "")
+    .split(INT_EXT_SEPARATOR)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function toggleIntExt(value: string | null, option: string): string {
+  const selected = parseIntExt(value);
+  const next = selected.includes(option)
+    ? selected.filter((entry) => entry !== option)
+    : [...selected, option];
+
+  // Order follows the option list, not the clicking order, so the stored value
+  // stays "intern;extern" no matter which box was ticked first.
+  return INT_EXT_OPTIONS.filter((o) => next.includes(o.value))
+    .map((o) => o.value)
+    .join(INT_EXT_SEPARATOR);
+}
+
+function CheckboxGroup({
   name,
-  value,
+  selected,
   options,
-  onChange,
+  onToggle,
 }: {
   name: string;
-  value: string | null;
+  selected: string[];
   options: { value: string; label: string }[];
-  onChange: (value: string) => void;
+  onToggle: (value: string) => void;
 }) {
   return (
     <div className="btn-group btn-group-sm" role="group">
       {options.map((option) => (
         <Fragment key={option.value}>
           <input
-            type="radio"
+            type="checkbox"
             className="btn-check"
             autoComplete="off"
             name={name}
             id={`${name}-${option.value}`}
-            checked={value === option.value}
-            onChange={() => onChange(option.value)}
+            checked={selected.includes(option.value)}
+            onChange={() => onToggle(option.value)}
           />
           <label className="btn btn-outline-dark" htmlFor={`${name}-${option.value}`}>
             {option.label}
@@ -310,22 +344,35 @@ export function ScheduleTable({
                           onChange={(e) => onSceneFieldChange(scene.id, "sceneNumber", e.target.value)}
                         />
                       </td>
-                      {/* Intern/Extern and Tag/Nacht share one column, stacked
-                          with In/Ex on top. */}
+                      {/* Intern/Extern and the time of day share one column,
+                          stacked with In/Ex on top. */}
                       <td rowSpan={sceneRowSpan} className={sceneCellClass} {...dropProps}>
                         <div className="scene-flags">
-                          <RadioGroup
+                          <CheckboxGroup
                             name={`intExt-${scene.id}`}
-                            value={scene.intExt}
+                            selected={parseIntExt(scene.intExt)}
                             options={INT_EXT_OPTIONS}
-                            onChange={(value) => onSceneFieldChange(scene.id, "intExt", value)}
+                            onToggle={(value) =>
+                              onSceneFieldChange(scene.id, "intExt", toggleIntExt(scene.intExt, value))
+                            }
                           />
-                          <RadioGroup
-                            name={`dayNight-${scene.id}`}
-                            value={scene.dayNight}
-                            options={DAY_NIGHT_OPTIONS}
-                            onChange={(value) => onSceneFieldChange(scene.id, "dayNight", value)}
-                          />
+                          {/* Five mutually exclusive stages no longer fit the
+                              column as buttons, and a list is what the
+                              reference plan uses. Distinct first letters keep
+                              it fast: T, N, M, D and A each select in one
+                              keystroke. */}
+                          <select
+                            aria-label="Tageszeit"
+                            value={scene.dayNight ?? ""}
+                            onChange={(e) => onSceneFieldChange(scene.id, "dayNight", e.target.value)}
+                          >
+                            <option value="">&ndash;</option>
+                            {TIME_OF_DAY_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </td>
                       {/* Von and Bis share one column; Bis only applies to the
