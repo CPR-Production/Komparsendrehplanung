@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { api, type ShootSet } from "../api.js";
 import { LanguageSwitcher } from "../components/LanguageSwitcher.js";
+import { VersionBadge } from "../components/VersionBadge.js";
 import { moveBefore, SET_DRAG_TYPE } from "../dragReorder.js";
 import { SCENE_LOCATIONS_DATALIST_ID } from "../grid/ScheduleTable.js";
 import { ScheduleTableHead } from "../grid/ScheduleTableHead.js";
@@ -129,6 +130,7 @@ export function ProjectSchedulePage() {
           {projectQuery.data?.name}
         </Link>
         <div className="d-flex align-items-center gap-2">
+          <VersionBadge />
           <LanguageSwitcher />
           <button
             type="button"

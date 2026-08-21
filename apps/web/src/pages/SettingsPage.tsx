@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useParams } from "react-router-dom";
 import { LanguageSwitcher } from "../components/LanguageSwitcher.js";
+import { VersionBadge } from "../components/VersionBadge.js";
 
 /* The shell around the settings sub-pages. One page per topic rather than one
    long page with headings: the sections would run into each other as more
@@ -16,7 +17,10 @@ export function SettingsPage() {
     <main className="container py-4" style={{ maxWidth: 760 }}>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Link to={`/projects/${projectId}`}>&larr; {t("nav.backToSchedule")}</Link>
-        <LanguageSwitcher />
+        <div className="d-flex align-items-center gap-2">
+          <VersionBadge />
+          <LanguageSwitcher />
+        </div>
       </div>
       <h1 className="h3 mb-3">{t("settings.title")}</h1>
 

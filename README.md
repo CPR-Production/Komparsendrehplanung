@@ -26,7 +26,7 @@ Jeder Kategorie-Eintrag ist entweder **neu** oder **wdh.** (wiederverwendet).
 Nur die neuen zählen in die Tagessumme:
 
 - **Total/Scene** summiert alles in einer Szene, unabhängig davon.
-- **Total Shoots** und die Summenzeile im Set-Kopf zählen **nur neue** Einträge —
+- **Die Summenzeile im Set-Kopf** („Summe neu") zählt **nur neue** Einträge —
   eine Komparsin, die an einem Drehtag in einer weiteren Szene nochmal auftritt,
   erhöht den Tagesbedarf nicht.
 

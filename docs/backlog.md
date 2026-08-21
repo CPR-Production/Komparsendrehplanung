@@ -93,6 +93,17 @@ Update-Banner, wenn es eines gibt.
 **Soll:** Dauerhaft sichtbar in der Navigationsleiste. Bei Rückfragen aus dem
 Betrieb ist das die erste Frage.
 
+**Erledigt.** `components/VersionBadge.tsx` steht in der Kopfleiste aller vier
+Seiten — Projektliste, Drehplan, Einstellungen, Hilfe. Es teilt sich den
+Abfrageschlüssel `["version"]` mit der Hilfeseite, die dieselbe Zahl in ihre
+Diagnosedaten schreibt; damit können beide nicht auseinanderlaufen. Die Abfrage
+läuft mit `staleTime: Infinity`, weil der laufende Server seine Version nicht
+wechseln kann: ein Selbst-Update endet damit, dass das Update-Banner die Seite
+neu lädt.
+
+**Vier Stellen, nicht eine**, weil die Seiten sich keine Kopfleiste teilen — der
+gleiche Grund, aus dem auch der `LanguageSwitcher` viermal dasteht.
+
 ## 5. Total Shoots steht doppelt da ([#9](https://github.com/CPR-Production/Komparsendrehplanung/issues/9))
 
 **Heute:** Zweimal dieselbe Zahl im Set-Kopf:
@@ -107,6 +118,18 @@ Dazu direkt daneben „Locations aus Szenen", ebenfalls als Fließtext.
 **Soll:** Eine Darstellung, nicht zwei. Die spaltenbündige Zeile ist die
 nützlichere — sie steht unter ihren Kategorie-Köpfen. Zu klären ist, ob die
 Gesamtsumme im Kopf ganz verschwindet oder die Zeile ersetzt.
+
+**Erledigt: der Fließtext im Kopf ist weg, die Zeile bleibt.** Die offene Frage
+ist damit zugunsten „ganz verschwinden" entschieden — die Zeile trägt dieselbe
+Zahl bereits in der Total-Spalte, es geht also nichts verloren, und der Kopf ist
+die falsche Stelle für eine Zahl, die zu Kategorie-Spalten gehört.
+`calcSetTotalShoots` und die Prop `totalShoots` bleiben, sie speisen jetzt nur
+noch die Zeile.
+
+**Nicht dabei: „Locations aus Szenen".** Der zweite Fließtext daneben hängt an
+Punkt 8 — zeigt die Szene erst auf ein Set, muss der Kopf sie nicht mehr
+einsammeln. Ihn vorher zu entfernen, nähme dem Kopf die einzige Übersicht der
+Drehorte.
 
 ## 6. Spaltenbreiten sollen dem Inhalt folgen ([#10](https://github.com/CPR-Production/Komparsendrehplanung/issues/10))
 
@@ -202,7 +225,7 @@ es nichts.
 
 **Heute:** Übersetzt ist die App-Hülle: Navigation, Projektliste und die
 Einstellungsseite. **Das Drehplan-Grid trägt fest verdrahtete deutsche Labels** —
-„Synopsis", „+ Rolle", „+ Szene", „+ Wechsel", „Total Shoots", „Summe neu",
+„Synopsis", „+ Rolle", „+ Szene", „+ Wechsel", „Summe neu",
 „neu"/„wdh." und die Tooltips.
 
 **Soll:** Diese Strings nach `apps/web/src/i18n/index.ts` ziehen, dann greift

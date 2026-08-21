@@ -79,6 +79,8 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Total/Scene | Fuzz
 - **Summenzeile** direkt unter dem Set-Header: Label in der Name-Spalte, Summen in
   den jeweiligen Kategorie-Spalten, Gesamtsumme in Total. Bewusst spaltenbündig
   statt als Fließtext, damit sie unter ihrem Kategorie- und Gruppen-Header steht.
+  Sie ist die **einzige** Darstellung der Tagessumme; im Set-Kopf stand dieselbe
+  Zahl einmal zusätzlich als „Total Shoots" und ist dort entfallen.
 
 ### Farben
 
@@ -166,12 +168,13 @@ Schema bereits bereit.
 
 Abgedeckt ist die App-Hülle (Nav, Projektliste, Settings-Seite komplett).
 **Das Drehplan-Grid trägt weiterhin fest verdrahtete deutsche Labels**
-(„Synopsis", „+ Rolle", „+ Szene", „+ Wechsel", „Total Shoots", „Summe neu",
+(„Synopsis", „+ Rolle", „+ Szene", „+ Wechsel", „Summe neu",
 „neu"/„wdh.", Tooltips). Wer das Grid übersetzen will, zieht diese Strings nach
 `i18n/index.ts`.
 
 Der `LanguageSwitcher` (`components/LanguageSwitcher.tsx`) steht in der Header-Nav
-aller Seiten; `LANGUAGES` dort ist die einzige Liste, die um ein Locale zu
+aller Seiten, daneben der `VersionBadge` — die Seiten teilen sich keine
+Kopfleiste, eine neue Seite braucht beide also selbst; `LANGUAGES` dort ist die einzige Liste, die um ein Locale zu
 erweitern ist. Die Auswahl liegt in `localStorage` unter `komparsen.language`.
 
 ## Bootstrap-Umstellung — Stand

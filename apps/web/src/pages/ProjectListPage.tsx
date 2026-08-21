@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { api, type Project } from "../api.js";
 import { LanguageSwitcher } from "../components/LanguageSwitcher.js";
+import { VersionBadge } from "../components/VersionBadge.js";
 
 // Up to two initials stand in for cover artwork. Spread rather than charAt so a
 // name starting with an emoji or a surrogate pair doesn't get cut in half.
@@ -60,6 +61,7 @@ export function ProjectListPage() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h3 mb-0">{t("project.list.title")}</h1>
         <div className="d-flex align-items-center gap-2">
+          <VersionBadge />
           <LanguageSwitcher />
           <Link to="/help" className="btn btn-sm btn-outline-secondary">
             {t("nav.help")}

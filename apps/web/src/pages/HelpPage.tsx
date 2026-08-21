@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
 import { LanguageSwitcher } from "../components/LanguageSwitcher.js";
+import { VersionBadge } from "../components/VersionBadge.js";
 
 const FEEDBACK_KINDS = [
   { value: "bug", label: "help.kind.bug", githubLabel: "bug" },
@@ -39,7 +40,10 @@ export function HelpPage() {
     <main className="container py-4" style={{ maxWidth: 760 }}>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Link to="/">&larr; {t("nav.backToProjects")}</Link>
-        <LanguageSwitcher />
+        <div className="d-flex align-items-center gap-2">
+          <VersionBadge />
+          <LanguageSwitcher />
+        </div>
       </div>
       <h1 className="h3 mb-4">{t("help.title")}</h1>
 

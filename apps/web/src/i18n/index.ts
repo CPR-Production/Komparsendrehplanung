@@ -9,6 +9,7 @@ const resources = {
   de: {
     translation: {
       "nav.language": "Sprache",
+      "nav.version": "App-Version {{version}}",
       "nav.addSet": "+ Set",
       "nav.settings": "Einstellungen",
       "nav.backToSchedule": "Zurück zum Drehplan",
@@ -97,6 +98,7 @@ const resources = {
   en: {
     translation: {
       "nav.language": "Language",
+      "nav.version": "App version {{version}}",
       "nav.addSet": "+ Set",
       "nav.settings": "Settings",
       "nav.backToSchedule": "Back to schedule",

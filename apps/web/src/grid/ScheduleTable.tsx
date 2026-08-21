@@ -227,7 +227,6 @@ export function ScheduleTable({
                 <div className="form-text mb-0">Locations aus Szenen</div>
               </div>
             )}
-            <strong className="ms-auto">Total Shoots: {totalShoots}</strong>
           </div>
 
           {locations.map((location, i) => (
