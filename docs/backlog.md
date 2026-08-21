@@ -4,12 +4,15 @@ Gesammelt am 21.08.2026 beim Durchklicken von 0.2.3. Reihenfolge ist keine
 Priorität. Jeder Punkt nennt, was heute da ist, damit man später nicht erst
 wieder suchen muss.
 
+Jeder Punkt hat ein Issue (#5–#15). Die Diskussion gehört dorthin, dieser Text
+bleibt der Überblick.
+
 Vorbild ist durchgehend **Fuzzle** — die Software, die im Betrieb schon benutzt
 wird. Wo hier „Fuzzle macht das so" steht, ist das ein Soll, kein Vorschlag.
 
 ---
 
-## 1. Farben aus Fuzzle übernehmen, samt Einstellungen
+## 1. Farben aus Fuzzle übernehmen, samt Einstellungen ([#5](https://github.com/CPR-Production/Komparsendrehplanung/issues/5))
 
 **Heute:** Die Farbhierarchie steht fest verdrahtet in
 `apps/web/src/schedule-colors.css` — Set `#f4c896`, Szene `#fff176`, Rolle
@@ -41,7 +44,7 @@ gleichzeitig Int **und** Ext sein kann.
 **Offen:** Farben pro Projekt oder global? Die Kategorien liegen pro Projekt,
 die Farben würden dazu passen — dann braucht es aber eine Tabelle statt CSS.
 
-## 2. Export nach CSV, Excel und JSON
+## 2. Export nach CSV, Excel und JSON ([#6](https://github.com/CPR-Production/Komparsendrehplanung/issues/6))
 
 **Heute:** Gar nicht vorhanden. Der Drehplan lebt nur in der Oberfläche und in
 der SQLite-Datei.
@@ -54,7 +57,7 @@ weitergibt.
 mit Kategorie-Spalten je Projekt — die Spaltenköpfe sind damit pro Projekt
 verschieden. Für Excel wäre die Farbgebung aus Punkt 1 mitzunehmen.
 
-## 3. Sperre gegen versehentliche Änderungen
+## 3. Sperre gegen versehentliche Änderungen ([#7](https://github.com/CPR-Production/Komparsendrehplanung/issues/7))
 
 **Heute:** Jedes Feld im Grid ist immer schreibbar, Änderungen laufen sofort
 über `useDebouncedSave` in die Datenbank.
@@ -66,7 +69,7 @@ verstellen.
 **Offen:** Nur Oberfläche oder auch serverseitig? Für den Zweck („nicht aus
 Versehen") reicht die Oberfläche.
 
-## 4. Versionsnummer in der Navigationsleiste
+## 4. Versionsnummer in der Navigationsleiste ([#8](https://github.com/CPR-Production/Komparsendrehplanung/issues/8))
 
 **Heute:** Die Version liefert `/api/version`, angezeigt wird sie nur im
 Update-Banner, wenn es eines gibt.
@@ -74,7 +77,7 @@ Update-Banner, wenn es eines gibt.
 **Soll:** Dauerhaft sichtbar in der Navigationsleiste. Bei Rückfragen aus dem
 Betrieb ist das die erste Frage.
 
-## 5. Total Shoots steht doppelt da
+## 5. Total Shoots steht doppelt da ([#9](https://github.com/CPR-Production/Komparsendrehplanung/issues/9))
 
 **Heute:** Zweimal dieselbe Zahl im Set-Kopf:
 
@@ -89,7 +92,7 @@ Dazu direkt daneben „Locations aus Szenen", ebenfalls als Fließtext.
 nützlichere — sie steht unter ihren Kategorie-Köpfen. Zu klären ist, ob die
 Gesamtsumme im Kopf ganz verschwindet oder die Zeile ersetzt.
 
-## 6. Spaltenbreiten sollen dem Inhalt folgen
+## 6. Spaltenbreiten sollen dem Inhalt folgen ([#10](https://github.com/CPR-Production/Komparsendrehplanung/issues/10))
 
 **Heute:** `grid/ScheduleTableHead.tsx` setzt je Spalte eine feste Breite als
 Inline-Style. Das ist bewusst so (siehe CLAUDE.md) und hält das Raster über
@@ -102,7 +105,7 @@ die Sets auseinander, wenn nicht alle dieselbe Tabelle bleiben. Entweder man
 misst über alle Sets hinweg und setzt das Ergebnis fest, oder man gibt das
 gemeinsame Raster auf. Vor der Umsetzung entscheiden.
 
-## 7. Int und Ext gleichzeitig, und mehr als Tag/Nacht
+## 7. Int und Ext gleichzeitig, und mehr als Tag/Nacht ([#11](https://github.com/CPR-Production/Komparsendrehplanung/issues/11))
 
 **Heute:** Zwei Umschaltgruppen mit je zwei sich ausschließenden Werten
 (`ScheduleTable.tsx:44-51`): Intern/Extern und Tag/Nacht. In der Datenbank sind
@@ -119,7 +122,7 @@ es nicht sagt.
 
 **Offen:** Datenmodell. Zwei Textspalten reichen für Kombinationen nicht sauber.
 
-## 8. Location je Szene soll die Sets des Drehtags anbieten
+## 8. Location je Szene soll die Sets des Drehtags anbieten ([#12](https://github.com/CPR-Production/Komparsendrehplanung/issues/12))
 
 **Heute:** Das Feld ist ein Freitext mit `datalist`
 (`SCENE_LOCATIONS_DATALIST_ID`), gefüllt aus den Werten, die in diesem Projekt
@@ -131,7 +134,7 @@ Ort; die Szene wählt einen davon aus, statt ihn neu zu tippen.
 Räumt nebenbei den doppelten „Locations aus Szenen"-Text aus Punkt 5 ab: Wenn
 die Szene auf ein Set zeigt, muss der Kopf sie nicht mehr einsammeln.
 
-## 9. Set trägt Namen und Adresse
+## 9. Set trägt Namen und Adresse ([#13](https://github.com/CPR-Production/Komparsendrehplanung/issues/13))
 
 **Heute:** In der Datenbank vorhanden — `shoot_set_location` hat `name` und
 `address`, und die Oberfläche zeigt beide Felder im Set-Kopf (Platzhalter
@@ -143,7 +146,7 @@ heißen im Text „Location".
 die Szene zeigt auf ein Set. Zusammen mit Punkt 8 zu machen — getrennt bringt
 es nichts.
 
-## 10. Übersetzung greift nicht überall
+## 10. Übersetzung greift nicht überall ([#14](https://github.com/CPR-Production/Komparsendrehplanung/issues/14))
 
 **Heute:** Übersetzt ist die App-Hülle: Navigation, Projektliste und die
 Einstellungsseite. **Das Drehplan-Grid trägt fest verdrahtete deutsche Labels** —
@@ -156,7 +159,7 @@ der Umschalter überall.
 Steht so schon in CLAUDE.md; hier nur, damit es nicht zwischen den anderen
 Punkten untergeht.
 
-## 11. Einstellungsseite um Farben erweitern
+## 11. Einstellungsseite um Farben erweitern ([#15](https://github.com/CPR-Production/Komparsendrehplanung/issues/15))
 
 Die Oberfläche zu Punkt 1: In den Einstellungen sollen Hintergrund- und
 Textfarbe je Zustand einstellbar sein, mit den Fuzzle-Werten als Vorgabe.
