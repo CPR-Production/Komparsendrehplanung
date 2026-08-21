@@ -61,11 +61,75 @@ function openBrowser(url: string) {
   spawn(command, args, { detached: true, stdio: "ignore" }).on("error", () => {}).unref();
 }
 
+// Aus einem App-Bundle heraus gibt es kein Fenster, in dem eine
+// Konsolenausgabe landen könnte — ohne Dialog verschwände die App wortlos.
+// Einzeilig, weil AppleScript keine Zeilenumbrüche in Zeichenketten kennt.
+function showFailureDialog(message: string) {
+  if (!isPackaged || process.platform !== "darwin") return;
+  const script = `display dialog ${JSON.stringify(message.replace(/\s+/g, " "))} buttons {"OK"} with icon caution with title "Komparsendrehplanung"`;
+  spawn("osascript", ["-e", script], { detached: true, stdio: "ignore" })
+    .on("error", () => {})
+    .unref();
+}
+
+// Antwortet auf dem Port bereits eine Komparsendrehplanung? Gibt deren Version
+// zurück, damit die Meldung sagen kann, welche dort läuft — bei einer
+// Entwicklungsumgebung neben einer Installation ist genau das die Frage.
+async function runningVersionAt(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${url}/api/version`, { signal: AbortSignal.timeout(2000) });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { version?: unknown };
+    return typeof body.version === "string" ? body.version : null;
+  } catch {
+    return null;
+  }
+}
+
+async function reportPortInUse(url: string) {
+  // Der häufige Fall: jemand hat zweimal geklickt. Dann ist das Fenster zur
+  // schon laufenden Instanz die richtige Antwort, nicht eine Fehlermeldung.
+  const running = await runningVersionAt(url);
+  if (running) {
+    console.log(`Komparsendrehplanung ${running} läuft bereits auf ${url} — öffne das Fenster dorthin.`);
+    openBrowser(url);
+    // Kurz Luft, damit der Browser-Aufruf den Prozess noch verlässt.
+    setTimeout(() => process.exit(0), 500);
+    return;
+  }
+
+  const message =
+    `Port ${port} ist von einem anderen Programm belegt, deshalb kann ` +
+    `Komparsendrehplanung nicht starten. Beenden Sie das andere Programm, ` +
+    `oder starten Sie die App mit einem anderen Port (Umgebungsvariable PORT).`;
+  console.error(message);
+  showFailureDialog(message);
+  setTimeout(() => process.exit(1), 500);
+}
+
 const port = Number(process.env.PORT ?? 3001);
+const url = `http://localhost:${port}`;
+
 const server = app.listen(port, () => {
-  const url = `http://localhost:${port}`;
   console.log(`Server listening on ${url}`);
   openBrowser(url);
+});
+
+// Nach einem Selbst-Update startet der Nachfolger, während der Vorgänger seinen
+// Listener gerade erst schließt. Ohne diese Versuche hielte die neue Version
+// den Vorgänger für eine laufende Instanz und beendete sich sofort wieder —
+// das Update sähe dann aus, als hätte es die App abgeschossen.
+const BIND_ATTEMPTS = 20;
+const BIND_RETRY_MS = 300;
+let bindAttempts = 0;
+
+server.on("error", (error: NodeJS.ErrnoException) => {
+  if (error.code !== "EADDRINUSE") throw error;
+  if (++bindAttempts <= BIND_ATTEMPTS) {
+    setTimeout(() => server.listen(port), BIND_RETRY_MS);
+    return;
+  }
+  void reportPortInUse(url);
 });
 
 // Der Updater schließt den Listener selbst, bevor er den Nachfolger startet.
