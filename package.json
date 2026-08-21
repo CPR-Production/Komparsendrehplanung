@@ -1,7 +1,7 @@
 {
   "name": "komparsendrehplanung",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.2.3",
   "license": "MIT",
   "workspaces": [
     "apps/*",
@@ -14,7 +14,8 @@
     "build:server": "npm run build --workspace apps/server",
     "build:web": "npm run build --workspace apps/web",
     "test": "npm run test --workspaces --if-present",
-    "build:release": "node scripts/build-release.mjs"
+    "build:release": "node scripts/build-release.mjs",
+    "build:icons": "node scripts/build-icons.mjs"
   },
   "engines": {
     "node": ">=20.12"
