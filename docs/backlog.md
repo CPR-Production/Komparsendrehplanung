@@ -4,8 +4,8 @@ Gesammelt am 21.08.2026 beim Durchklicken von 0.2.3. Reihenfolge ist keine
 Priorität. Jeder Punkt nennt, was heute da ist, damit man später nicht erst
 wieder suchen muss.
 
-Die Punkte 1–11 haben je ein Issue (#5–#15); dort gehört die Diskussion hin,
-dieser Text bleibt der Überblick. Punkt 12 kam später dazu und hat noch keines.
+Jeder Punkt hat ein Issue (#5–#16). Die Diskussion gehört dorthin, dieser Text
+bleibt der Überblick.
 
 Vorbild ist durchgehend **Fuzzle** — die Software, die im Betrieb schon benutzt
 wird. Wo hier „Fuzzle macht das so" steht, ist das ein Soll, kein Vorschlag.
@@ -232,7 +232,7 @@ Kategorien und Farben stehen unter `/settings/categories` und
 Abschnitte auf einer Seite liefen sie ineinander, und das wird mit jeder
 weiteren Einstellung schlimmer.
 
-## 12. Weitere Zähler und Zeilen am Fuß des Drehtags — „adjust Total Counter"
+## 12. Weitere Zähler und Zeilen am Fuß des Drehtags — „adjust Total Counter" ([#16](https://github.com/CPR-Production/Komparsendrehplanung/issues/16))
 
 **Heute:** Der Set-Kopf trägt eine einzige Summenzeile, „Summe neu", je Kategorie
 aufgeschlüsselt (`calcSetNewCountsByCategory`). Mehr rechnet die App nicht.
