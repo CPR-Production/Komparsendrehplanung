@@ -166,11 +166,24 @@ keine ganze Besetzungsliste mitnehmen.
 redeploy-freie, editierbare Übersetzungen — die `translation`-Tabelle steht im
 Schema bereits bereit.
 
-Abgedeckt ist die App-Hülle (Nav, Projektliste, Settings-Seite komplett).
-**Das Drehplan-Grid trägt weiterhin fest verdrahtete deutsche Labels**
-(„Synopsis", „+ Rolle", „+ Szene", „+ Wechsel", „Summe neu",
-„neu"/„wdh.", Tooltips). Wer das Grid übersetzen will, zieht diese Strings nach
-`i18n/index.ts`.
+Abgedeckt ist die ganze Oberfläche, das Drehplan-Grid eingeschlossen
+(`grid.*`). Drei Regeln, die dort gelten:
+
+- **Benutzereingaben laufen nie durch `t()`.** Projekt-, Set-, Rollen- und
+  Kategorienamen, Synopsis, Wechseltext, Adressen: alles steht so da, wie es
+  eingetippt wurde. Ein `t()`-Schlüssel wird deshalb **nie** aus Daten gebaut —
+  die dynamischen Schlüssel (`sceneState.…`, `update.phase.…`,
+  `colorTarget.chrome.…`) setzen sich ausschließlich aus festen Wertelisten
+  zusammen.
+- **Die Spaltenköpfe tragen in beiden Sprachen die Begriffe der Vorlage** —
+  Scene, Script Time, Location, Total/Scene, Fuzzle ID, Total. Sie sind der
+  Wortschatz, in dem am Set geredet wird; eine deutsche Fassung stünde neben
+  der Vorlage, nicht in ihr. `grid.head.*` ist deshalb in `de` und `en`
+  gleich — das ist Absicht und kein vergessener Eintrag.
+- **`sceneState.intExt.*` und `sceneState.timeOfDay.*` gehören Grid und
+  Einstellungen gemeinsam.** Beide beschriften dieselben Zustände, und zwei
+  Schlüsselsätze wären zwei Schreibweisen. (Die Farbziele des Rasters bleiben
+  unter `colorTarget.chrome.*`, die sind wirklich nur Farbe.)
 
 Der `LanguageSwitcher` (`components/LanguageSwitcher.tsx`) steht in der Header-Nav
 aller Seiten, daneben der `VersionBadge` — die Seiten teilen sich keine

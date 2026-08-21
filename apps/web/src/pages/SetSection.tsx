@@ -2,6 +2,7 @@ import { calcSetNewCountsByCategory, calcSetTotalShoots } from "@komparsen/share
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { HTMLAttributes, TdHTMLAttributes } from "react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   api,
   type Category,
@@ -32,6 +33,7 @@ export function SetSection({
   setDragHandleProps,
   setDropProps,
 }: SetSectionProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const fullSetQuery = useQuery({
@@ -122,7 +124,7 @@ export function SetSection({
   });
 
   const addRole = async (sceneId: string) => {
-    const name = window.prompt("Rollenname?");
+    const name = window.prompt(t("grid.role.namePrompt"));
     if (!name?.trim()) return;
     const role = await api.createRole(sceneId, name.trim());
     setScenes((prev) =>

@@ -234,6 +234,34 @@ der Umschalter überall.
 Steht so schon in CLAUDE.md; hier nur, damit es nicht zwischen den anderen
 Punkten untergeht.
 
+**Erledigt.** Rund vierzig Schlüssel unter `grid.*`, dazu `useTranslation` in
+`ScheduleTable`, `ScheduleTableHead` und `SetSection` — auch der
+`window.prompt` beim Anlegen einer Rolle, der als einziger kein JSX ist und
+sich deshalb leicht übersehen lässt. Die deutsche Oberfläche sagt Wort für Wort
+dasselbe wie vorher; die Aufgabe war, sie umschaltbar zu machen, nicht sie neu
+zu formulieren.
+
+**Benutzereingaben werden nie übersetzt.** Namen von Projekt, Set, Rolle und
+Kategorie, Synopsis, Wechseltext, Adresse: alles steht so da, wie es eingetippt
+wurde. Ein `t()`-Schlüssel wird deshalb nie aus Daten gebaut — die dynamischen
+Schlüssel setzen sich ausschließlich aus festen Wertelisten zusammen.
+
+**Die Spaltenköpfe bleiben in beiden Sprachen die Begriffe der Vorlage** —
+Scene, Script Time, Location, Total/Scene, Fuzzle ID, Total. Sie sind der
+Wortschatz, in dem am Set geredet wird. `grid.head.*` steht damit in `de` und
+`en` gleich; das ist Absicht und kein vergessener Eintrag.
+
+**Zwei Schlüsselsätze zusammengelegt:** Die Zustandsnamen hießen
+`colorTarget.intExt.*` und `colorTarget.timeOfDay.*`, weil zuerst die
+Farbseite sie brauchte. Das Grid beschriftet dieselben Zustände, also heißen
+sie jetzt `sceneState.*` und werden von beiden gelesen — sonst hätte dasselbe
+Wort zwei Fassungen. Die Werte kommen dabei aus `INT_EXT_VALUES` und
+`TIME_OF_DAY_VALUES` in `packages/shared`, das Grid führt keine eigene Liste
+mehr mit.
+
+**„wdh." heißt auf Englisch „reu."** (reused) — bestätigt, keine offene Frage
+mehr.
+
 ## 11. Einstellungsseite um Farben erweitern ([#15](https://github.com/CPR-Production/Komparsendrehplanung/issues/15))
 
 Die Oberfläche zu Punkt 1: In den Einstellungen sollen Hintergrund- und

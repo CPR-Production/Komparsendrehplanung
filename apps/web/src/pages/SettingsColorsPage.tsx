@@ -96,8 +96,8 @@ export function SettingsColorsPage() {
   };
 
   const sceneLabel = (state: SceneColorState) =>
-    `${state.intExt.map((side) => t(`colorTarget.intExt.${side}`)).join("+")} · ${t(
-      `colorTarget.timeOfDay.${state.timeOfDay}`,
+    `${state.intExt.map((side) => t(`sceneState.intExt.${side}`)).join("+")} · ${t(
+      `sceneState.timeOfDay.${state.timeOfDay}`,
     )}`;
 
   const customCount = (colorsQuery.data ?? []).filter((color) => color.isCustom).length;
@@ -172,7 +172,7 @@ export function SettingsColorsPage() {
       {SCENE_GROUPS.map((group) => (
         <div key={group.key} className="card mb-3">
           <div className="card-header fw-semibold">
-            {group.intExt.map((side) => t(`colorTarget.intExt.${side}`)).join("+")}
+            {group.intExt.map((side) => t(`sceneState.intExt.${side}`)).join("+")}
           </div>
           <ul className="list-group list-group-flush">
             {group.states.map((state) => (

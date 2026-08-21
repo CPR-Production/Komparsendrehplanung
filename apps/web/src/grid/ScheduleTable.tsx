@@ -1,13 +1,15 @@
 import {
   calcSceneTotal,
   formatIntExt,
+  INT_EXT_VALUES,
   type IntExt,
   isDarkColor,
   parseIntExt,
   sceneColorKey,
-  type TimeOfDay,
+  TIME_OF_DAY_VALUES,
 } from "@komparsen/shared";
 import { Fragment, type CSSProperties, type HTMLAttributes, type TdHTMLAttributes } from "react";
+import { useTranslation } from "react-i18next";
 import type {
   Category,
   ChangeRow,
@@ -58,22 +60,17 @@ interface ScheduleTableProps {
   onRemoveChange: (changeId: string) => void;
 }
 
-const INT_EXT_OPTIONS: { value: IntExt; label: string }[] = [
-  { value: "intern", label: "Intern" },
-  { value: "extern", label: "Extern" },
-];
-/* Five stages, not two — the column `scene.day_night` keeps its historic name.
+/* The values come from @komparsen/shared — the same list the server validates
+   against and the colour keys are built from, so the grid cannot drift from
+   either. Only the labels live here, and only as keys: they are the same words
+   the colour settings put on their rows, so both read from `sceneState.*` and
+   cannot end up naming one state two ways.
+
+   Five stages, not two — the column `scene.day_night` keeps its historic name.
    Order follows the reference plan (Day, Night, Morn, Dim, Eve) rather than the
    course of a day, because the planned digit shortcuts number the entries in
-   exactly that order. "Dim" stays untranslated: „halb dunkel" is too long for
-   the column and does not shorten well. */
-const TIME_OF_DAY_OPTIONS: { value: TimeOfDay; label: string }[] = [
-  { value: "tag", label: "Tag" },
-  { value: "nacht", label: "Nacht" },
-  { value: "morgen", label: "Morgen" },
-  { value: "dim", label: "Dim" },
-  { value: "abend", label: "Abend" },
-];
+   exactly that order. "Dim" stays "Dim" in German too: „halb dunkel" is too
+   long for the column and does not shorten well. */
 
 /* Intern and Extern do not exclude each other — a Scene can start inside and
    end outside, and the reference plan uses that combination. Both values go
@@ -177,8 +174,19 @@ export function ScheduleTable({
   onChangeDescriptionChange,
   onRemoveChange,
 }: ScheduleTableProps) {
+  const { t } = useTranslation();
   const groups = groupCategories(categories);
   const totalColumns = totalColumnCount(categories);
+  // Labelled here rather than at module level: the wording depends on the
+  // language, and that is not known until render.
+  const intExtOptions = INT_EXT_VALUES.map((value) => ({
+    value,
+    label: t(`sceneState.intExt.${value}`),
+  }));
+  const timeOfDayOptions = TIME_OF_DAY_VALUES.map((value) => ({
+    value,
+    label: t(`sceneState.timeOfDay.${value}`),
+  }));
   const sceneLocations = distinctSceneLocations(scenes);
   // Only the per-Scene colours are looked up here; the frame colours ride on
   // the table element and reach these cells by inheritance.
@@ -196,11 +204,11 @@ export function ScheduleTable({
       <tr>
         <td colSpan={totalColumns} className="cell-set" {...setDropProps}>
           <div className="d-flex flex-wrap gap-3 align-items-end mb-2">
-            <span className="drag-handle" title="Set verschieben" {...setDragHandleProps}>
+            <span className="drag-handle" title={t("grid.set.move")} {...setDragHandleProps}>
               ⠿
             </span>
             <label className="mb-0">
-              SD
+              {t("grid.set.sd")}
               <input
                 className="form-control form-control-sm"
                 style={{ width: SCENE_NUMBER_COLUMN_WIDTH }}
@@ -210,7 +218,7 @@ export function ScheduleTable({
             </label>
             <input
               type="date"
-              aria-label="Drehdatum"
+              aria-label={t("grid.set.shootDate")}
               className="form-control form-control-sm set-date-input"
               value={set.shootDate ?? ""}
               onChange={(e) => onSetFieldChange("shootDate", e.target.value)}
@@ -219,12 +227,12 @@ export function ScheduleTable({
               <strong>
                 {firstShootTime || "?"} &ndash; {lastShootTime || "?"}
               </strong>
-              <div className="form-text mb-0">aus erster/letzter Szene</div>
+              <div className="form-text mb-0">{t("grid.set.shootTimeHint")}</div>
             </div>
             {sceneLocations.length > 0 && (
               <div>
                 <strong>{sceneLocations.join(" · ")}</strong>
-                <div className="form-text mb-0">Locations aus Szenen</div>
+                <div className="form-text mb-0">{t("grid.set.sceneLocationsHint")}</div>
               </div>
             )}
           </div>
@@ -234,20 +242,20 @@ export function ScheduleTable({
               <input
                 className="form-control form-control-sm"
                 style={{ maxWidth: 200 }}
-                placeholder={`Set-Name ${i + 1}`}
+                placeholder={t("grid.set.namePlaceholder", { index: i + 1 })}
                 value={location.name ?? ""}
                 onChange={(e) => onLocationFieldChange(location.id, "name", e.target.value)}
               />
               <input
                 className="form-control form-control-sm"
-                placeholder="Adresse"
+                placeholder={t("grid.set.addressPlaceholder")}
                 value={location.address ?? ""}
                 onChange={(e) => onLocationFieldChange(location.id, "address", e.target.value)}
               />
               <button
                 type="button"
                 className="row-delete"
-                title="Set-Name löschen"
+                title={t("grid.set.deleteName")}
                 onClick={() => onRemoveLocation(location.id)}
               >
                 &times;
@@ -256,7 +264,7 @@ export function ScheduleTable({
           ))}
           {locations.length < 3 && (
             <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onAddLocation}>
-              + Set-Name
+              {t("grid.set.addName")}
             </button>
           )}
         </td>
@@ -267,7 +275,7 @@ export function ScheduleTable({
           category header and — via the group header above it — per group. */}
       <tr className="set-totals-row">
         <td colSpan={COLUMNS_BEFORE_ROLE_NAME} className="cell-set" />
-        <td className="cell-set set-totals-label">Summe neu</td>
+        <td className="cell-set set-totals-label">{t("grid.set.totalsLabel")}</td>
         {groups.flatMap((group) =>
           group.categories.map((category) => {
             const count = newCountsByCategory.get(category.id) ?? 0;
@@ -288,7 +296,7 @@ export function ScheduleTable({
         <tr>
           <td colSpan={totalColumns} className="text-center">
             <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onAddSceneAfter(null)}>
-              + Szene
+              {t("grid.scene.add")}
             </button>
           </td>
         </tr>
@@ -338,7 +346,7 @@ export function ScheduleTable({
                 style={sceneCellStyle}
                 {...dropProps}
               >
-                <span className="cell-synopsis-label">Synopsis</span>
+                <span className="cell-synopsis-label">{t("grid.scene.synopsis")}</span>
                 <input
                   value={scene.synopsis ?? ""}
                   onChange={(e) => onSceneFieldChange(scene.id, "synopsis", e.target.value)}
@@ -362,7 +370,7 @@ export function ScheduleTable({
                         <div className="scene-cell-tools">
                           <span
                             className="drag-handle"
-                            title="Szene verschieben"
+                            title={t("grid.scene.move")}
                             {...getSceneDragHandleProps(scene.id)}
                           >
                             ⠿
@@ -373,8 +381,8 @@ export function ScheduleTable({
                             disabled={roleCount > 0}
                             title={
                               roleCount > 0
-                                ? "Erst alle Rollen dieser Szene löschen"
-                                : "Szene löschen"
+                                ? t("grid.scene.deleteBlocked")
+                                : t("grid.scene.delete")
                             }
                             onClick={() => onRemoveScene(scene.id)}
                           >
@@ -382,7 +390,7 @@ export function ScheduleTable({
                           </button>
                         </div>
                         <input
-                          placeholder="#"
+                          placeholder={t("grid.scene.numberPlaceholder")}
                           value={scene.sceneNumber ?? ""}
                           onChange={(e) => onSceneFieldChange(scene.id, "sceneNumber", e.target.value)}
                         />
@@ -399,7 +407,7 @@ export function ScheduleTable({
                           <CheckboxGroup
                             name={`intExt-${scene.id}`}
                             selected={parseIntExt(scene.intExt)}
-                            options={INT_EXT_OPTIONS}
+                            options={intExtOptions}
                             onToggle={(value) =>
                               onSceneFieldChange(scene.id, "intExt", toggleIntExt(scene.intExt, value))
                             }
@@ -410,12 +418,12 @@ export function ScheduleTable({
                               it fast: T, N, M, D and A each select in one
                               keystroke. */}
                           <select
-                            aria-label="Tageszeit"
+                            aria-label={t("grid.scene.timeOfDay")}
                             value={scene.dayNight ?? ""}
                             onChange={(e) => onSceneFieldChange(scene.id, "dayNight", e.target.value)}
                           >
                             <option value="">&ndash;</option>
-                            {TIME_OF_DAY_OPTIONS.map((option) => (
+                            {timeOfDayOptions.map((option) => (
                               <option key={option.value} value={option.value}>
                                 {option.label}
                               </option>
@@ -434,7 +442,7 @@ export function ScheduleTable({
                         <div className="scene-time-range">
                           <input
                             type="time"
-                            aria-label="Script Time von"
+                            aria-label={t("grid.scene.scriptTimeFrom")}
                             value={scene.scriptTime ?? ""}
                             onChange={(e) => onSceneFieldChange(scene.id, "scriptTime", e.target.value)}
                           />
@@ -443,7 +451,7 @@ export function ScheduleTable({
                               <span className="scene-time-separator">&ndash;</span>
                               <input
                                 type="time"
-                                aria-label="Script Time bis"
+                                aria-label={t("grid.scene.scriptTimeTo")}
                                 value={scene.endTime ?? ""}
                                 onChange={(e) => onSceneFieldChange(scene.id, "endTime", e.target.value)}
                               />
@@ -477,7 +485,7 @@ export function ScheduleTable({
                           className="btn btn-sm btn-outline-secondary"
                           onClick={() => onAddRole(scene.id)}
                         >
-                          + Rolle
+                          {t("grid.role.add")}
                         </button>
                       </td>
                       <td className="cell-role" colSpan={categories.length + 1} />
@@ -521,12 +529,12 @@ export function ScheduleTable({
                                   className={`isnew-toggle ${isNew ? "is-new" : "is-reused"}`}
                                   title={
                                     isNew
-                                      ? "neu – klicken für wiederverwendet"
-                                      : "wiederverwendet – klicken für neu"
+                                      ? t("grid.count.toggleToReused")
+                                      : t("grid.count.toggleToNew")
                                   }
                                   onClick={() => onToggleIsNew(role.id, category.id)}
                                 >
-                                  {isNew ? "neu" : "wdh."}
+                                  {isNew ? t("grid.count.new") : t("grid.count.reused")}
                                 </button>
                               </td>
                             );
@@ -538,7 +546,7 @@ export function ScheduleTable({
                             <button
                               type="button"
                               className="row-delete"
-                              title="Rolle löschen"
+                              title={t("grid.role.delete")}
                               onClick={() => onRemoveRole(role.id)}
                             >
                               &times;
@@ -556,7 +564,7 @@ export function ScheduleTable({
               <tr key={change.id}>
                 <td colSpan={totalColumns} className="cell-change">
                   <div className="cell-change-row">
-                    <strong>Change</strong>
+                    <strong>{t("grid.change.label")}</strong>
                     <input
                       value={change.description ?? ""}
                       onChange={(e) => onChangeDescriptionChange(change.id, e.target.value)}
@@ -564,7 +572,7 @@ export function ScheduleTable({
                     <button
                       type="button"
                       className="row-delete"
-                      title="Wechsel löschen"
+                      title={t("grid.change.delete")}
                       onClick={() => onRemoveChange(change.id)}
                     >
                       &times;
@@ -581,14 +589,14 @@ export function ScheduleTable({
                   className="btn btn-sm btn-outline-secondary"
                   onClick={() => onAddSceneAfter(scene.id)}
                 >
-                  + Szene
+                  {t("grid.scene.add")}
                 </button>
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary"
                   onClick={() => onAddChange(scene.id)}
                 >
-                  + Wechsel
+                  {t("grid.change.add")}
                 </button>
               </td>
             </tr>

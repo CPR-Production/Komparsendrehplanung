@@ -17,8 +17,8 @@ SQLite-Datei und wird im Browser bedient.
 - **Wechsel** („Changes"), die hinter einer Szene verankert sind
 - **Sortieren per Drag & Drop** für Sets und Szenen
 - **Summen pro Kategorie und Gruppe** direkt im Set-Kopf, spaltenbündig zum Raster
-- **Deutsch und Englisch** umschaltbar (die Oberfläche des Drehplan-Grids ist
-  derzeit noch fest deutsch)
+- **Deutsch und Englisch** umschaltbar, Drehplan eingeschlossen; die
+  Spaltenköpfe bleiben in beiden Sprachen die Begriffe der Vorlage
 
 ## Die Regel, die den Plan ausmacht
 
