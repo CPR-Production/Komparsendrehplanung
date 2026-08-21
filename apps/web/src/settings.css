@@ -3,7 +3,10 @@
    shows the background but says nothing about whether the text still reads. */
 .scene-color-preview {
   flex: 0 0 auto;
-  min-width: 9rem;
+  /* Wide enough for the longest label written out — "Intern+Extern · Morgen".
+     Spelled out rather than abbreviated, so the settings name a state the same
+     way the checkboxes in the grid do. */
+  min-width: 12.5rem;
   padding: 0.35rem 0.6rem;
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 3px;

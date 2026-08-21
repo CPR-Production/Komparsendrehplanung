@@ -36,7 +36,7 @@ const resources = {
       "settings.category.empty": "Noch keine Kategorien in dieser Gruppe.",
       "settings.colors": "Farben",
       "settings.color.intro":
-        "Zuerst die Grundfarben des Rasters, dann die Szenen: eine Szene wird nach ihrem Zustand eingefärbt — Int oder Ex, zusammen mit der Tageszeit. Hintergrund und Text lassen sich überall getrennt einstellen. Was hier nicht geändert wird, folgt weiter der Vorgabe.",
+        "Zuerst die Grundfarben des Rasters, dann die Szenen: eine Szene wird nach ihrem Zustand eingefärbt — intern oder extern, zusammen mit der Tageszeit. Hintergrund und Text lassen sich überall getrennt einstellen. Was hier nicht geändert wird, folgt weiter der Vorgabe.",
       "settings.color.chrome": "Grundfarben",
       "colorTarget.chrome.header": "Tabellenkopf",
       "colorTarget.chrome.set": "Set",
@@ -50,8 +50,8 @@ const resources = {
       "settings.color.resetAllConfirm":
         "Alle geänderten Farben (aktuell {{amount}}) auf die Vorgaben zurücksetzen?",
       "settings.color.error": "Farben konnten nicht geladen werden.",
-      "colorTarget.intExt.intern": "Int",
-      "colorTarget.intExt.extern": "Ex",
+      "colorTarget.intExt.intern": "Intern",
+      "colorTarget.intExt.extern": "Extern",
       "colorTarget.timeOfDay.tag": "Tag",
       "colorTarget.timeOfDay.nacht": "Nacht",
       "colorTarget.timeOfDay.morgen": "Morgen",
@@ -124,7 +124,7 @@ const resources = {
       "settings.category.empty": "No categories in this group yet.",
       "settings.colors": "Colors",
       "settings.color.intro":
-        "The grid's base colors first, then the scenes: a scene is coloured by its state — Int or Ext, together with the time of day. Background and text are set separately throughout. Anything left alone here keeps following the default.",
+        "The grid's base colors first, then the scenes: a scene is coloured by its state — interior or exterior, together with the time of day. Background and text are set separately throughout. Anything left alone here keeps following the default.",
       "settings.color.chrome": "Base colors",
       "colorTarget.chrome.header": "Table header",
       "colorTarget.chrome.set": "Set",
@@ -138,8 +138,8 @@ const resources = {
       "settings.color.resetAllConfirm":
         "Reset all changed colors ({{amount}} at the moment) to the defaults?",
       "settings.color.error": "Could not load the colors.",
-      "colorTarget.intExt.intern": "Int",
-      "colorTarget.intExt.extern": "Ext",
+      "colorTarget.intExt.intern": "Interior",
+      "colorTarget.intExt.extern": "Exterior",
       "colorTarget.timeOfDay.tag": "Day",
       "colorTarget.timeOfDay.nacht": "Night",
       "colorTarget.timeOfDay.morgen": "Morn",

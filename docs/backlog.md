@@ -4,8 +4,8 @@ Gesammelt am 21.08.2026 beim Durchklicken von 0.2.3. Reihenfolge ist keine
 Priorität. Jeder Punkt nennt, was heute da ist, damit man später nicht erst
 wieder suchen muss.
 
-Jeder Punkt hat ein Issue (#5–#15). Die Diskussion gehört dorthin, dieser Text
-bleibt der Überblick.
+Die Punkte 1–11 haben je ein Issue (#5–#15); dort gehört die Diskussion hin,
+dieser Text bleibt der Überblick. Punkt 12 kam später dazu und hat noch keines.
 
 Vorbild ist durchgehend **Fuzzle** — die Software, die im Betrieb schon benutzt
 wird. Wo hier „Fuzzle macht das so" steht, ist das ein Soll, kein Vorschlag.
@@ -231,3 +231,35 @@ Kategorien und Farben stehen unter `/settings/categories` und
 `/settings/colors`, umgeschaltet über Reiter im Kopf der Einstellungen. Als
 Abschnitte auf einer Seite liefen sie ineinander, und das wird mit jeder
 weiteren Einstellung schlimmer.
+
+## 12. Weitere Zähler und Zeilen am Fuß des Drehtags — „adjust Total Counter"
+
+**Heute:** Der Set-Kopf trägt eine einzige Summenzeile, „Summe neu", je Kategorie
+aufgeschlüsselt (`calcSetNewCountsByCategory`). Mehr rechnet die App nicht.
+
+**Soll:** Die Vorlage führt darunter noch mehrere Zeilen, jede in eigener Farbe:
+
+| Zeile | Farbe in der Vorlage | Inhalt |
+| --- | --- | --- |
+| TOTAL SHOOT | gelb | Summe je Kategorie-Spalte |
+| MARSHALLS | grün | Freitext, in der Vorlage „Names tba." |
+| ADDITIONAL ADs | blau | Freitext, in der Vorlage „Names tba." |
+| TOTAL SECTIONS | braun | eigene Summe je Spalte, andere Zahlen als TOTAL SHOOT |
+
+Zwei verschiedene Summen nebeneinander (49 gegen 79 in derselben Spalte) heißt:
+**TOTAL SECTIONS zählt etwas anderes als TOTAL SHOOT**, nicht dasselbe anders
+formatiert. Was genau, steht noch nicht fest.
+
+**Bewusst zurückgestellt.** Weder die Rechenregeln noch die Farbzuordnung sind
+final. Ohne die Regel ließe sich die Zeile nur nachbauen, nicht berechnen — und
+eine Summe, die niemand erklären kann, ist im Betrieb schlimmer als keine.
+
+**Wenn es losgeht, hier anfangen:** die Zählregeln stehen alle in
+`packages/shared/src/calculations.ts` und sind die einzige getestete Stelle;
+die Summenzeile rendert `ScheduleTable` direkt unter dem Set-Kopf. Weitere
+Zeilen brauchen kein neues Raster, aber je eine Farbe — die kann aus demselben
+Mechanismus kommen wie Punkt 1, dann ohne neue Sonderwege.
+
+**Offen:** Was zählt TOTAL SECTIONS? Sind MARSHALLS und ADDITIONAL ADs
+Freitext je Drehtag oder Verweise auf Personen? Und gehören ihre Farben in
+dieselbe Liste wie die Grundfarben?
