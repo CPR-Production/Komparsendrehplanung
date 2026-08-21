@@ -45,6 +45,49 @@ codesign --force --deep --sign - "$APP"
 # Der Symlink macht aus dem Fenster ein Ziehziel: App links, Programme rechts.
 ln -sfn /Applications "$STAGING/Applications"
 
+# Liegt sichtbar im selben Fenster. Ohne das steht der Nutzer beim ersten Start
+# vor einem Dialog, dessen blauer Vorgabeknopf die App in den Papierkorb wirft.
+cat > "$STAGING/Bitte zuerst lesen.txt" <<'README'
+Komparsendrehplanung — erster Start
+===================================
+
+1. Komparsendrehplanung.app nach rechts auf "Applications" ziehen.
+2. Die App dort per Doppelklick starten.
+
+Beim ersten Mal meldet macOS: "Apple konnte nicht überprüfen, ob
+'Komparsendrehplanung.app' frei von Schadsoftware ist."
+
+Das ist erwartet. Diese Software ist quelloffen und nicht bei Apple
+registriert — dafür müsste das Projekt jährlich zahlen. Der Hinweis sagt
+nichts darüber aus, ob die App in Ordnung ist.
+
+So kommen Sie weiter:
+
+  1. Im Dialog auf "Fertig" klicken.
+     NICHT auf "In den Papierkorb legen" — das ist zwar der blau
+     hervorgehobene Knopf, aber der falsche.
+
+  2. Systemeinstellungen öffnen, dort "Datenschutz & Sicherheit"
+     auswählen und bis zum Abschnitt "Sicherheit" hinunterscrollen.
+
+  3. Dort steht "Komparsendrehplanung.app" mit dem Knopf
+     "Dennoch öffnen". Darauf klicken.
+
+  4. Mit Passwort oder Touch ID bestätigen, dann noch einmal "Öffnen".
+
+Der Knopf erscheint erst, nachdem Sie die App einmal zu starten versucht
+haben, und bleibt danach etwa eine Stunde lang stehen. Ist die Ausnahme
+einmal gesetzt, startet die App künftig per Doppelklick wie jedes andere
+Programm.
+
+Danach öffnet sich der Browser auf http://localhost:3001.
+Das Fenster, das dabei aufgeht, gehört dazu — es zu schließen beendet
+die Anwendung.
+
+Fragen und Fehler:
+https://github.com/CPR-Production/Komparsendrehplanung/issues
+README
+
 DMG="$DIST/Komparsendrehplanung-$VERSION-macos-$ARCH.dmg"
 rm -f "$DMG"
 hdiutil create -volname "Komparsendrehplanung" -srcfolder "$STAGING" -ov -format UDZO "$DMG" >/dev/null

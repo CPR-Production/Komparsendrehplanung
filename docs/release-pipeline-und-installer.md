@@ -63,6 +63,11 @@ migrations/           Datenbank-Migrationen
 Vier Runner sind nötig, weil `better_sqlite3.node` nur auf der Zielplattform
 entsteht — es lässt sich nicht kreuzweise bauen.
 
+Der Intel-Mac-Runner bleibt bewusst drin, solange es ihn gibt: Im Büro ist nicht
+sicher, welche Hardware noch im Einsatz ist, und GitHub bietet `macos-15-intel`
+bis **Herbst 2027** an. Danach endet x86_64 auf macOS bei GitHub ganz — dann
+fällt dieser Runner weg und mit ihm das Intel-DMG.
+
 ## Ein Release veröffentlichen
 
 1. **Alles auf `master`**, was in die Version soll.

@@ -34,8 +34,51 @@ Wer an dieser Logik etwas ändert, sollte
 [`packages/shared/src/calculations.ts`](packages/shared/src/calculations.ts)
 lesen; das ist die einzige Stelle im Projekt mit Tests.
 
-## Schnellstart
+## Installieren
 
+Fertige Installer liegen auf der
+[Releases-Seite](https://github.com/CPR-Production/Komparsendrehplanung/releases)
+unter **Assets**:
+
+| Datei | Für |
+| --- | --- |
+| `…-macos-arm64.dmg` | Mac mit Apple Silicon (M1 und neuer) |
+| `…-macos-x86_64.dmg` | Mac mit Intel-Prozessor |
+| `…-windows-x64.exe` | Windows |
+| `…-linux-x86_64.tar.gz` | Linux |
+
+Die `payload-…`-Archive daneben gehören zur eingebauten Update-Funktion und sind
+nicht zum Installieren von Hand gedacht.
+
+Danach läuft die App unter <http://localhost:3001>; der Browser öffnet sich von
+selbst.
+
+### Der erste Start braucht einen Handgriff
+
+Diese App ist quelloffen und **nicht bei Apple oder Microsoft registriert** — für
+eine Registrierung müsste das Projekt jährlich zahlen. Beide Systeme melden das
+beim ersten Start. Das ist erwartet, und es ist einmalig.
+
+**macOS.** Der Dialog sagt, Apple könne die App nicht auf Schadsoftware prüfen,
+und bietet als blau hervorgehobenen Knopf *In den Papierkorb legen* an. **Nicht
+den nehmen.**
+
+1. Im Dialog auf **Fertig** klicken.
+2. *Systemeinstellungen* → *Datenschutz & Sicherheit* → hinunterscrollen zum
+   Abschnitt *Sicherheit*. Dort steht die App mit dem Knopf **Dennoch öffnen**.
+3. Mit Passwort oder Touch ID bestätigen, dann noch einmal **Öffnen**.
+
+Der Knopf erscheint erst *nach* dem ersten Startversuch und bleibt etwa eine
+Stunde lang stehen. Danach startet die App wie jedes andere Programm.
+
+**Windows.** SmartScreen meldet einen unbekannten Herausgeber: auf *Weitere
+Informationen* klicken, dann *Trotzdem ausführen*.
+
+**Linux.** Keine Rückfrage; das Archiv entpacken und `./install.sh` ausführen.
+
+## Alternativ: mit Docker betreiben
+
+Für einen Rechner, der die App für mehrere Leute im Netz bereitstellt.
 Voraussetzung ist Docker (Docker Desktop unter Mac/Windows, Docker Engine unter
 Linux).
 

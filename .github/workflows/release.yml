@@ -124,6 +124,11 @@ jobs:
       id-token: write
       attestations: write
     steps:
+      # Vor dem Herunterladen der Artefakte: checkout räumt das
+      # Arbeitsverzeichnis auf und würde sie sonst gleich wieder wegwischen.
+      # Gebraucht wird nur die Installationsanleitung für die Release-Notizen.
+      - uses: actions/checkout@v7
+
       - uses: actions/download-artifact@v8
         with:
           path: dist
@@ -162,8 +167,12 @@ jobs:
             echo "Release $GITHUB_REF_NAME existiert bereits — hänge die Dateien an."
             gh release upload "$GITHUB_REF_NAME" dist/* --clobber
           else
+            # Die Installationsanleitung steht über den generierten Notizen —
+            # wer hier landet, will die App installieren und soll nicht erst in
+            # die Dokumentation abbiegen müssen.
             gh release create "$GITHUB_REF_NAME" dist/* \
               --title "$GITHUB_REF_NAME" \
+              --notes "$(cat .github/release-notes-intro.md)" \
               --generate-notes \
               $prerelease
           fi

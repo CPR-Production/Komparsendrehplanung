@@ -20,9 +20,26 @@ liegt für jede Version ein Paket je Plattform:
 | `Komparsendrehplanung-<version>-linux-x86_64.tar.gz` | Linux |
 
 **macOS** — DMG öffnen, die App nach *Programme* ziehen. Beim ersten Start
-meldet macOS einen unbekannten Entwickler: einmal mit Rechtsklick → *Öffnen*
-starten, danach nicht mehr. Der Hinweis verschwindet erst, wenn das Projekt
-eine Apple-Developer-ID hat.
+meldet macOS, es könne die App nicht auf Schadsoftware prüfen, und stellt *In
+den Papierkorb legen* als blauen Vorgabeknopf voran. Stattdessen:
+
+1. **Fertig** klicken.
+2. *Systemeinstellungen* → *Datenschutz & Sicherheit* → Abschnitt *Sicherheit*
+   → **Dennoch öffnen**.
+3. Mit Passwort oder Touch ID bestätigen, dann **Öffnen**.
+
+Der Knopf erscheint erst nach dem Startversuch und steht dort etwa eine Stunde.
+Danach ist die Ausnahme dauerhaft gesetzt und die App startet per Doppelklick.
+
+Den früher üblichen Weg über Rechtsklick → *Öffnen* gibt es seit macOS 15 nicht
+mehr. Wer lieber ein Terminal benutzt, kommt mit einem Befehl ans Ziel:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Komparsendrehplanung.app
+```
+
+Ganz verschwindet der Hinweis erst mit einer Apple-Developer-ID samt
+Notarisierung — die kostet jährlich und ist bewusst nicht Teil des Projekts.
 
 **Windows** — Setup ausführen. Es installiert ins Benutzerprofil und braucht
 deshalb keine Administratorrechte; SmartScreen meldet aus demselben Grund einen
