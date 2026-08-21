@@ -187,8 +187,15 @@ Abgedeckt ist die ganze Oberfläche, das Drehplan-Grid eingeschlossen
 
 Der `LanguageSwitcher` (`components/LanguageSwitcher.tsx`) steht in der Header-Nav
 aller Seiten, daneben der `VersionBadge` — die Seiten teilen sich keine
-Kopfleiste, eine neue Seite braucht beide also selbst; `LANGUAGES` dort ist die einzige Liste, die um ein Locale zu
-erweitern ist. Die Auswahl liegt in `localStorage` unter `komparsen.language`.
+Kopfleiste, eine neue Seite braucht beide also selbst. `LANGUAGES` dort ist die
+einzige Liste, die um ein Locale zu erweitern ist; dazu kommt nur der
+Ressourcenblock in `i18n/index.ts`.
+
+Die Auswahl liegt in `localStorage` unter `komparsen.language`, und
+**`<html lang>` folgt ihr** — gesetzt beim Start *und* im
+`languageChanged`-Listener, weil i18next das Ereignis je nach Ladeweg schon
+während `init()` feuert, also womöglich bevor der Listener steht. `index.html`
+liefert `lang="de"` aus; das stimmt für die Vorgabe und nur für sie.
 
 ## Bootstrap-Umstellung — Stand
 

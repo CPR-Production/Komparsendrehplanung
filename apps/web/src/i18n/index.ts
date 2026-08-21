@@ -285,9 +285,22 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
-// Without this the choice only survives in-app navigation and a plain reload
-// would drop the user back to German.
+/* index.html ships lang="de" — right for the default, wrong from the first
+   switch on. Screen readers pick their voice from it, the browser offers to
+   translate a page it believes is foreign, and hyphenation follows it too. */
+function applyDocumentLanguage(language: string): void {
+  document.documentElement.lang = language;
+}
+
+// Also once here, not only in the listener below: the resources sit in memory,
+// so init can emit languageChanged before that listener is registered — and
+// the very first paint would keep the attribute from the HTML file.
+applyDocumentLanguage(i18n.resolvedLanguage ?? i18n.language);
+
+// Without the stored value the choice only survives in-app navigation and a
+// plain reload would drop the user back to German.
 i18n.on("languageChanged", (language) => {
+  applyDocumentLanguage(language);
   try {
     localStorage.setItem(STORAGE_KEY, language);
   } catch {
