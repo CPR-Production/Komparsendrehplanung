@@ -1,3 +1,4 @@
+import { isDarkColor } from "@komparsen/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CSSProperties, HTMLAttributes, TdHTMLAttributes } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,9 +32,9 @@ export function ProjectSchedulePage() {
     queryFn: () => api.listCategories(projectId!),
     enabled: !!projectId,
   });
-  const sceneColorsQuery = useQuery({
-    queryKey: ["sceneColors", projectId],
-    queryFn: () => api.listSceneColors(projectId!),
+  const colorsQuery = useQuery({
+    queryKey: ["colorSettings", projectId],
+    queryFn: () => api.listColorSettings(projectId!),
     enabled: !!projectId,
   });
   const sceneLocationsQuery = useQuery({
@@ -41,6 +42,27 @@ export function ProjectSchedulePage() {
     queryFn: () => api.listProjectSceneLocations(projectId!),
     enabled: !!projectId,
   });
+
+  /* The four frame colours ride on the table as inherited custom properties:
+     the header row, every Set header, every Role row and every count cell pick
+     them up without a prop apiece. Per-Scene colours cannot work that way —
+     they differ from row to row — and stay on their own cells. */
+  const colorByKey = new Map((colorsQuery.data ?? []).map((color) => [color.key, color]));
+  const frameVars: Record<string, string> = {};
+  const frameClasses: string[] = [];
+  for (const key of ["header", "set", "role", "count"]) {
+    const color = colorByKey.get(key);
+    if (!color) continue;
+    frameVars[`--${key}-bg`] = color.backgroundColor;
+    frameVars[`--${key}-text`] = color.textColor;
+    // Same reasoning as a Scene's has-dark-state: the controls in those cells
+    // carry fixed colours that a dark background swallows. Only the Set header
+    // and the Role rows hold any — the header row has none, and a count cell's
+    // only control paints its own background — so only those two get a class.
+    if ((key === "set" || key === "role") && isDarkColor(color.backgroundColor)) {
+      frameClasses.push(`has-dark-${key}`);
+    }
+  }
 
   const createSetMutation = useMutation({
     mutationFn: () => api.createSet(projectId!, {}),
@@ -135,8 +157,8 @@ export function ProjectSchedulePage() {
 
       <div style={{ padding: "0 1rem" }}>
         <table
-          className="schedule-table table table-bordered table-sm mb-4"
-          style={{ tableLayout: "fixed" }}
+          className={["schedule-table table table-bordered table-sm mb-4", ...frameClasses].join(" ")}
+          style={{ tableLayout: "fixed", ...frameVars } as CSSProperties}
         >
           <ScheduleTableHead categories={categoriesQuery.data ?? []} />
           {setsQuery.data?.map((set) => (
@@ -145,7 +167,7 @@ export function ProjectSchedulePage() {
               projectId={projectId}
               setId={set.id}
               categories={categoriesQuery.data ?? []}
-              sceneColors={sceneColorsQuery.data ?? []}
+              colors={colorsQuery.data ?? []}
               setDragHandleProps={getSetDragHandleProps(set.id)}
               setDropProps={getSetDropProps(set.id)}
             />

@@ -6,7 +6,7 @@ import {
   api,
   type Category,
   type ChangeRow,
-  type SceneColor,
+  type ColorSetting,
   type SceneRow,
   type SetLocation,
   type ShootSet,
@@ -19,7 +19,7 @@ interface SetSectionProps {
   projectId: string;
   setId: string;
   categories: Category[];
-  sceneColors: SceneColor[];
+  colors: ColorSetting[];
   setDragHandleProps: HTMLAttributes<HTMLSpanElement>;
   setDropProps: TdHTMLAttributes<HTMLTableCellElement>;
 }
@@ -28,7 +28,7 @@ export function SetSection({
   projectId,
   setId,
   categories,
-  sceneColors,
+  colors,
   setDragHandleProps,
   setDropProps,
 }: SetSectionProps) {
@@ -310,7 +310,7 @@ export function SetSection({
       scenes={scenes}
       changes={changes}
       categories={categories}
-      sceneColors={sceneColors}
+      colors={colors}
       totalShoots={totalShoots}
       newCountsByCategory={newCountsByCategory}
       setDragHandleProps={setDragHandleProps}

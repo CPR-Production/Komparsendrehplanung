@@ -5,7 +5,8 @@ import {
   HEX_COLOR_PATTERN,
   isDarkColor,
   parseIntExt,
-  SCENE_COLOR_KEYS,
+  COLOR_TARGET_KEYS,
+  COLOR_TARGETS,
   SCENE_COLOR_STATES,
   sceneColorKey,
 } from "./sceneColors.js";
@@ -64,26 +65,33 @@ describe("sceneColorKey", () => {
     expect(sceneColorKey("intern", "mittag")).toBeNull();
   });
 
-  it("only produces keys that exist in the state list", () => {
+  it("only produces keys that exist in the target list", () => {
     for (const intExt of ["intern", "extern", "intern;extern"]) {
       for (const time of ["tag", "nacht", "morgen", "dim", "abend"]) {
-        expect(SCENE_COLOR_KEYS).toContain(sceneColorKey(intExt, time));
+        expect(COLOR_TARGET_KEYS).toContain(sceneColorKey(intExt, time));
       }
     }
   });
 });
 
-describe("SCENE_COLOR_STATES", () => {
-  it("covers every combination once", () => {
+describe("COLOR_TARGETS", () => {
+  it("covers every combination once, plus the frame colours", () => {
     expect(SCENE_COLOR_STATES).toHaveLength(15);
-    expect(new Set(SCENE_COLOR_KEYS).size).toBe(15);
+    expect(COLOR_TARGETS).toHaveLength(19);
+    expect(new Set(COLOR_TARGET_KEYS).size).toBe(19);
+  });
+
+  // The frame is what a reader looks at first, so it is what the settings page
+  // has to offer first.
+  it("puts the frame ahead of the states", () => {
+    expect(COLOR_TARGETS.slice(0, 4).map((t) => t.key)).toEqual(["header", "set", "role", "count"]);
   });
 
   // A missing default would reach the grid as `undefined` in a style attribute.
-  it("gives every state both colours", () => {
-    for (const state of SCENE_COLOR_STATES) {
-      expect(state.background).toMatch(HEX_COLOR_PATTERN);
-      expect(state.textColor).toMatch(HEX_COLOR_PATTERN);
+  it("gives every target both colours", () => {
+    for (const target of COLOR_TARGETS) {
+      expect(target.background).toMatch(HEX_COLOR_PATTERN);
+      expect(target.textColor).toMatch(HEX_COLOR_PATTERN);
     }
   });
 });
@@ -113,9 +121,9 @@ describe("isDarkColor", () => {
 describe("the default palette", () => {
   // The defaults ship before anyone opens the settings, so every pairing has to
   // be readable as delivered. AA for normal text is 4.5:1.
-  it("clears WCAG AA on every state", () => {
-    for (const state of SCENE_COLOR_STATES) {
-      expect(contrastRatio(state.background, state.textColor)).toBeGreaterThanOrEqual(4.5);
+  it("clears WCAG AA on every target", () => {
+    for (const target of COLOR_TARGETS) {
+      expect(contrastRatio(target.background, target.textColor)).toBeGreaterThanOrEqual(4.5);
     }
   });
 });

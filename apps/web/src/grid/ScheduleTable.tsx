@@ -12,7 +12,7 @@ import type {
   Category,
   ChangeRow,
   RoleRow,
-  SceneColor,
+  ColorSetting,
   SceneRow,
   SetLocation,
   ShootSet,
@@ -32,7 +32,7 @@ interface ScheduleTableProps {
   scenes: SceneRow[];
   changes: ChangeRow[];
   categories: Category[];
-  sceneColors: SceneColor[];
+  colors: ColorSetting[];
   totalShoots: number;
   newCountsByCategory: Map<string, number>;
   setDragHandleProps: HTMLAttributes<HTMLSpanElement>;
@@ -152,7 +152,7 @@ export function ScheduleTable({
   scenes,
   changes,
   categories,
-  sceneColors,
+  colors,
   totalShoots,
   newCountsByCategory,
   setDragHandleProps,
@@ -180,7 +180,9 @@ export function ScheduleTable({
   const groups = groupCategories(categories);
   const totalColumns = totalColumnCount(categories);
   const sceneLocations = distinctSceneLocations(scenes);
-  const colorByState = new Map(sceneColors.map((color) => [color.stateKey, color]));
+  // Only the per-Scene colours are looked up here; the frame colours ride on
+  // the table element and reach these cells by inheritance.
+  const colorByKey = new Map(colors.map((color) => [color.key, color]));
 
   // Drehzeit is derived, not entered directly on the Set: "Von" comes from the
   // first Scene's Script Time, "Bis" from the last Scene's own end time (the
@@ -303,14 +305,16 @@ export function ScheduleTable({
         // whole Scene block rather than just the drag handle glyph.
         const dropProps = getSceneDropProps(scene.id);
         // Coloured by what the Scene shows, not by where it sits in the
-        // hierarchy. Bootstrap reads the cell background from --bs-table-bg, so
-        // that is what gets set. A Scene without In/Ex or a time of day has no
-        // state yet and keeps the neutral Scene colour from the stylesheet.
-        const stateColor = colorByState.get(sceneColorKey(scene.intExt, scene.dayNight) ?? "");
+        // hierarchy. Both colours go through Bootstrap's own cell variables —
+        // it paints `background-color` and `color` on every cell itself, so
+        // setting those properties directly means fighting it. A Scene without
+        // In/Ex or a time of day has no state yet and keeps the neutral Scene
+        // colour from the stylesheet.
+        const stateColor = colorByKey.get(sceneColorKey(scene.intExt, scene.dayNight) ?? "");
         const sceneCellStyle = stateColor
           ? ({
               "--bs-table-bg": stateColor.backgroundColor,
-              color: stateColor.textColor,
+              "--bs-table-color": stateColor.textColor,
             } as CSSProperties)
           : undefined;
         // The controls inside the cell carry fixed colours of their own — a red

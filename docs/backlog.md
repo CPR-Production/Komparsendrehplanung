@@ -44,16 +44,17 @@ Int/Day bis Int+Ext/Eve. Diese Liste ist damit zugleich die Zeilenliste der
 Farbeinstellung. Solange es die Zustände nicht gibt, gibt es auch nichts zu
 färben.
 
-**Erledigt.** Die fünfzehn Zustände stehen in `packages/shared`, die Farben pro
+**Erledigt.** Neunzehn Ziele stehen in `packages/shared`, die Farben pro
 Projekt in `scene_color` — die offene Frage ist damit zugunsten „pro Projekt"
 entschieden, passend zu den Kategorien. Gespeichert wird nur, was von der
 Vorgabe abweicht; zurücksetzen löscht die Zeile, statt den Vorgabewert
-hineinzuschreiben. Hintergrund und Text sind getrennt einstellbar.
+hineinzuschreiben. Hintergrund und Text sind überall getrennt einstellbar.
 
-**Eingefärbt werden nur die Szenenzellen.** Set, Rolle und Anzahl behalten ihre
-Hierarchiefarben — für sie nennt dieser Punkt keinen Zustand, aus dem sich eine
-Farbe ergäbe. Das Szenen-Gelb greift nur noch, solange eine Szene weder In/Ex
-noch Tageszeit gesetzt hat.
+**Auch die vier Grundfarben sind einstellbar** — Tabellenkopf, Set, Rolle und
+Anzahl, mit genau den Werten als Vorgabe, auf die das Grid vorher fest
+verdrahtet war. Damit ist die Farbhierarchie der Excel-Vorlage kein fester
+Bestandteil mehr, sondern nur noch der Ausgangspunkt. Das Szenen-Gelb greift
+nur noch, solange eine Szene weder In/Ex noch Tageszeit gesetzt hat.
 
 **Nicht dabei: „aktuell ausgewählt = rot".** Eine Szenenauswahl gibt es im Grid
 nicht, und eine Einstellung, die nichts färbt, wäre eine Attrappe. Der Zustand
@@ -219,11 +220,14 @@ Die Einstellungsseite ist bereits umgestellt (Karte plus Listengruppe je
 Gruppe) und hat mit den Kategorie-Gruppen ein Muster, an dem sich ein
 Farbabschnitt orientieren kann.
 
-**Erledigt, zusammen mit Punkt 1.** Der Abschnitt folgt genau diesem Muster:
-je eine Karte für Int, Ex und Int+Ex, darin fünf Zeilen. Jede Zeile zeigt sich
-in ihren eigenen beiden Farben — die einzige ehrliche Vorschau — und trägt zwei
-Farbwähler und einen Knopf zurück auf die Vorgabe.
+**Erledigt, zusammen mit Punkt 1.** Die Farben liegen auf einer eigenen
+Unterseite und folgen genau diesem Muster: zuerst eine Karte „Grundfarben", dann
+je eine für Int, Ex und Int+Ex. Jede Zeile zeigt sich in ihren eigenen beiden
+Farben — die einzige ehrliche Vorschau — und trägt zwei Farbwähler und einen
+Knopf zurück auf die Vorgabe.
 
-**Kein zusätzlicher Eintrag in der Navigation.** Die Seite hat jetzt zwei
-Themen und bekommt Sprungmarken an den Kopf; die Abschnitte gehören zu den
-Einstellungen, nicht neben Drehplan und Projekte.
+**Ein Thema je Unterseite, kein zusätzlicher Eintrag in der Navigation.**
+Kategorien und Farben stehen unter `/settings/categories` und
+`/settings/colors`, umgeschaltet über Reiter im Kopf der Einstellungen. Als
+Abschnitte auf einer Seite liefen sie ineinander, und das wird mit jeder
+weiteren Einstellung schlimmer.

@@ -2,9 +2,15 @@
    hierarchy: Int, Ext or both, combined with the time of day. That makes
    fifteen states, and each carries a background and a text colour separately.
 
+   Four more colours frame those fifteen: the table header, the Set header, the
+   Role rows and the count cells. They are not states — nothing about a Scene
+   decides them — but to whoever sets them they are the same kind of setting, so
+   they travel in the same list, the same endpoint and the same table, and they
+   come first.
+
    The list lives here because three places need the same one: the server
    validates against it, the settings page lists it, and the grid looks up a
-   Scene's colour in it. */
+   colour in it. */
 
 export const INT_EXT_VALUES = ["intern", "extern"] as const;
 export const TIME_OF_DAY_VALUES = ["tag", "nacht", "morgen", "dim", "abend"] as const;
@@ -48,13 +54,30 @@ export function sceneColorKey(
   return `${sides.join("+")}-${time}`;
 }
 
-export interface SceneColorState {
+export type ColorTargetKind = "chrome" | "scene";
+
+export interface ColorTarget {
   key: string;
-  intExt: IntExt[];
-  timeOfDay: TimeOfDay;
+  kind: ColorTargetKind;
   background: string;
   textColor: string;
 }
+
+export interface SceneColorState extends ColorTarget {
+  kind: "scene";
+  intExt: IntExt[];
+  timeOfDay: TimeOfDay;
+}
+
+/* The grid's frame, top to bottom in the order it reads on screen. Every one
+   keeps the value it was hard-wired to, so nothing moves until someone changes
+   it on purpose. */
+export const CHROME_COLOR_TARGETS: ColorTarget[] = [
+  { key: "header", kind: "chrome", background: "#000000", textColor: "#ffffff" },
+  { key: "set", kind: "chrome", background: "#f4c896", textColor: "#212529" },
+  { key: "role", kind: "chrome", background: "#a5c882", textColor: "#212529" },
+  { key: "count", kind: "chrome", background: "#5b9bd5", textColor: "#212529" },
+];
 
 /* Only four of the fifteen are named in the brief — Int/Night light blue,
    Ext/Day yellow, Ext/Night dark blue, Int+Ext/Night darker still. The rest
@@ -94,11 +117,14 @@ const INT_EXT_COMBINATIONS: IntExt[][] = [["intern"], ["extern"], ["intern", "ex
 export const SCENE_COLOR_STATES: SceneColorState[] = INT_EXT_COMBINATIONS.flatMap((sides) =>
   TIME_OF_DAY_VALUES.map((timeOfDay) => {
     const key = `${sides.join("+")}-${timeOfDay}`;
-    return { key, intExt: sides, timeOfDay, ...DEFAULTS[key] };
+    return { key, kind: "scene" as const, intExt: sides, timeOfDay, ...DEFAULTS[key] };
   }),
 );
 
-export const SCENE_COLOR_KEYS: string[] = SCENE_COLOR_STATES.map((state) => state.key);
+// Frame first, then the states — the order the settings page lists them in.
+export const COLOR_TARGETS: ColorTarget[] = [...CHROME_COLOR_TARGETS, ...SCENE_COLOR_STATES];
+
+export const COLOR_TARGET_KEYS: string[] = COLOR_TARGETS.map((target) => target.key);
 
 /** WCAG relative luminance of a "#rrggbb" colour. */
 export function relativeLuminance(hex: string): number {

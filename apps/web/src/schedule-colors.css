@@ -1,11 +1,15 @@
-/* Color hierarchy matching the Excel template: Set > Scene > Role > Komparsen-count.
-   Bootstrap's table cells read `background-color: var(--bs-table-bg)` via its own
-   low-specificity selector, so we set that variable rather than fighting it with
-   a higher-specificity background-color override. */
+/* Bootstrap paints both `background-color` and `color` on every table cell from
+   its own variables, through a selector that outranks a single class. So the
+   colours here are handed to those variables rather than fought with a plain
+   property — the same reason for the background and for the text.
+
+   Header, Set, Role and count are settings now. All four arrive as inherited
+   custom properties set once on the <table>; the values below are the
+   fallbacks, and they are what the grid was hard-wired to before. */
 .schedule-table thead th {
-  --bs-table-bg: #000;
-  background-color: #000;
-  color: #fff;
+  --bs-table-bg: var(--header-bg, #000);
+  background-color: var(--header-bg, #000);
+  color: var(--header-text, #fff);
   vertical-align: middle;
   text-align: center;
   position: sticky;
@@ -19,21 +23,26 @@
 }
 
 .cell-set {
-  --bs-table-bg: #f4c896;
+  --bs-table-bg: var(--set-bg, #f4c896);
+  --bs-table-color: var(--set-text, #212529);
 }
 
+/* The Scene's own colour is set per cell, because it differs from row to row;
+   the neutral yellow holds while In/Ex or the time of day is still missing. */
 .cell-scene {
   --bs-table-bg: #fff176;
   vertical-align: top;
 }
 
 .cell-role {
-  --bs-table-bg: #a5c882;
+  --bs-table-bg: var(--role-bg, #a5c882);
+  --bs-table-color: var(--role-text, #212529);
   vertical-align: top;
 }
 
 .cell-count {
-  --bs-table-bg: #5b9bd5;
+  --bs-table-bg: var(--count-bg, #5b9bd5);
+  --bs-table-color: var(--count-text, #212529);
 }
 
 .schedule-table td input,
@@ -143,6 +152,48 @@
 }
 
 .cell-scene.has-dark-state .scene-flags .btn-check:not(:checked) + .btn {
+  color: inherit;
+  border-color: currentColor;
+}
+
+/* Same story one level up: the Set header's colour is a setting, and its
+   contents were all tuned to the old orange — the red ×, the grey handle, the
+   muted "aus erster/letzter Szene" hints, the outline button, the brown totals
+   label and the near-black divider above the totals row. On a dark Set they
+   give way; on a light one nothing changes. */
+.has-dark-set .cell-set .drag-handle,
+.has-dark-set .cell-set .row-delete:not(:disabled) {
+  color: inherit;
+}
+
+/* Not `inherit`: this rule sits on the cell itself, so it would reach past the
+   cell's own colour to the row, which has none. */
+.has-dark-set .set-totals-label {
+  color: var(--set-text, #6b4d24);
+}
+
+.has-dark-set .cell-set .form-text {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.has-dark-set .cell-set .btn-outline-secondary {
+  color: inherit;
+  border-color: currentColor;
+}
+
+.has-dark-set .set-totals-row td {
+  border-top-color: rgba(255, 255, 255, 0.35);
+}
+
+/* A Role row holds the same two: the "Rolle löschen" × and the "+ Rolle"
+   outline button. The count cells need nothing — their only control is the
+   neu/wdh. toggle, which paints its own background. */
+.has-dark-role .cell-role .row-delete:not(:disabled) {
+  color: inherit;
+}
+
+.has-dark-role .cell-role .btn-outline-secondary {
   color: inherit;
   border-color: currentColor;
 }

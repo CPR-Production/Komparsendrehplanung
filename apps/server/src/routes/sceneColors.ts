@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { HEX_COLOR_PATTERN, SCENE_COLOR_STATES } from "@komparsen/shared";
+import { COLOR_TARGETS, HEX_COLOR_PATTERN } from "@komparsen/shared";
 import { and, eq, sql } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
@@ -13,10 +13,10 @@ const colorSchema = z.object({
   textColor: z.string().regex(HEX_COLOR_PATTERN),
 });
 
-// The set of states is fixed by the domain, not by the caller. An unknown key
+// The set of targets is fixed by the domain, not by the caller. An unknown key
 // would sit in the table forever without ever being read back.
-function knownState(key: string) {
-  return SCENE_COLOR_STATES.find((state) => state.key === key);
+function knownTarget(key: string) {
+  return COLOR_TARGETS.find((target) => target.key === key);
 }
 
 // Defaults first, the project's overrides on top. A project only stores what it
@@ -31,15 +31,16 @@ sceneColorsRouter.get("/projects/:projectId/scene-colors", (req, res) => {
       .map((row) => [row.stateKey, row] as const),
   );
 
+  // Only the key and the two colours go over the wire: labels and grouping come
+  // from the same shared list on the other side, so repeating them here would
+  // just be a second version of the truth.
   res.json(
-    SCENE_COLOR_STATES.map((state) => {
-      const override = stored.get(state.key);
+    COLOR_TARGETS.map((target) => {
+      const override = stored.get(target.key);
       return {
-        stateKey: state.key,
-        intExt: state.intExt,
-        timeOfDay: state.timeOfDay,
-        backgroundColor: override?.backgroundColor ?? state.background,
-        textColor: override?.textColor ?? state.textColor,
+        key: target.key,
+        backgroundColor: override?.backgroundColor ?? target.background,
+        textColor: override?.textColor ?? target.textColor,
         isCustom: !!override,
       };
     }),
@@ -47,9 +48,9 @@ sceneColorsRouter.get("/projects/:projectId/scene-colors", (req, res) => {
 });
 
 sceneColorsRouter.put("/projects/:projectId/scene-colors/:stateKey", (req, res) => {
-  const state = knownState(req.params.stateKey);
-  if (!state) {
-    res.status(404).json({ error: "unknown scene color state" });
+  const target = knownTarget(req.params.stateKey);
+  if (!target) {
+    res.status(404).json({ error: "unknown color target" });
     return;
   }
 
@@ -64,7 +65,7 @@ sceneColorsRouter.put("/projects/:projectId/scene-colors/:stateKey", (req, res) 
     .values({
       id: randomUUID(),
       projectId: req.params.projectId,
-      stateKey: state.key,
+      stateKey: target.key,
       ...parsed.data,
     })
     .onConflictDoUpdate({
@@ -75,9 +76,7 @@ sceneColorsRouter.put("/projects/:projectId/scene-colors/:stateKey", (req, res) 
     .all();
 
   res.json({
-    stateKey: row.stateKey,
-    intExt: state.intExt,
-    timeOfDay: state.timeOfDay,
+    key: row.stateKey,
     backgroundColor: row.backgroundColor,
     textColor: row.textColor,
     isCustom: true,

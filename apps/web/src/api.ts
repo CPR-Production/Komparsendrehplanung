@@ -45,14 +45,15 @@ export interface CategoryGroup {
   sortOrder: number;
 }
 
-export interface SceneColor {
-  stateKey: string;
-  intExt: string[];
-  timeOfDay: string;
+export interface ColorSetting {
+  // One of COLOR_TARGET_KEYS in @komparsen/shared — the two frame colours and
+  // the fifteen Scene states. Labels and grouping come from that same list, so
+  // the wire format carries nothing but the key and the two colours.
+  key: string;
   backgroundColor: string;
   textColor: string;
-  // False while the state still follows the default from @komparsen/shared —
-  // the settings page only offers "reset" for the ones a project has changed.
+  // False while the target still follows the default — the settings page only
+  // offers "reset" for the ones a project has actually changed.
   isCustom: boolean;
 }
 
@@ -181,17 +182,17 @@ export const api = {
     request<Category>("PATCH", `/categories/${categoryId}`, { name }),
   deleteCategory: (categoryId: string) => request<void>("DELETE", `/categories/${categoryId}`),
 
-  listSceneColors: (projectId: string) =>
-    request<SceneColor[]>("GET", `/projects/${projectId}/scene-colors`),
-  setSceneColor: (projectId: string, stateKey: string, colors: { backgroundColor: string; textColor: string }) =>
-    request<SceneColor>(
+  listColorSettings: (projectId: string) =>
+    request<ColorSetting[]>("GET", `/projects/${projectId}/scene-colors`),
+  setColorSetting: (projectId: string, key: string, colors: { backgroundColor: string; textColor: string }) =>
+    request<ColorSetting>(
       "PUT",
-      `/projects/${projectId}/scene-colors/${encodeURIComponent(stateKey)}`,
+      `/projects/${projectId}/scene-colors/${encodeURIComponent(key)}`,
       colors,
     ),
-  resetSceneColor: (projectId: string, stateKey: string) =>
-    request<void>("DELETE", `/projects/${projectId}/scene-colors/${encodeURIComponent(stateKey)}`),
-  resetAllSceneColors: (projectId: string) =>
+  resetColorSetting: (projectId: string, key: string) =>
+    request<void>("DELETE", `/projects/${projectId}/scene-colors/${encodeURIComponent(key)}`),
+  resetAllColorSettings: (projectId: string) =>
     request<void>("DELETE", `/projects/${projectId}/scene-colors`),
 
   createScene: (setId: string, data: Partial<SceneRow>) =>

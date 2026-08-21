@@ -36,7 +36,7 @@ Der wichtigste fachliche Punkt: **`isNew` entscheidet, ob ein Slot zählt.**
 
 Bei Änderungen an der Zähllogik immer
 `npm run test --workspace packages/shared` laufen lassen. Getestet ist dort
-außerdem `sceneColors.ts` (siehe „Szenenfarben"); `packages/shared` bleibt der
+außerdem `sceneColors.ts` (siehe „Farben"); `packages/shared` bleibt der
 einzige Ort mit Tests.
 
 ## Grid-Layout
@@ -80,12 +80,15 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Total/Scene | Fuzz
   den jeweiligen Kategorie-Spalten, Gesamtsumme in Total. Bewusst spaltenbündig
   statt als Fließtext, damit sie unter ihrem Kategorie- und Gruppen-Header steht.
 
-### Szenenfarben
+### Farben
 
-Eine Szene wird **nach ihrem Zustand** eingefärbt, nicht nach ihrer Stelle in der
-Hierarchie: Int, Ex oder beides, mal fünf Tageszeiten — fünfzehn Zustände. Set,
-Rolle und Anzahl behalten ihre Hierarchiefarben, weil es für sie keinen Zustand
-gibt, aus dem sich etwas ableiten ließe.
+Neunzehn Ziele, alle pro Projekt einstellbar, Hintergrund und Text getrennt:
+
+- **Vier Grundfarben** — Tabellenkopf, Set, Rolle, Anzahl. Sie tragen als
+  Vorgabe genau die Werte, auf die das Grid vorher fest verdrahtet war.
+- **Fünfzehn Szenenzustände** — eine Szene wird **nach ihrem Zustand**
+  eingefärbt, nicht nach ihrer Stelle in der Hierarchie: Int, Ex oder beides,
+  mal fünf Tageszeiten. Ohne In/Ex oder Tageszeit bleibt das neutrale Gelb.
 
 `packages/shared/src/sceneColors.ts` ist die einzige Liste. Sie muss geteilt
 sein: der Server prüft gegen sie, die Einstellungsseite zeigt sie als Zeilen,
@@ -93,37 +96,49 @@ das Grid schlägt darin nach. Dort liegen auch `parseIntExt`/`formatIntExt` —
 das `;`-Format von `scene.int_ext` gehört neben `sceneColorKey`, weil beide
 den Zustand aus demselben String lesen.
 
-Vier Kopplungen:
+Fünf Kopplungen:
 
 - **Gespeichert wird nur, was abweicht.** `scene_color` (pro Projekt) hält
-  ausschließlich geänderte Zustände, `GET` legt sie über die Vorgaben aus dem
+  ausschließlich geänderte Ziele, `GET` legt sie über die Vorgaben aus dem
   Code. Deshalb brauchte kein Bestandsprojekt eine Nachbefüllung, und eine
   spätere Änderung an den Vorgaben erreicht alle, die nichts angefasst haben.
   **Zurücksetzen ist ein `DELETE`, kein Schreiben des Vorgabewerts** — sonst
-  würde der Zustand den Vorgaben nicht mehr folgen.
-- **Der Zustandsschlüssel ist ein URL-Pfadsegment** (`PUT …/scene-colors/:key`).
-  Er darf deshalb kein `/` enthalten: Int und Ex hängen mit `+` aneinander, die
+  würde das Ziel den Vorgaben nicht mehr folgen.
+- **Die Tabelle heißt `scene_color` und der Endpunkt `/scene-colors`**, obwohl
+  beide auch die Grundfarben tragen — benannt, als es nur die Szenenzustände
+  gab. Eine Umbenennung wäre eine Migration ohne Gegenwert, wie bei
+  `scene.day_night`.
+- **Der Schlüssel ist ein URL-Pfadsegment** (`PUT …/scene-colors/:key`). Er darf
+  deshalb kein `/` enthalten: Int und Ex hängen mit `+` aneinander, die
   Tageszeit folgt nach `-` (`intern+extern-nacht`). Der Client kodiert ihn
   zusätzlich.
-- **`--bs-table-bg` per Inline-Style**, wie überall im Grid — die Farbe ist
-  Daten, keine Klasse.
-- **`has-dark-state` ist kein Schönheitsklassen-Name.** Die Bedienelemente in
-  der Zelle tragen feste Farben, die gegen das alte Gelb gewählt waren: rotes
-  ×, grauer Anfasser, dunkle Knopfränder. Auf einem Nachtblau verschwinden alle
-  drei. Nur dort weichen sie der Textfarbe der Zelle; auf hellen Zuständen
-  bleibt das Rot, weil es dort liest und das Löschen sonst sein einziges Signal
-  verlöre. `isDarkColor` entscheidet das.
+- **Farben laufen über Bootstraps eigene Zellvariablen**, `--bs-table-bg` und
+  `--bs-table-color`. Bootstrap setzt beide Eigenschaften über
+  `.table > :not(caption) > * > *` — das schlägt eine einzelne Klasse, ein
+  direktes `color:` verliert also. Die vier Grundfarben hängen als geerbte
+  Custom Properties am `<table>` (`--set-bg` und so weiter, Vorgabewerte als
+  Fallback im Stylesheet); die Szenenfarbe steht am jeweiligen `<td>`, weil sie
+  sich von Zeile zu Zeile unterscheidet.
+- **`has-dark-state`, `has-dark-set`, `has-dark-role` sind keine
+  Schönheitsnamen.** Die Bedienelemente in diesen Zellen tragen feste Farben,
+  die gegen Gelb und Orange gewählt waren: rotes ×, grauer Anfasser, dunkle
+  Knopfränder, die gedämpften Hinweistexte, die Trennlinie über der Summenzeile.
+  Auf einem Nachtblau verschwinden sie. Nur dann weichen sie der Textfarbe der
+  Zelle; auf hellen Farben bleibt das Rot, weil es dort liest und das Löschen
+  sonst sein einziges Signal verlöre. `isDarkColor` entscheidet das. Für
+  Tabellenkopf und Anzahl gibt es bewusst keine solche Klasse — dort steht kein
+  Element mit eigener fester Farbe.
 
-Die Vorgabepalette nennt die Vorlage nur an vier Stellen; der Rest füllt
-dazwischen auf. **Ein Test in `packages/shared` hält jede Paarung auf WCAG AA**
-— die Farben werden ausgeliefert, bevor sie jemand anfasst.
+Die Vorgabepalette der Szenen nennt die Vorlage nur an vier Stellen; der Rest
+füllt dazwischen auf. **Ein Test in `packages/shared` hält jede Paarung auf
+WCAG AA** — die Farben werden ausgeliefert, bevor sie jemand anfasst.
 
 ### Styling-Konventionen
 
 - Farbhierarchie in `schedule-colors.css`, angelehnt an die Excel-Vorlage:
-  Set (orange) > Role (grün) > Count (blau). Das Szenen-Gelb greift nur noch,
-  solange eine Szene weder In/Ex noch Tageszeit gesetzt hat — sonst siehe
-  „Szenenfarben".
+  Set (orange) > Role (grün) > Count (blau) — inzwischen aber nur noch als
+  Vorgabewerte, siehe „Farben". Das Szenen-Gelb greift nur, solange eine Szene
+  weder In/Ex noch Tageszeit gesetzt hat.
 - Bootstrap liest Zellhintergründe über `--bs-table-bg`. Deshalb **diese Variable
   setzen**, statt mit höherer Spezifität gegen `background-color` anzukämpfen.
 - Löschen ist app-weit einheitlich `.row-delete` (rotes ×, festes Quadrat) — im
@@ -170,7 +185,7 @@ Seiten sind unterschiedlich weit:
 | `ScheduleTable` | weitgehend umgestellt (form-control-sm, btn-group, d-flex) + eigenes CSS |
 | `ProjectSchedulePage` Header | umgestellt; Höhe/Sticky bleiben inline (Kopplung an `--app-header-height`) |
 | `ScheduleTableHead` | inline `width`-Styles je Spalte — bewusst, steuert das feste Tabellenraster |
-| `SettingsPage` | umgestellt (card + list-group je Gruppe, `form-control`/`btn`, `.row-delete`); trägt jetzt zwei Abschnitte, Kategorien und Farben, über Sprungmarken statt über einen zweiten Nav-Eintrag |
+| `SettingsPage` | nur noch Hülle: Kopf, Reiter, `<Outlet/>`. Ein Thema je Unterseite — `SettingsCategoriesPage` und `SettingsColorsPage` (card + list-group, `form-control`/`btn`, `.row-delete`). `/settings` ohne Unterpfad leitet auf die Kategorien um, wo es vorher aufging. Ein zweiter Eintrag in der App-Navigation kam bewusst nicht dazu |
 | `SetSection` | reine Logik, kein Markup |
 
 Damit ist die Umstellung durch. Übrig sind nur noch bewusste Inline-Styles:
