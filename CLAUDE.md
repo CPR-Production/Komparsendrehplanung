@@ -157,6 +157,41 @@ Drei Kopplungen, die man kennen muss:
   `better-sqlite3` bekommt sein Addon als geladenes Objekt durchgereicht, weil
   das `require()` der SEA-Runtime nur Builtins auflöst.
 
+### Das macOS-Fenster
+
+`infra/installer/macos/launcher/main.swift` ist auf dem Mac das
+`CFBundleExecutable` — ein kleines AppKit-Fenster, das den Server als
+Kindprozess führt und ihn beim Beenden mitnimmt. Ohne das ist die App ein reiner
+Node-Prozess: keine WindowServer-Verbindung, also kein Dock-Eintrag, kein
+Laufindikator und kein Weg zum Beenden außer der Aktivitätsanzeige.
+
+Zwei Kopplungen:
+
+- **Ende-Code 75.** `restart()` in `services/updater.ts` startet den Nachfolger
+  nur dann selbst, wenn `KOMPARSEN_SUPERVISED` **nicht** gesetzt ist; unter dem
+  Fenster beendet es sich stattdessen mit 75, und das Fenster startet neu. Ein
+  selbst gestarteter Nachfolger hinge nicht mehr am Fenster. Die Zahl steht in
+  beiden Dateien und muss zusammenpassen.
+- **Nicht in der Nutzlast.** Wie die `.icns` bleibt der Wrapper vom
+  Selbst-Update unangetastet — das hält nebenbei die Bundle-Signatur gültig,
+  kostet aber dasselbe: Änderungen kommen erst per Neuinstallation an.
+
+Das Fenster misst seine Höhe selbst (`fitWindowToContent`). Feste Koordinaten
+schneiden bei größerer Systemschrift Text ab, deshalb Auto Layout.
+
+### Icons
+
+Eine Zeichnung, `infra/installer/assets/icon.svg`, wird von
+`npm run build:icons` zu `.icns`, `.ico`, Linux-PNG und Favicons gerastert.
+Die Ergebnisse **liegen fertig im Repo** — das Skript läuft nicht im Workflow,
+weil es Chrome, `sips` und `iconutil` braucht. Wer die Zeichnung ändert, ruft es
+von Hand auf und checkt die erzeugten Dateien mit ein.
+
+Zwei Kopplungen: macOS bekommt eine eigene, auf 824/1024 verkleinerte Fassung
+mit Schatten, und die `.icns` liegt in `Contents/Resources`, also außerhalb der
+Nutzlast — ein neues Motiv erreicht Nutzer deshalb nur über eine
+Neuinstallation, nicht per Selbst-Update.
+
 Lokal probieren: `npm run build:release` (optional `--version=1.2.3`), dann
 `bash scripts/smoke-test.sh`. Der Rauchtest läuft auch im Workflow und legt
 testweise ein Projekt an — nur ein Schreibvorgang beweist, dass die Migrationen

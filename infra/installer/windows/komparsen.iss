@@ -26,6 +26,8 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayName=Komparsendrehplanung {#AppVersion}
+SetupIconFile=..\assets\icon.ico
+UninstallDisplayIcon={app}\komparsen.ico
 
 [Languages]
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"
@@ -34,10 +36,15 @@ Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 ; Die ganze Nutzlast flach ins Programmverzeichnis — die App findet ihre
 ; Dateien über den Programmpfad (siehe apps/server/src/paths.ts).
 Source: "..\..\..\build\release\payload\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Die Verknüpfungen holen ihr Icon aus dieser Datei, nicht aus der Binary: in
+; der komparsen.exe steckt das SEA-Bündel als PE-Ressource, und ein Werkzeug
+; wie rcedit, das nachträglich ein Icon einträgt, schreibt genau dort hinein.
+; Ein separates .ico kostet 120 KB und lässt die Binary in Ruhe.
+Source: "..\assets\icon.ico"; DestDir: "{app}"; DestName: "komparsen.ico"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Komparsendrehplanung"; Filename: "{app}\komparsen.exe"
-Name: "{autodesktop}\Komparsendrehplanung"; Filename: "{app}\komparsen.exe"; Tasks: desktopicon
+Name: "{group}\Komparsendrehplanung"; Filename: "{app}\komparsen.exe"; IconFilename: "{app}\komparsen.ico"
+Name: "{autodesktop}\Komparsendrehplanung"; Filename: "{app}\komparsen.exe"; IconFilename: "{app}\komparsen.ico"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "Verknüpfung auf dem Desktop anlegen"; GroupDescription: "Zusätzliche Verknüpfungen:"

@@ -56,8 +56,19 @@ cd Komparsendrehplanung
 `./install.sh --with-service` richtet zusätzlich eine systemd-User-Unit ein, die
 die App bei jeder Anmeldung startet.
 
-Nach dem Start öffnet sich der Browser auf http://localhost:3001. Das
-Konsolenfenster gehört dazu — es zu schließen beendet die Anwendung.
+Nach dem Start öffnet sich der Browser auf http://localhost:3001.
+
+Wie man die Anwendung wieder los wird, unterscheidet sich je System:
+
+| System | Läuft sichtbar als | Beenden |
+| --- | --- | --- |
+| macOS | kleines Fenster „Komparsendrehplanung" | Fenster schließen oder darin „Beenden" |
+| Windows | Konsolenfenster | Fenster schließen |
+| Linux | Konsolenfenster, als Dienst gar nicht | `systemctl --user stop komparsendrehplanung` |
+
+Den Browser-Tab zu schließen genügt in keinem Fall — der Server läuft dann
+weiter. Auf dem Mac ist deshalb das kleine Fenster die Anwendung: Es hat einen
+Eintrag im Dock, und solange es offen ist, ist der Drehplan erreichbar.
 
 ### Wo die Daten liegen
 
@@ -69,6 +80,21 @@ Datenbank nicht anfassen kann:
 | macOS | `~/Library/Application Support/Komparsendrehplanung/komparsen.sqlite` |
 | Windows | `%LOCALAPPDATA%\Komparsendrehplanung\komparsen.sqlite` |
 | Linux | `~/.local/share/Komparsendrehplanung/komparsen.sqlite` |
+
+Auf dem Mac ist das der **Library-Ordner im Benutzerverzeichnis**, nicht der auf
+der Festplatte — der Finder blendet ihn aus. Erreichbar über *Gehe zu ▸ Gehe zum
+Ordner* oder aus dem Terminal:
+
+```bash
+open ~/Library/Application\ Support/Komparsendrehplanung/
+```
+
+**Zum Sichern gehören drei Dateien.** Neben der `komparsen.sqlite` liegen eine
+`-wal` und eine `-shm`; SQLite schreibt neue Änderungen zuerst in die `-wal` und
+räumt sie erst später in die Hauptdatei. Die kann deshalb winzig aussehen,
+während die eigentliche Arbeit in der `-wal` steht. Wer nur die `.sqlite`
+kopiert, sichert unter Umständen einen viel älteren Stand. Am sichersten kopiert
+man alle drei, nachdem man die Anwendung beendet hat.
 
 ### Prüfsummen kontrollieren
 

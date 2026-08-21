@@ -24,6 +24,7 @@ mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR"
 # lassen, sonst serviert das Frontend Reste aus zwei Ständen.
 rm -rf "${APP_DIR:?}/web" "${APP_DIR:?}/migrations"
 cp -R "$SOURCE_DIR/komparsen" "$SOURCE_DIR/better_sqlite3.node" "$SOURCE_DIR/web" "$SOURCE_DIR/migrations" "$APP_DIR/"
+cp "$SOURCE_DIR/icon.png" "$APP_DIR/"
 chmod +x "$APP_DIR/komparsen"
 
 ln -sfn "$APP_DIR/komparsen" "$BIN_DIR/komparsendrehplanung"
@@ -34,6 +35,7 @@ Type=Application
 Name=Komparsendrehplanung
 Comment=Drehplanung für Komparsen
 Exec=$APP_DIR/komparsen
+Icon=$APP_DIR/icon.png
 Terminal=false
 Categories=Office;
 DESKTOP

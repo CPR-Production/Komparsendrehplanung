@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Quellgrafik für alle Icons: .icns (macOS), .ico (Windows), .png (Linux) und
+  das Favicon. Erzeugt werden die aus dieser Datei von scripts/build-icons.mjs.
+
+  Die vier Balken tragen die Farbhierarchie der Excel-Vorlage, in derselben
+  Reihenfolge wie im Drehplan: Set (orange) > Szene (gelb) > Rolle (grün) >
+  Anzahl (blau). Wer sie in schedule-colors.css ändert, sollte hier nachziehen.
+
+  Alles Sichtbare liegt in <g id="artwork">: das Bauskript schneidet den Inhalt
+  heraus und setzt ihn für die macOS-Variante verkleinert samt Schlagschatten in
+  ein neues <svg> — so bleibt die Zeichnung an einer Stelle.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <g id="artwork">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#3c424b"/>
+        <stop offset="1" stop-color="#15171b"/>
+      </linearGradient>
+      <!-- Hält die schrägen Streifen in der Klappe; ohne das ragen sie über
+           deren abgerundete Ecken hinaus. -->
+      <clipPath id="clapper-clip">
+        <rect x="176" y="300" width="672" height="128" rx="26"/>
+      </clipPath>
+    </defs>
+
+    <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+
+    <!-- Klappe, aufgeklappt um den Scharnierpunkt links unten. -->
+    <g transform="rotate(-12 200 428)">
+      <rect x="176" y="300" width="672" height="128" rx="26" fill="#1b1e23"/>
+      <g clip-path="url(#clapper-clip)" fill="#f8f5ef">
+        <polygon points="200,300 262,300 216,428 154,428"/>
+        <polygon points="334,300 396,300 350,428 288,428"/>
+        <polygon points="468,300 530,300 484,428 422,428"/>
+        <polygon points="602,300 664,300 618,428 556,428"/>
+        <polygon points="736,300 798,300 752,428 690,428"/>
+      </g>
+    </g>
+
+    <!-- Tafel mit den vier Ebenen des Drehplans, treppenförmig eingerückt. -->
+    <rect x="176" y="452" width="672" height="396" rx="36" fill="#f8f5ef"/>
+    <g>
+      <rect x="236" y="510" width="552" height="52" rx="16" fill="#f4c896"/>
+      <rect x="276" y="586" width="512" height="52" rx="16" fill="#fff176"/>
+      <rect x="316" y="662" width="472" height="52" rx="16" fill="#a5c882"/>
+      <rect x="356" y="738" width="432" height="52" rx="16" fill="#5b9bd5"/>
+    </g>
+  </g>
+</svg>

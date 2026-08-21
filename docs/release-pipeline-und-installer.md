@@ -63,6 +63,26 @@ migrations/           Datenbank-Migrationen
 Vier Runner sind nötig, weil `better_sqlite3.node` nur auf der Zielplattform
 entsteht — es lässt sich nicht kreuzweise bauen.
 
+Im macOS-Bundle liegt daneben noch ein zweites Programm: das Fenster aus
+`infra/installer/macos/launcher/main.swift`, das `package.sh` mit `swiftc`
+übersetzt. Es ist das `CFBundleExecutable`, startet den Server als Kindprozess
+und nimmt ihn beim Beenden mit. Ohne das wäre die App auf dem Mac ein reiner
+Node-Prozess ohne Fenster — kein Dock-Eintrag, kein Laufindikator, kein Weg zum
+Beenden außer der Aktivitätsanzeige.
+
+Daran hängen zwei Dinge:
+
+- **Der Updater startet unter dem Fenster nicht selbst neu.** `restart()` in
+  `apps/server/src/services/updater.ts` beendet sich mit Code **75**, wenn
+  `KOMPARSEN_SUPERVISED` gesetzt ist; das Fenster erkennt den Code und startet
+  den Server neu. Startete der Server sich selbst, hinge der Nachfolger nicht
+  mehr am Fenster und liefe nach dem Schließen als Waise weiter. Die Zahl steht
+  an beiden Enden im Quelltext und muss zusammenpassen.
+- **Das Fenster liegt nicht in der Nutzlast.** Damit tauscht das Selbst-Update
+  es nie aus, und die Signatur des Bundles hängt weiter an einem unveränderten
+  Hauptprogramm. Der Preis ist derselbe wie beim Icon: Eine Änderung am Fenster
+  erreicht Nutzer erst mit einer Neuinstallation.
+
 Der Intel-Mac-Runner bleibt bewusst drin, solange es ihn gibt: Im Büro ist nicht
 sicher, welche Hardware noch im Einsatz ist, und GitHub bietet `macos-15-intel`
 bis **Herbst 2027** an. Danach endet x86_64 auf macOS bei GitHub ganz — dann
@@ -159,6 +179,40 @@ Ergebnis liegt in `build/release/dist/`, die rohe Nutzlast in
 
 Mit `--skip-build` überspringt das Skript die Workspace-Builds — praktisch, wenn
 man nur am Verpacken schraubt.
+
+## Icons
+
+Alle Icons entstehen aus einer einzigen Zeichnung,
+`infra/installer/assets/icon.svg` — die vier Balken darin sind die
+Farbhierarchie des Drehplans (Set, Szene, Rolle, Anzahl).
+
+Erzeugt werden daraus:
+
+| Datei | Wohin |
+| --- | --- |
+| `infra/installer/assets/icon.icns` | `Contents/Resources` des App-Bundles |
+| `infra/installer/assets/icon.ico` | Installer-Icon und Verknüpfungen unter Windows |
+| `infra/installer/assets/icon-512.png` | `Icon=` im `.desktop`-Eintrag unter Linux |
+| `apps/web/public/favicon.*` | Browser-Tab und Home-Bildschirm |
+
+```bash
+npm run build:icons
+```
+
+Das läuft **nicht** im Release-Workflow: die erzeugten Dateien liegen fertig im
+Repo, wer die Zeichnung ändert, ruft das Skript einmal von Hand auf und checkt
+das Ergebnis mit ein. Ein Release-Runner müsste sonst jedes Mal einen Browser
+mitbringen — das Skript rastert das SVG mit Chrome und braucht zusätzlich
+`sips` und `iconutil`, läuft also nur auf macOS.
+
+Zwei Dinge, die daran hängen:
+
+- **Das Motiv gibt es in zwei Fassungen.** macOS setzt seine Icons auf 824 von
+  1024 Punkten und legt einen Schatten darunter; Windows und Linux nutzen die
+  volle Fläche. Das Skript baut beide aus derselben Zeichnung.
+- **Ein neues Icon kommt nicht per Selbst-Update an.** Der Updater tauscht die
+  Nutzlast aus, und die `.icns` liegt bewusst daneben in `Contents/Resources`.
+  Ein geändertes Motiv erreicht die Nutzer erst mit einer Neuinstallation.
 
 ## Wie ein Update beim Nutzer abläuft
 

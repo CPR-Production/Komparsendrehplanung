@@ -18,6 +18,7 @@ rm -rf "$(dirname "$STAGING")"
 mkdir -p "$STAGING" "$DIST"
 cp -R "$PAYLOAD/." "$STAGING/"
 cp "$REPO_ROOT/infra/installer/linux/install.sh" "$STAGING/"
+cp "$REPO_ROOT/infra/installer/assets/icon-512.png" "$STAGING/icon.png"
 
 ARCHIVE="$DIST/Komparsendrehplanung-$VERSION-linux-$ARCH.tar.gz"
 rm -f "$ARCHIVE"

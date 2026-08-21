@@ -2,6 +2,10 @@
 # Verpackt die Nutzlast aus build/release/payload in ein App-Bundle und ein DMG.
 # Die Nutzlast bleibt flach in Contents/MacOS liegen, weil die App ihre Dateien
 # über den Programmpfad findet (siehe apps/server/src/paths.ts).
+#
+# Gestartet wird nicht die Nutzlast selbst, sondern das daneben übersetzte
+# Fenster aus launcher/main.swift — der Server allein hätte auf dem Mac weder
+# Dock-Eintrag noch Beenden-Knopf.
 set -euo pipefail
 
 VERSION="${1:?Version fehlt: package.sh <version>}"
@@ -17,8 +21,24 @@ APP="$STAGING/Komparsendrehplanung.app"
 [ -d "$PAYLOAD" ] || { echo "Keine Nutzlast in $PAYLOAD — vorher npm run build:release"; exit 1; }
 
 rm -rf "$STAGING"
-mkdir -p "$APP/Contents/MacOS" "$DIST"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$DIST"
 cp -R "$PAYLOAD/." "$APP/Contents/MacOS/"
+
+# Das Icon gehört nach Resources und damit ausdrücklich nicht in die Nutzlast:
+# das Selbst-Update tauscht nur Contents/MacOS aus. Ein geändertes Motiv kommt
+# deshalb erst mit einer neuen Installation an, nicht über ein Update.
+cp "$REPO_ROOT/infra/installer/assets/icon.icns" "$APP/Contents/Resources/Komparsendrehplanung.icns"
+
+# Für die Zielarchitektur des Runners, nicht für die des Übersetzers: die
+# Release-Matrix baut Intel und Apple Silicon auf getrennten Maschinen. Das
+# Mindestsystem muss zu LSMinimumSystemVersion weiter unten passen.
+command -v swiftc >/dev/null || { echo "swiftc fehlt — Xcode Command Line Tools installieren"; exit 1; }
+# Sprachfassung festgenagelt: Welches Xcode auf dem Runner steht, entscheidet
+# GitHub. Ein Compiler, der irgendwann auf Swift 6 vorgibt, würde die Closures
+# unten wegen strengerer Nebenläufigkeitsregeln zurückweisen.
+swiftc -O -swift-version 5 -target "$ARCH-apple-macos11" \
+  -o "$APP/Contents/MacOS/Komparsendrehplanung" \
+  "$REPO_ROOT/infra/installer/macos/launcher/main.swift"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -28,11 +48,13 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleName</key><string>Komparsendrehplanung</string>
   <key>CFBundleDisplayName</key><string>Komparsendrehplanung</string>
   <key>CFBundleIdentifier</key><string>com.github.cpr-production.komparsendrehplanung</string>
-  <key>CFBundleExecutable</key><string>komparsen</string>
+  <key>CFBundleExecutable</key><string>Komparsendrehplanung</string>
+  <key>CFBundleIconFile</key><string>Komparsendrehplanung</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleVersion</key><string>$VERSION</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
+  <key>NSHighResolutionCapable</key><true/>
 </dict>
 </plist>
 PLIST
@@ -80,9 +102,13 @@ haben, und bleibt danach etwa eine Stunde lang stehen. Ist die Ausnahme
 einmal gesetzt, startet die App künftig per Doppelklick wie jedes andere
 Programm.
 
-Danach öffnet sich der Browser auf http://localhost:3001.
-Das Fenster, das dabei aufgeht, gehört dazu — es zu schließen beendet
-die Anwendung.
+Danach öffnet sich der Browser auf http://localhost:3001, und daneben
+ein kleines Fenster "Komparsendrehplanung".
+
+Dieses kleine Fenster IST die laufende Anwendung. Solange es offen ist,
+ist der Drehplan erreichbar. Zum Beenden das Fenster schließen oder
+darin auf "Beenden" klicken. Nur den Browser-Tab zu schließen genügt
+nicht — dann läuft die Anwendung im Hintergrund weiter.
 
 Fragen und Fehler:
 https://github.com/CPR-Production/Komparsendrehplanung/issues

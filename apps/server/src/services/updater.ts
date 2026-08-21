@@ -152,8 +152,18 @@ export function cleanUpAfterUpdate() {
   }
 }
 
+// Unter dem macOS-Fenster (infra/installer/macos/launcher/main.swift) führt
+// nicht dieser Prozess den Neustart aus, sondern der Wrapper: Er erkennt den
+// Nachfolger an diesem Ende-Code. Ein selbst gestarteter Nachfolger hinge nicht
+// mehr am Fenster und liefe nach dem Schließen als Waise weiter — genau der
+// Zustand, den das Fenster abschaffen soll.
+const SUPERVISED_RESTART_EXIT_CODE = 75;
+
 function restart() {
   const relaunch = () => {
+    if (process.env.KOMPARSEN_SUPERVISED) {
+      process.exit(SUPERVISED_RESTART_EXIT_CODE);
+    }
     // process.execPath zeigt auf den Pfad, an dem jetzt die neue Binary liegt.
     spawn(process.execPath, process.argv.slice(1), {
       detached: true,
