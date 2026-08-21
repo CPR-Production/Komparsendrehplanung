@@ -38,8 +38,11 @@ Vorgabewerte, an denen wir uns ausrichten sollen:
 die Anlehnung an die Excel-Vorlage endet — wer `schedule-colors.css` anfasst,
 sollte vorher hier hereinsehen.
 
-Hängt zusammen mit Punkt 7: „Int+Ext/Night" setzt voraus, dass eine Szene
-gleichzeitig Int **und** Ext sein kann.
+**Hängt an Punkt 7, enger als zunächst gedacht.** Fuzzle zeigt die Farben in
+derselben Auswahlliste, aus der man den Zustand wählt — fünfzehn Einträge von
+Int/Day bis Int+Ext/Eve. Diese Liste ist damit zugleich die Zeilenliste der
+Farbeinstellung. Solange es die Zustände nicht gibt, gibt es auch nichts zu
+färben.
 
 **Offen:** Farben pro Projekt oder global? Die Kategorien liegen pro Projekt,
 die Farben würden dazu passen — dann braucht es aber eine Tabelle statt CSS.
@@ -111,16 +114,33 @@ gemeinsame Raster auf. Vor der Umsetzung entscheiden.
 (`ScheduleTable.tsx:44-51`): Intern/Extern und Tag/Nacht. In der Datenbank sind
 das zwei Textspalten, `scene.int_ext` und `scene.day_night`.
 
-**Soll:** Fuzzle kennt Kombinationen — die Farbtabelle in Punkt 1 nennt
-ausdrücklich **Int+Ext/Night**. Und die Tageszeit hat dort mehr Stufen als
-zwei: im Screenshot stehen **Morn**, **Day**, **Eve** und **Night**.
+**Soll:** Fuzzle löst das nicht über Umschalter, sondern über **eine
+Auswahlliste** mit allen Kombinationen. Fünfzehn Einträge plus „–" für nichts
+gesetzt, die ersten zehn mit einer Ziffer als Kürzel:
 
-Zwei Wege für die Bedienung wurden genannt: Umschaltung mit gedrückter
-Umschalttaste mehrfach auswählbar machen, oder schlicht Auswahlkästchen statt
-Umschaltung. Kästchen sind erklärungsfrei — Umschalttaste weiß niemand, dem man
-es nicht sagt.
+| | Day | Night | Morn | Dim | Eve |
+| --- | --- | --- | --- | --- | --- |
+| **Int** | 0 | 1 | 2 | 3 | 4 |
+| **Ext** | 5 | 6 | 7 | 8 | 9 |
+| **Int+Ext** | – | – | – | – | – |
 
-**Offen:** Datenmodell. Zwei Textspalten reichen für Kombinationen nicht sauber.
+Die Tageszeit hat dort also **fünf** Stufen, nicht zwei — neben Day, Night,
+Morn und Eve auch **Dim**. Die Liste zeigt jeden Eintrag bereits in seiner
+Farbe: Int/Night hellblau, Ext/Day gelb, Ext/Night dunkelblau, Int+Ext/Night
+dunkler. Damit **ist** diese Liste die Farbtabelle aus Punkt 1 — die
+Einstellungsseite braucht eine Zeile je Eintrag von hier.
+
+Die Ziffern sind kein Beiwerk: Wer einen Drehplan erfasst, tippt das dutzendfach
+hintereinander.
+
+**Datenmodell — kleiner als gedacht.** In den Spalten steht ohnehin nur Text.
+Eine Kombination trägt einfach mehr davon, mit `;` getrennt, und lässt sich
+wieder auftrennen — `int_ext` = `"Int;Ext"`. Es braucht also weder neue Spalten
+noch eine aufwendige Migration.
+
+**Offen:** Ob die Kombination Int+Ext überhaupt als eigenes Merkmal geführt
+werden muss, ist noch nicht entschieden — vorerst nur aufgenommen. Ebenfalls
+offen: wie **Dim** auf Deutsch heißen soll.
 
 ## 8. Location je Szene soll die Sets des Drehtags anbieten ([#12](https://github.com/CPR-Production/Komparsendrehplanung/issues/12))
 
