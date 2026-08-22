@@ -23,6 +23,7 @@ import { useEditLock } from "../editLock.js";
 import {
   COLUMNS_BEFORE_ROLE_NAME,
   groupCategories,
+  SCENE_COLUMN_COUNT,
   SCENE_NUMBER_COLUMN_WIDTH,
   totalColumnCount,
 } from "./scheduleLayout.js";
@@ -331,8 +332,8 @@ export function ScheduleTable({
         const total = sceneTotal(scene);
         const isLastScene = sceneIndex === scenes.length - 1;
         const sceneChanges = changes.filter((c) => c.anchorAfterSceneId === scene.id);
-        // Every rowSpan'd Scene cell accepts the drop, so the drop zone is the
-        // whole Scene block rather than just the drag handle glyph.
+        // Every Scene cell accepts the drop, so the drop zone is the whole
+        // Scene block rather than just the drag handle glyph.
         const dropProps = getSceneDropProps(scene.id);
         // Coloured by what the Scene shows, not by where it sits in the
         // hierarchy. Both colours go through Bootstrap's own cell variables —
@@ -362,18 +363,109 @@ export function ScheduleTable({
 
         return (
           <Fragment key={scene.id}>
+            {/* The Scene's own fields, each in its own column: number, In/Ex
+                with the time of day, Script Time, Location. The Location takes
+                everything to its right with it — that stretch sits above the
+                Roles and would otherwise stay empty, and the location is the
+                one Scene field regularly too long for its column. */}
             <tr>
+              <td className={sceneCellClass} style={sceneCellStyle} {...dropProps}>
+                <div className="scene-cell-tools">
+                  <span
+                    className="drag-handle"
+                    title={t("grid.scene.move")}
+                    {...getSceneDragHandleProps(scene.id)}
+                  >
+                    ⠿
+                  </span>
+                  <button
+                    type="button"
+                    className="row-delete"
+                    disabled={locked || roleCount > 0}
+                    title={roleCount > 0 ? t("grid.scene.deleteBlocked") : t("grid.scene.delete")}
+                    onClick={() => onRemoveScene(scene.id)}
+                  >
+                    &times;
+                  </button>
+                </div>
+                <input
+                  placeholder={t("grid.scene.numberPlaceholder")}
+                  disabled={locked}
+                  value={scene.sceneNumber ?? ""}
+                  onChange={(e) => onSceneFieldChange(scene.id, "sceneNumber", e.target.value)}
+                />
+              </td>
+              {/* Intern/Extern and the time of day share one column, stacked
+                  with In/Ex on top. */}
+              <td className={sceneCellClass} style={sceneCellStyle} {...dropProps}>
+                <div className="scene-flags">
+                  <CheckboxGroup
+                    name={`intExt-${scene.id}`}
+                    selected={parseIntExt(scene.intExt)}
+                    options={intExtOptions}
+                    disabled={locked}
+                    onToggle={(value) =>
+                      onSceneFieldChange(scene.id, "intExt", toggleIntExt(scene.intExt, value))
+                    }
+                  />
+                  {/* Five mutually exclusive stages no longer fit the column as
+                      buttons, and a list is what the reference plan uses.
+                      Distinct first letters keep it fast: T, N, M, D and A each
+                      select in one keystroke. */}
+                  <select
+                    aria-label={t("grid.scene.timeOfDay")}
+                    disabled={locked}
+                    value={scene.dayNight ?? ""}
+                    onChange={(e) => onSceneFieldChange(scene.id, "dayNight", e.target.value)}
+                  >
+                    <option value="">&ndash;</option>
+                    {timeOfDayOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </td>
+              {/* Von and Bis share one column; Bis only applies to the last
+                  Scene, which is what closes out the shooting day. */}
+              <td className={sceneCellClass} style={sceneCellStyle} {...dropProps}>
+                <div className="scene-time-range">
+                  <input
+                    type="time"
+                    aria-label={t("grid.scene.scriptTimeFrom")}
+                    disabled={locked}
+                    value={scene.scriptTime ?? ""}
+                    onChange={(e) => onSceneFieldChange(scene.id, "scriptTime", e.target.value)}
+                  />
+                  {isLastScene && (
+                    <>
+                      <span className="scene-time-separator">&ndash;</span>
+                      <input
+                        type="time"
+                        aria-label={t("grid.scene.scriptTimeTo")}
+                        disabled={locked}
+                        value={scene.endTime ?? ""}
+                        onChange={(e) => onSceneFieldChange(scene.id, "endTime", e.target.value)}
+                      />
+                    </>
+                  )}
+                </div>
+              </td>
+              {/* Its own column plus every column after it: the three Scene
+                  columns to the left are the only ones this row still needs. */}
               <td
-                colSpan={totalColumns}
-                className={`${sceneCellClass} cell-synopsis`}
+                colSpan={totalColumns - (SCENE_COLUMN_COUNT - 1)}
+                className={sceneCellClass}
                 style={sceneCellStyle}
                 {...dropProps}
               >
-                <span className="cell-synopsis-label">{t("grid.scene.synopsis")}</span>
                 <input
+                  list={SCENE_LOCATIONS_DATALIST_ID}
+                  aria-label={t("grid.head.location")}
                   disabled={locked}
-                  value={scene.synopsis ?? ""}
-                  onChange={(e) => onSceneFieldChange(scene.id, "synopsis", e.target.value)}
+                  value={scene.location ?? ""}
+                  onChange={(e) => onSceneFieldChange(scene.id, "location", e.target.value)}
                 />
               </td>
             </tr>
@@ -385,120 +477,31 @@ export function ScheduleTable({
                 <tr key={role?.id ?? `${scene.id}-row-${rowIndex}`}>
                   {rowIndex === 0 && (
                     <>
+                      {/* The Synopsis, under the Scene's own fields and across
+                          the same four columns. It lost its label with the move:
+                          one italic line below the Scene number reads as the
+                          Scene's description without being announced, and the
+                          plans it comes from write it that way too. The room for
+                          it is the Role rows it spans — nothing else claims that
+                          corner of the grid. */}
                       <td
+                        colSpan={SCENE_COLUMN_COUNT}
                         rowSpan={sceneRowSpan}
-                        className={sceneCellClass}
+                        className={`${sceneCellClass} cell-synopsis`}
                         style={sceneCellStyle}
                         {...dropProps}
                       >
-                        <div className="scene-cell-tools">
-                          <span
-                            className="drag-handle"
-                            title={t("grid.scene.move")}
-                            {...getSceneDragHandleProps(scene.id)}
-                          >
-                            ⠿
-                          </span>
-                          <button
-                            type="button"
-                            className="row-delete"
-                            disabled={locked || roleCount > 0}
-                            title={
-                              roleCount > 0
-                                ? t("grid.scene.deleteBlocked")
-                                : t("grid.scene.delete")
-                            }
-                            onClick={() => onRemoveScene(scene.id)}
-                          >
-                            &times;
-                          </button>
-                        </div>
-                        <input
-                          placeholder={t("grid.scene.numberPlaceholder")}
+                        {/* A textarea, not a one-line field: four columns are
+                            narrower than the full-width row this used to be, and
+                            a locked field cannot even be scrolled to read its
+                            tail. The Role rows give the cell the height, so the
+                            text wraps into space that is already there. */}
+                        <textarea
+                          rows={1}
+                          aria-label={t("grid.scene.synopsis")}
                           disabled={locked}
-                          value={scene.sceneNumber ?? ""}
-                          onChange={(e) => onSceneFieldChange(scene.id, "sceneNumber", e.target.value)}
-                        />
-                      </td>
-                      {/* Intern/Extern and the time of day share one column,
-                          stacked with In/Ex on top. */}
-                      <td
-                        rowSpan={sceneRowSpan}
-                        className={sceneCellClass}
-                        style={sceneCellStyle}
-                        {...dropProps}
-                      >
-                        <div className="scene-flags">
-                          <CheckboxGroup
-                            name={`intExt-${scene.id}`}
-                            selected={parseIntExt(scene.intExt)}
-                            options={intExtOptions}
-                            disabled={locked}
-                            onToggle={(value) =>
-                              onSceneFieldChange(scene.id, "intExt", toggleIntExt(scene.intExt, value))
-                            }
-                          />
-                          {/* Five mutually exclusive stages no longer fit the
-                              column as buttons, and a list is what the
-                              reference plan uses. Distinct first letters keep
-                              it fast: T, N, M, D and A each select in one
-                              keystroke. */}
-                          <select
-                            aria-label={t("grid.scene.timeOfDay")}
-                            disabled={locked}
-                            value={scene.dayNight ?? ""}
-                            onChange={(e) => onSceneFieldChange(scene.id, "dayNight", e.target.value)}
-                          >
-                            <option value="">&ndash;</option>
-                            {timeOfDayOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </td>
-                      {/* Von and Bis share one column; Bis only applies to the
-                          last Scene, which is what closes out the shooting day. */}
-                      <td
-                        rowSpan={sceneRowSpan}
-                        className={sceneCellClass}
-                        style={sceneCellStyle}
-                        {...dropProps}
-                      >
-                        <div className="scene-time-range">
-                          <input
-                            type="time"
-                            aria-label={t("grid.scene.scriptTimeFrom")}
-                            disabled={locked}
-                            value={scene.scriptTime ?? ""}
-                            onChange={(e) => onSceneFieldChange(scene.id, "scriptTime", e.target.value)}
-                          />
-                          {isLastScene && (
-                            <>
-                              <span className="scene-time-separator">&ndash;</span>
-                              <input
-                                type="time"
-                                aria-label={t("grid.scene.scriptTimeTo")}
-                                disabled={locked}
-                                value={scene.endTime ?? ""}
-                                onChange={(e) => onSceneFieldChange(scene.id, "endTime", e.target.value)}
-                              />
-                            </>
-                          )}
-                        </div>
-                      </td>
-                      <td
-                        rowSpan={sceneRowSpan}
-                        className={sceneCellClass}
-                        style={sceneCellStyle}
-                        {...dropProps}
-                      >
-                        <input
-                          list={SCENE_LOCATIONS_DATALIST_ID}
-                          disabled={locked}
-                          value={scene.location ?? ""}
-                          onChange={(e) => onSceneFieldChange(scene.id, "location", e.target.value)}
+                          value={scene.synopsis ?? ""}
+                          onChange={(e) => onSceneFieldChange(scene.id, "synopsis", e.target.value)}
                         />
                       </td>
                       <td rowSpan={sceneRowSpan} className="cell-role text-center fw-bold">

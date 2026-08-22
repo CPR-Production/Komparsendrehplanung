@@ -73,6 +73,26 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Total/Scene | Fuzz
     „halb dunkel" ist zu lang und lässt sich nicht gut kürzen.
   - Die Spalte heißt in der Datenbank weiterhin `scene.day_night` — historisch,
     eine Umbenennung wäre eine Migration ohne Gegenwert.
+- **Eine Szene belegt zwei Bereiche.** Oben eine eigene Zeile mit Nummer,
+  In/Ex + Tageszeit, Script Time und Location — die **Location zieht alle
+  Spalten rechts von sich mit** (`totalColumns - (SCENE_COLUMN_COUNT - 1)`),
+  weil der Streifen über den Rollen sonst leer bliebe und eine Adresse
+  regelmäßig länger ist als ihre Spalte. Darunter die **Synopsis über den vier
+  Szenen-Spalten** (`SCENE_COLUMN_COUNT`) und über die Rollenzeilen hinweg
+  (`rowSpan`), also genau dort, wo vorher nichts stand.
+  - **Ohne Beschriftung**: „Synopsis" stand früher als Wort davor. Kursiv unter
+    der Szenennummer liest sich die Zeile auch so; den Namen trägt jetzt nur
+    noch `aria-label`, der Schlüssel `grid.scene.synopsis` bleibt dafür.
+  - Als `<textarea>`, nicht als Eingabezeile: vier Spalten sind schmaler als die
+    frühere volle Tabellenbreite, und ein **gesperrtes Feld lässt sich nicht
+    scrollen** — der Text muss also umbrechen können.
+  - Das Feld ist **absolut gegen die Zelle positioniert**, nicht auf `height:
+    100%` gesetzt. Die Zelle bekommt ihre Höhe von den Rollenzeilen nebenan, hat
+    also selbst keine, die sie weiterreichen könnte; die Prozenthöhe löst sich
+    ins Nichts auf und das Feld bliebe einzeilig in einer vier Zeilen tiefen
+    Zelle. Der Selektor muss dafür `.schedule-table td.cell-synopsis textarea`
+    heißen — schwächer geschrieben gewinnt das `width: 100%` der allgemeinen
+    Feldregel gegen den rechten Versatz.
 - **Script Time** führt Von und Bis in einer Spalte; Bis erscheint nur bei der
   letzten Szene, weil sie den Drehtag abschließt. Die Drehzeit im Set-Header ist
   daraus abgeleitet, kein eigenes Feld.

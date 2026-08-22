@@ -117,23 +117,25 @@
   color: #212529;
 }
 
+/* The Synopsis sits beside the Roles now, across the four Scene columns, and
+   carries no label any more: italic under the Scene's own fields is enough to
+   read it as the Scene's description.
+
+   Positioned against the cell rather than sized in it: the cell spans the Role
+   rows and gets its height from them, so it has none of its own to hand down
+   and a `height: 100%` on the field resolves against nothing — one line tall in
+   a cell four rows deep. The full selector is needed to beat the width: 100% of
+   `.schedule-table td textarea`, which would otherwise fight the right inset. */
 .cell-synopsis {
-  padding-top: 0.15rem;
-  padding-bottom: 0.15rem;
-  display: table-cell;
+  position: relative;
 }
 
-.cell-synopsis-label {
+.schedule-table td.cell-synopsis textarea {
+  position: absolute;
+  inset: 0.25rem;
+  width: auto;
   font-style: italic;
-  font-weight: 600;
-  margin-right: 0.4rem;
-  white-space: nowrap;
-}
-
-.cell-synopsis input {
-  display: inline;
-  width: calc(100% - 5rem);
-  font-style: italic;
+  resize: none;
 }
 
 /* Sized as a real hit area, not a bare glyph — the handle is the only place a
