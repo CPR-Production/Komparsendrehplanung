@@ -16,6 +16,9 @@ SQLite-Datei und wird im Browser bedient.
   `normal, special, Feat., KD, Double`), pro Projekt anpassbar
 - **Wechsel** („Changes"), die hinter einer Szene verankert sind
 - **Sortieren per Drag & Drop** für Sets und Szenen
+- **Sperre gegen versehentliche Änderungen**: ein Schloss in der Kopfleiste
+  schaltet zwischen Ansehen und Bearbeiten — wer den Plan nur liest, verstellt
+  nichts aus Versehen
 - **Summen pro Kategorie und Gruppe** direkt im Set-Kopf, spaltenbündig zum Raster
 - **Deutsch und Englisch** umschaltbar, Drehplan eingeschlossen; die
   Spaltenköpfe bleiben in beiden Sprachen die Begriffe der Vorlage
