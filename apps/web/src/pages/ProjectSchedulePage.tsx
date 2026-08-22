@@ -4,9 +4,11 @@ import type { CSSProperties, HTMLAttributes, TdHTMLAttributes } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { api, type ShootSet } from "../api.js";
+import { EditLockToggle } from "../components/EditLockToggle.js";
 import { LanguageSwitcher } from "../components/LanguageSwitcher.js";
 import { VersionBadge } from "../components/VersionBadge.js";
 import { moveBefore, SET_DRAG_TYPE } from "../dragReorder.js";
+import { useEditLock } from "../editLock.js";
 import { SCENE_LOCATIONS_DATALIST_ID } from "../grid/ScheduleTable.js";
 import { ScheduleTableHead } from "../grid/ScheduleTableHead.js";
 import { SetSection } from "./SetSection.js";
@@ -17,6 +19,7 @@ export function ProjectSchedulePage() {
   const { t } = useTranslation();
   const { projectId } = useParams<{ projectId: string }>();
   const queryClient = useQueryClient();
+  const { locked } = useEditLock();
 
   const projectQuery = useQuery({
     queryKey: ["project", projectId],
@@ -88,7 +91,9 @@ export function ProjectSchedulePage() {
   // Mirrors the Scene drag wiring in SetSection: the handle starts the drag, the
   // Set header cell accepts the drop, and the id travels in dataTransfer.
   const getSetDragHandleProps = (setId: string): HTMLAttributes<HTMLSpanElement> => ({
-    draggable: true,
+    // A drag has no `disabled`; taking the attribute away is the whole of it.
+    // The drop targets can stay as they are — nothing can be dragged onto them.
+    draggable: !locked,
     onDragStart: (e) => {
       e.dataTransfer.setData(SET_DRAG_TYPE, setId);
       e.dataTransfer.effectAllowed = "move";
@@ -132,9 +137,11 @@ export function ProjectSchedulePage() {
         <div className="d-flex align-items-center gap-2">
           <VersionBadge />
           <LanguageSwitcher />
+          <EditLockToggle />
           <button
             type="button"
             className="btn btn-sm btn-outline-dark"
+            disabled={locked}
             onClick={() => createSetMutation.mutate()}
           >
             {t("nav.addSet")}
@@ -159,7 +166,9 @@ export function ProjectSchedulePage() {
 
       <div style={{ padding: "0 1rem" }}>
         <table
-          className={["schedule-table table table-bordered table-sm mb-4", ...frameClasses].join(" ")}
+          className={["schedule-table table table-bordered table-sm mb-4", locked ? "is-locked" : "", ...frameClasses]
+            .filter(Boolean)
+            .join(" ")}
           style={{ tableLayout: "fixed", ...frameVars } as CSSProperties}
         >
           <ScheduleTableHead categories={categoriesQuery.data ?? []} />

@@ -85,6 +85,25 @@ verstellen.
 **Offen:** Nur Oberfläche oder auch serverseitig? Für den Zweck („nicht aus
 Versehen") reicht die Oberfläche.
 
+**Erledigt, und zwar als Oberfläche.** Der Schloss-Knopf steht in der Kopfleiste
+des Drehplans, links von „+ Set": zu, solange nur gelesen wird, offen und gelb,
+sobald geschrieben werden darf. Gesperrt sind dann alle Felder, alle Knöpfe —
+„+ Set", „+ Szene", „+ Rolle", „+ Wechsel", jedes rote × — und beide
+Drag-Anfasser. Die offene Frage ist damit zugunsten „nur Oberfläche" entschieden:
+`/api` nimmt weiter jede Änderung an, wer den Plan aus Versehen verstellt, sitzt
+aber nicht auf der API, sondern auf der Tastatur.
+
+**Gesperrt ist der Anfangszustand:** Ein Browser, der noch nie aufgeschlossen
+hat, beginnt zu — wer einen Plan öffnet, liest ihn zuerst. Danach gilt die
+zuletzt getroffene Wahl, sie liegt in `localStorage` unter
+`komparsen.editLock`. Ein Bearbeitungstag kostet damit einen Klick und nicht
+einen pro Neuladen.
+
+**Nicht dabei: die Einstellungsseiten.** Kategorien und Farben bleiben
+schreibbar, und der Knopf steht dort auch nicht. Dorthin klickt man absichtlich;
+das Löschen einer Kategorie fragt außerdem schon nach. Der Zustand liegt aber
+app-weit in `editLock.tsx` — die Seiten nachzuziehen wäre je eine Zeile.
+
 ## 4. Versionsnummer in der Navigationsleiste ([#8](https://github.com/CPR-Production/Komparsendrehplanung/issues/8))
 
 **Heute:** Die Version liefert `/api/version`, angezeigt wird sie nur im

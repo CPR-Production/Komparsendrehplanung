@@ -9,6 +9,7 @@ import "./schedule-colors.css";
 import "./settings.css";
 import "./i18n/index.js";
 import { UpdateBanner } from "./components/UpdateBanner.js";
+import { EditLockProvider } from "./editLock.js";
 import { HelpPage } from "./pages/HelpPage.js";
 import { ProjectListPage } from "./pages/ProjectListPage.js";
 import { ProjectSchedulePage } from "./pages/ProjectSchedulePage.js";
@@ -21,21 +22,25 @@ const queryClient = new QueryClient();
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <UpdateBanner />
-        <Routes>
-          <Route path="/" element={<ProjectListPage />} />
-          <Route path="/help" element={<HelpPage />} />
-          <Route path="/projects/:projectId" element={<ProjectSchedulePage />} />
-          {/* One sub-page per topic. The bare /settings link is kept working
-              and lands on the categories, which is where it used to open. */}
-          <Route path="/projects/:projectId/settings" element={<SettingsPage />}>
-            <Route index element={<Navigate to="categories" replace />} />
-            <Route path="categories" element={<SettingsCategoriesPage />} />
-            <Route path="colors" element={<SettingsColorsPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      {/* Above the routes: the lock is app state, and a trip to the settings
+          and back should not quietly re-open the grid. */}
+      <EditLockProvider>
+        <BrowserRouter>
+          <UpdateBanner />
+          <Routes>
+            <Route path="/" element={<ProjectListPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/projects/:projectId" element={<ProjectSchedulePage />} />
+            {/* One sub-page per topic. The bare /settings link is kept working
+                and lands on the categories, which is where it used to open. */}
+            <Route path="/projects/:projectId/settings" element={<SettingsPage />}>
+              <Route index element={<Navigate to="categories" replace />} />
+              <Route path="categories" element={<SettingsCategoriesPage />} />
+              <Route path="colors" element={<SettingsColorsPage />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </EditLockProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );

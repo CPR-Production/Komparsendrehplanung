@@ -13,6 +13,7 @@ import {
   type ShootSet,
 } from "../api.js";
 import { moveBefore, SCENE_DRAG_TYPE } from "../dragReorder.js";
+import { useEditLock } from "../editLock.js";
 import { ScheduleTable } from "../grid/ScheduleTable.js";
 import { useDebouncedSave } from "../useDebouncedSave.js";
 
@@ -35,6 +36,7 @@ export function SetSection({
 }: SetSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { locked } = useEditLock();
 
   const fullSetQuery = useQuery({
     queryKey: ["fullSet", setId],
@@ -97,7 +99,9 @@ export function SetSection({
   // to drop. The payload rides in dataTransfer so the drag also initiates in
   // browsers that require it, and so a Set drag is never taken for a Scene drag.
   const getSceneDragHandleProps = (sceneId: string): HTMLAttributes<HTMLSpanElement> => ({
-    draggable: true,
+    // Same as the Set handle in ProjectSchedulePage: a drag knows no `disabled`,
+    // so the locked grid simply stops offering one.
+    draggable: !locked,
     onDragStart: (e) => {
       e.dataTransfer.setData(SCENE_DRAG_TYPE, sceneId);
       e.dataTransfer.effectAllowed = "move";

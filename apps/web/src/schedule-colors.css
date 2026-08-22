@@ -67,6 +67,49 @@
   color: #212529;
 }
 
+/* Locked mode. A field loses its write affordance, not its content: the plan is
+   being read exactly then, and the browser's grey-on-grey for disabled fields
+   would make it harder to read the moment it matters most. Safari greys the
+   text through -webkit-text-fill-color rather than `color`, so both have to be
+   named. */
+.schedule-table td input:disabled,
+.schedule-table td select:disabled,
+.schedule-table td textarea:disabled {
+  /* Bootstrap fills a disabled .form-control with grey, and inside the grid that
+     paints a box where the cell had none — the Set's SD, date and name fields
+     are the only .form-control fields in the table, and they would be the only
+     ones to change shape when the lock closes. */
+  background: transparent;
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+  opacity: 1;
+  cursor: default;
+}
+
+/* Same reasoning for Int/Ex: Bootstrap dims a disabled toggle to 65 %, but the
+   ticked box is data — it says what the Scene is. */
+.scene-flags .btn-check:disabled + .btn {
+  opacity: 1;
+}
+
+/* And for neu/wdh., which carries its meaning in its colour. */
+.isnew-toggle:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* The handle keeps its place so nothing in the grid shifts, but it stops
+   advertising a drag that `draggable={false}` has already taken away. Its
+   colour is left alone — has-dark-set and has-dark-state set it per cell. */
+.schedule-table.is-locked .drag-handle {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.schedule-table.is-locked .drag-handle:hover {
+  background: none;
+}
+
 /* The dropdown is drawn outside the cell on some platforms and inherits from it
    on others — spelling both out keeps the list readable either way. */
 .schedule-table td select option {

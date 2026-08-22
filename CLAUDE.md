@@ -159,6 +159,35 @@ Debounce-Fenster hängen. Schreibende Felder laufen über `useDebouncedSave`.
 Szenen lassen sich erst löschen, wenn ihre Rollen weg sind — ein Fehlklick soll
 keine ganze Besetzungsliste mitnehmen.
 
+## Bearbeitungssperre
+
+`editLock.tsx` hält den einen Zustand, den die Sperre braucht: gesperrt oder
+nicht. Umgeschaltet wird er mit dem Schloss-Knopf in der Kopfleiste des
+Drehplans (`components/EditLockToggle.tsx`), gelesen mit `useEditLock()` —
+im Grid direkt und nicht als Prop, weil die Sperre weder zum Set noch zur Szene
+gehört und sonst durch `SetSection` hindurchgereicht werden müsste.
+
+- **Nur Oberfläche.** Der Server nimmt weiter jede Änderung an. Die Sperre
+  schützt vor dem Vertippen, nicht vor Personen — so in Issue #7 entschieden.
+- **Gesperrt ist der Anfangszustand**: Ein Browser, der noch nie aufgeschlossen
+  hat, beginnt zu. Danach gilt die zuletzt getroffene Wahl — sie liegt in
+  `localStorage` unter `komparsen.editLock`, wie die Sprache, damit ein
+  Bearbeitungstag einen Klick kostet und nicht einen pro Neuladen. Alles außer
+  einem gespeicherten `"unlocked"` heißt gesperrt.
+- **`disabled` an jedem Bedienelement**, nicht `pointer-events: none` und nicht
+  `inert`: beides nähme dem Lesenden auch das Markieren und den Screenreader.
+  Fürs Ziehen gibt es kein `disabled`, dort steht `draggable: !locked` — an
+  beiden Anfassern, Set in `ProjectSchedulePage`, Szene in `SetSection`.
+- **Ein gesperrtes Feld darf nicht grau werden**, denn gesperrt heißt: Der Plan
+  wird gerade gelesen. In `schedule-colors.css` steht dafür `color: inherit`
+  **samt `-webkit-text-fill-color`** (Safari graut darüber ein, nicht über
+  `color`), `background: transparent` gegen Bootstraps `.form-control:disabled`
+  und `opacity: 1` für Int/Ex und neu/wdh., deren Zustand Information ist. Die
+  Klasse `is-locked` am `<table>` trägt nur den Anfasser, dem sonst der
+  Greifzeiger bliebe.
+- **Die Einstellungsseiten sind bewusst nicht gesperrt** — dorthin geht man
+  absichtlich, und der Knopf steht dort auch nicht.
+
 ## i18n
 
 `apps/web/src/i18n/index.ts` hält die Ressourcen aktuell **im Code**. Laut Plan

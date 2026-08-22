@@ -19,6 +19,7 @@ import type {
   SetLocation,
   ShootSet,
 } from "../api.js";
+import { useEditLock } from "../editLock.js";
 import {
   COLUMNS_BEFORE_ROLE_NAME,
   groupCategories,
@@ -95,11 +96,13 @@ function CheckboxGroup<T extends string>({
   name,
   selected,
   options,
+  disabled,
   onToggle,
 }: {
   name: string;
   selected: readonly T[];
   options: { value: T; label: string }[];
+  disabled: boolean;
   onToggle: (value: T) => void;
 }) {
   return (
@@ -113,6 +116,7 @@ function CheckboxGroup<T extends string>({
             name={name}
             id={`${name}-${option.value}`}
             checked={selected.includes(option.value)}
+            disabled={disabled}
             onChange={() => onToggle(option.value)}
           />
           <label className="btn btn-outline-dark" htmlFor={`${name}-${option.value}`}>
@@ -175,6 +179,10 @@ export function ScheduleTable({
   onRemoveChange,
 }: ScheduleTableProps) {
   const { t } = useTranslation();
+  /* Read from the context, not handed down: the lock belongs to the app, not to
+     this Set, and a prop would have to travel through SetSection — which has no
+     other use for it — into all thirty-odd controls below. */
+  const { locked } = useEditLock();
   const groups = groupCategories(categories);
   const totalColumns = totalColumnCount(categories);
   // Labelled here rather than at module level: the wording depends on the
@@ -212,6 +220,7 @@ export function ScheduleTable({
               <input
                 className="form-control form-control-sm"
                 style={{ width: SCENE_NUMBER_COLUMN_WIDTH }}
+                disabled={locked}
                 value={set.sdNumber ?? ""}
                 onChange={(e) => onSetFieldChange("sdNumber", e.target.value)}
               />
@@ -220,6 +229,7 @@ export function ScheduleTable({
               type="date"
               aria-label={t("grid.set.shootDate")}
               className="form-control form-control-sm set-date-input"
+              disabled={locked}
               value={set.shootDate ?? ""}
               onChange={(e) => onSetFieldChange("shootDate", e.target.value)}
             />
@@ -243,18 +253,21 @@ export function ScheduleTable({
                 className="form-control form-control-sm"
                 style={{ maxWidth: 200 }}
                 placeholder={t("grid.set.namePlaceholder", { index: i + 1 })}
+                disabled={locked}
                 value={location.name ?? ""}
                 onChange={(e) => onLocationFieldChange(location.id, "name", e.target.value)}
               />
               <input
                 className="form-control form-control-sm"
                 placeholder={t("grid.set.addressPlaceholder")}
+                disabled={locked}
                 value={location.address ?? ""}
                 onChange={(e) => onLocationFieldChange(location.id, "address", e.target.value)}
               />
               <button
                 type="button"
                 className="row-delete"
+                disabled={locked}
                 title={t("grid.set.deleteName")}
                 onClick={() => onRemoveLocation(location.id)}
               >
@@ -263,7 +276,12 @@ export function ScheduleTable({
             </div>
           ))}
           {locations.length < 3 && (
-            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onAddLocation}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              disabled={locked}
+              onClick={onAddLocation}
+            >
               {t("grid.set.addName")}
             </button>
           )}
@@ -295,7 +313,12 @@ export function ScheduleTable({
       {scenes.length === 0 && (
         <tr>
           <td colSpan={totalColumns} className="text-center">
-            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onAddSceneAfter(null)}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              disabled={locked}
+              onClick={() => onAddSceneAfter(null)}
+            >
               {t("grid.scene.add")}
             </button>
           </td>
@@ -348,6 +371,7 @@ export function ScheduleTable({
               >
                 <span className="cell-synopsis-label">{t("grid.scene.synopsis")}</span>
                 <input
+                  disabled={locked}
                   value={scene.synopsis ?? ""}
                   onChange={(e) => onSceneFieldChange(scene.id, "synopsis", e.target.value)}
                 />
@@ -378,7 +402,7 @@ export function ScheduleTable({
                           <button
                             type="button"
                             className="row-delete"
-                            disabled={roleCount > 0}
+                            disabled={locked || roleCount > 0}
                             title={
                               roleCount > 0
                                 ? t("grid.scene.deleteBlocked")
@@ -391,6 +415,7 @@ export function ScheduleTable({
                         </div>
                         <input
                           placeholder={t("grid.scene.numberPlaceholder")}
+                          disabled={locked}
                           value={scene.sceneNumber ?? ""}
                           onChange={(e) => onSceneFieldChange(scene.id, "sceneNumber", e.target.value)}
                         />
@@ -408,6 +433,7 @@ export function ScheduleTable({
                             name={`intExt-${scene.id}`}
                             selected={parseIntExt(scene.intExt)}
                             options={intExtOptions}
+                            disabled={locked}
                             onToggle={(value) =>
                               onSceneFieldChange(scene.id, "intExt", toggleIntExt(scene.intExt, value))
                             }
@@ -419,6 +445,7 @@ export function ScheduleTable({
                               keystroke. */}
                           <select
                             aria-label={t("grid.scene.timeOfDay")}
+                            disabled={locked}
                             value={scene.dayNight ?? ""}
                             onChange={(e) => onSceneFieldChange(scene.id, "dayNight", e.target.value)}
                           >
@@ -443,6 +470,7 @@ export function ScheduleTable({
                           <input
                             type="time"
                             aria-label={t("grid.scene.scriptTimeFrom")}
+                            disabled={locked}
                             value={scene.scriptTime ?? ""}
                             onChange={(e) => onSceneFieldChange(scene.id, "scriptTime", e.target.value)}
                           />
@@ -452,6 +480,7 @@ export function ScheduleTable({
                               <input
                                 type="time"
                                 aria-label={t("grid.scene.scriptTimeTo")}
+                                disabled={locked}
                                 value={scene.endTime ?? ""}
                                 onChange={(e) => onSceneFieldChange(scene.id, "endTime", e.target.value)}
                               />
@@ -467,6 +496,7 @@ export function ScheduleTable({
                       >
                         <input
                           list={SCENE_LOCATIONS_DATALIST_ID}
+                          disabled={locked}
                           value={scene.location ?? ""}
                           onChange={(e) => onSceneFieldChange(scene.id, "location", e.target.value)}
                         />
@@ -483,6 +513,7 @@ export function ScheduleTable({
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-secondary"
+                          disabled={locked}
                           onClick={() => onAddRole(scene.id)}
                         >
                           {t("grid.role.add")}
@@ -495,12 +526,14 @@ export function ScheduleTable({
                       <>
                         <td className="cell-role">
                           <input
+                            disabled={locked}
                             value={role.fuzzleId ?? ""}
                             onChange={(e) => onFuzzleIdChange(role.id, e.target.value)}
                           />
                         </td>
                         <td className="cell-role">
                           <input
+                            disabled={locked}
                             value={role.name}
                             onChange={(e) => onRoleNameChange(role.id, e.target.value)}
                           />
@@ -515,6 +548,7 @@ export function ScheduleTable({
                                 <input
                                   type="number"
                                   min={0}
+                                  disabled={locked}
                                   value={count}
                                   onChange={(e) =>
                                     onCountChange(
@@ -527,6 +561,7 @@ export function ScheduleTable({
                                 <button
                                   type="button"
                                   className={`isnew-toggle ${isNew ? "is-new" : "is-reused"}`}
+                                  disabled={locked}
                                   title={
                                     isNew
                                       ? t("grid.count.toggleToReused")
@@ -546,6 +581,7 @@ export function ScheduleTable({
                             <button
                               type="button"
                               className="row-delete"
+                              disabled={locked}
                               title={t("grid.role.delete")}
                               onClick={() => onRemoveRole(role.id)}
                             >
@@ -566,12 +602,14 @@ export function ScheduleTable({
                   <div className="cell-change-row">
                     <strong>{t("grid.change.label")}</strong>
                     <input
+                      disabled={locked}
                       value={change.description ?? ""}
                       onChange={(e) => onChangeDescriptionChange(change.id, e.target.value)}
                     />
                     <button
                       type="button"
                       className="row-delete"
+                      disabled={locked}
                       title={t("grid.change.delete")}
                       onClick={() => onRemoveChange(change.id)}
                     >
@@ -587,6 +625,7 @@ export function ScheduleTable({
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary"
+                  disabled={locked}
                   onClick={() => onAddSceneAfter(scene.id)}
                 >
                   {t("grid.scene.add")}
@@ -594,6 +633,7 @@ export function ScheduleTable({
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary"
+                  disabled={locked}
                   onClick={() => onAddChange(scene.id)}
                 >
                   {t("grid.change.add")}
