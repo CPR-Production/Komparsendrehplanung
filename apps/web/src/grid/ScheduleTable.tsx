@@ -295,6 +295,10 @@ export function ScheduleTable({
       <tr className="set-totals-row">
         <td colSpan={COLUMNS_BEFORE_ROLE_NAME} className="cell-set" />
         <td className="cell-set set-totals-label">{t("grid.set.totalsLabel")}</td>
+        {/* Total/Scene sums a single Scene, so the Set has nothing to put
+            there; the day's total does sit under its own Total header. */}
+        <td className="cell-set" />
+        <td className="cell-set set-totals-value">{totalShoots}</td>
         {groups.flatMap((group) =>
           group.categories.map((category) => {
             const count = newCountsByCategory.get(category.id) ?? 0;
@@ -308,7 +312,6 @@ export function ScheduleTable({
             );
           }),
         )}
-        <td className="cell-set set-totals-value">{totalShoots}</td>
       </tr>
 
       {scenes.length === 0 && (
@@ -471,45 +474,74 @@ export function ScheduleTable({
             </tr>
 
             {Array.from({ length: sceneRowSpan }).map((_, rowIndex) => {
+              // No Role for the last row: that is the trailing "+ Rolle" row.
               const role = rowIndex < roleCount ? scene.roles[rowIndex] : undefined;
-              const isAddRoleRow = rowIndex === roleCount;
               return (
                 <tr key={role?.id ?? `${scene.id}-row-${rowIndex}`}>
+                  {/* The Synopsis, under the Scene's own fields and across the
+                      same four columns. It lost its label with the move: one
+                      italic line below the Scene number reads as the Scene's
+                      description without being announced, and the plans it comes
+                      from write it that way too. The room for it is the Role rows
+                      it spans — nothing else claims that corner of the grid. */}
                   {rowIndex === 0 && (
+                    <td
+                      colSpan={SCENE_COLUMN_COUNT}
+                      rowSpan={sceneRowSpan}
+                      className={`${sceneCellClass} cell-synopsis`}
+                      style={sceneCellStyle}
+                      {...dropProps}
+                    >
+                      {/* A textarea, not a one-line field: four columns are
+                          narrower than the full-width row this used to be, and a
+                          locked field cannot even be scrolled to read its tail.
+                          The Role rows give the cell the height, so the text
+                          wraps into space that is already there. */}
+                      <textarea
+                        rows={1}
+                        aria-label={t("grid.scene.synopsis")}
+                        disabled={locked}
+                        value={scene.synopsis ?? ""}
+                        onChange={(e) => onSceneFieldChange(scene.id, "synopsis", e.target.value)}
+                      />
+                    </td>
+                  )}
+                  {/* Fuzzle ID and Name first — a Role is read by who it is,
+                      not by what it adds up to. */}
+                  {role ? (
                     <>
-                      {/* The Synopsis, under the Scene's own fields and across
-                          the same four columns. It lost its label with the move:
-                          one italic line below the Scene number reads as the
-                          Scene's description without being announced, and the
-                          plans it comes from write it that way too. The room for
-                          it is the Role rows it spans — nothing else claims that
-                          corner of the grid. */}
-                      <td
-                        colSpan={SCENE_COLUMN_COUNT}
-                        rowSpan={sceneRowSpan}
-                        className={`${sceneCellClass} cell-synopsis`}
-                        style={sceneCellStyle}
-                        {...dropProps}
-                      >
-                        {/* A textarea, not a one-line field: four columns are
-                            narrower than the full-width row this used to be, and
-                            a locked field cannot even be scrolled to read its
-                            tail. The Role rows give the cell the height, so the
-                            text wraps into space that is already there. */}
-                        <textarea
-                          rows={1}
-                          aria-label={t("grid.scene.synopsis")}
+                      <td className="cell-role">
+                        <input
                           disabled={locked}
-                          value={scene.synopsis ?? ""}
-                          onChange={(e) => onSceneFieldChange(scene.id, "synopsis", e.target.value)}
+                          value={role.fuzzleId ?? ""}
+                          onChange={(e) => onFuzzleIdChange(role.id, e.target.value)}
                         />
                       </td>
-                      <td rowSpan={sceneRowSpan} className="cell-role text-center fw-bold">
-                        {total}
+                      {/* The delete × rides with the Name rather than with the
+                          Total: the Total column is half-width now and a fixed
+                          1.6rem square would hold it open on its own. Next to
+                          the Role's name it also sits where the Scene's and the
+                          Set's do — beside the field that names the row. */}
+                      <td className="cell-role">
+                        <div className="role-name-cell">
+                          <input
+                            disabled={locked}
+                            value={role.name}
+                            onChange={(e) => onRoleNameChange(role.id, e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className="row-delete"
+                            disabled={locked}
+                            title={t("grid.role.delete")}
+                            onClick={() => onRemoveRole(role.id)}
+                          >
+                            &times;
+                          </button>
+                        </div>
                       </td>
                     </>
-                  )}
-                  {isAddRoleRow ? (
+                  ) : (
                     <>
                       <td className="cell-role" />
                       <td className="cell-role text-center">
@@ -522,78 +554,61 @@ export function ScheduleTable({
                           {t("grid.role.add")}
                         </button>
                       </td>
-                      <td className="cell-role" colSpan={categories.length + 1} />
+                    </>
+                  )}
+                  {/* Total/Scene follows the names and spans the Role rows, so
+                      it has to be emitted between them and the Role's own
+                      Total rather than ahead of both. */}
+                  {rowIndex === 0 && (
+                    <td rowSpan={sceneRowSpan} className="cell-role text-center fw-bold">
+                      {total}
+                    </td>
+                  )}
+                  {role ? (
+                    <>
+                      <td className="cell-role text-center">{roleTotal(role)}</td>
+                      {groups.flatMap((group) =>
+                        group.categories.map((category) => {
+                          const cell = role.counts.find((c) => c.categoryId === category.id);
+                          const count = cell?.count ?? 0;
+                          const isNew = cell?.isNew ?? true;
+                          return (
+                            <td key={category.id} className="cell-count">
+                              <input
+                                type="number"
+                                min={0}
+                                disabled={locked}
+                                value={count}
+                                onChange={(e) =>
+                                  onCountChange(
+                                    role.id,
+                                    category.id,
+                                    Math.max(0, Number(e.target.value) || 0),
+                                  )
+                                }
+                              />
+                              <button
+                                type="button"
+                                className={`isnew-toggle ${isNew ? "is-new" : "is-reused"}`}
+                                disabled={locked}
+                                title={
+                                  isNew
+                                    ? t("grid.count.toggleToReused")
+                                    : t("grid.count.toggleToNew")
+                                }
+                                onClick={() => onToggleIsNew(role.id, category.id)}
+                              >
+                                {isNew ? t("grid.count.new") : t("grid.count.reused")}
+                              </button>
+                            </td>
+                          );
+                        }),
+                      )}
                     </>
                   ) : (
-                    role && (
-                      <>
-                        <td className="cell-role">
-                          <input
-                            disabled={locked}
-                            value={role.fuzzleId ?? ""}
-                            onChange={(e) => onFuzzleIdChange(role.id, e.target.value)}
-                          />
-                        </td>
-                        <td className="cell-role">
-                          <input
-                            disabled={locked}
-                            value={role.name}
-                            onChange={(e) => onRoleNameChange(role.id, e.target.value)}
-                          />
-                        </td>
-                        {groups.flatMap((group) =>
-                          group.categories.map((category) => {
-                            const cell = role.counts.find((c) => c.categoryId === category.id);
-                            const count = cell?.count ?? 0;
-                            const isNew = cell?.isNew ?? true;
-                            return (
-                              <td key={category.id} className="cell-count">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  disabled={locked}
-                                  value={count}
-                                  onChange={(e) =>
-                                    onCountChange(
-                                      role.id,
-                                      category.id,
-                                      Math.max(0, Number(e.target.value) || 0),
-                                    )
-                                  }
-                                />
-                                <button
-                                  type="button"
-                                  className={`isnew-toggle ${isNew ? "is-new" : "is-reused"}`}
-                                  disabled={locked}
-                                  title={
-                                    isNew
-                                      ? t("grid.count.toggleToReused")
-                                      : t("grid.count.toggleToNew")
-                                  }
-                                  onClick={() => onToggleIsNew(role.id, category.id)}
-                                >
-                                  {isNew ? t("grid.count.new") : t("grid.count.reused")}
-                                </button>
-                              </td>
-                            );
-                          }),
-                        )}
-                        <td className="cell-role">
-                          <div className="role-total-cell">
-                            <span>{roleTotal(role)}</span>
-                            <button
-                              type="button"
-                              className="row-delete"
-                              disabled={locked}
-                              title={t("grid.role.delete")}
-                              onClick={() => onRemoveRole(role.id)}
-                            >
-                              &times;
-                            </button>
-                          </div>
-                        </td>
-                      </>
-                    )
+                    // The Role's own Total plus every category column: the
+                    // Total/Scene cell between them comes from the rowSpan above.
+                    <td className="cell-role" colSpan={categories.length + 1} />
                   )}
                 </tr>
               );

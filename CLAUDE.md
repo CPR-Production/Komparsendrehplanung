@@ -41,17 +41,27 @@ einzige Ort mit Tests.
 
 ## Grid-Layout
 
-Der Drehplan ist **eine** Tabelle: `ScheduleTableHead` liefert den `<thead>`,
-jedes `SetSection` rendert einen eigenen `<tbody>`. Dadurch teilen sich alle Sets
-ein Spaltenraster.
+Der Drehplan ist **eine** Tabelle: `ScheduleTableHead` liefert `<colgroup>` und
+`<thead>`, jedes `SetSection` rendert einen eigenen `<tbody>`. Dadurch teilen
+sich alle Sets ein Spaltenraster.
 
-Die Spaltenzahlen stehen in `apps/web/src/grid/scheduleLayout.ts` und sind hart
-gekoppelt: `SCENE_COLUMN_COUNT`, `ROLE_META_COLUMN_COUNT`,
-`COLUMNS_BEFORE_ROLE_NAME`, `totalColumnCount()`. **Wer eine Spalte hinzufügt oder
-zusammenlegt, muss diese Konstanten mitziehen** — sonst brechen alle `colSpan`s
-(Set-Header, Synopsis, Change-Zeile, Summenzeile).
+Das Raster steht in `apps/web/src/grid/scheduleLayout.ts`, und zwar **als Liste
+von Breiten**: `SCENE_COLUMN_WIDTHS` und `ROLE_META_COLUMN_WIDTHS`. Die
+Spaltenzahlen sind deren Länge (`SCENE_COLUMN_COUNT`,
+`ROLE_META_COLUMN_COUNT`), daraus wiederum `COLUMNS_BEFORE_ROLE_NAME` und
+`totalColumnCount()`. **Eine neue Spalte kommt als Eintrag in eine der beiden
+Listen** — die Zahlen ziehen dann von selbst nach, und alle `colSpan`s
+(Set-Header, Synopsis, Change-Zeile, Summenzeile) bleiben heil.
 
-Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Total/Scene | Fuzzle ID | Name | <Kategorien…> | Total`
+Die Tabelle ist `table-layout: fixed`. Darunter liest der Browser seine Spalten
+**allein aus der ersten Zeile** — und das ist hier der Gruppen-Header, dessen
+Zellen über vier und mehr Spalten laufen. Deshalb steht die Breite im
+`<colgroup>`; an den `<th>` der zweiten Kopfzeile, wo sie früher stand, liest sie
+niemand, und alle Spalten wurden gleich breit. Reicht die Tabellenbreite über die
+Summe der Spalten hinaus, verteilt der Browser den Rest **proportional** — die
+Verhältnisse der Liste bleiben also in jeder Fensterbreite erhalten.
+
+Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name | Total/Scene | Total | <Kategorien…>`
 
 - **In/Ex und Tageszeit teilen sich eine Spalte** (gestapelt, In/Ex oben) —
   `.scene-flags`. Der Spaltenkopf heißt weiterhin „In/Ex · D/N".
@@ -96,11 +106,25 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Total/Scene | Fuzz
 - **Script Time** führt Von und Bis in einer Spalte; Bis erscheint nur bei der
   letzten Szene, weil sie den Drehtag abschließt. Die Drehzeit im Set-Header ist
   daraus abgeleitet, kein eigenes Feld.
+- **Die beiden Total-Spalten stehen vor den Kategorien**, nicht dahinter: erst
+  wer die Rolle ist (Fuzzle ID, Name), dann was sie zusammenzählt, und erst
+  danach die Felder, in die getippt wird. Beide sind **halb so breit** wie eine
+  Kategorie-Spalte (`TOTAL_COLUMN_WIDTH`), denn darin steht nur eine Zahl.
+  - Zwei Folgen daraus: Das **× zum Löschen einer Rolle sitzt neben dem Namen**
+    und nicht mehr in der Total-Spalte — als festes 1,6-rem-Quadrat hielte es die
+    halbierte Spalte allein auf. Nebenbei steht es damit dort, wo es bei Szene
+    und Set auch steht: neben dem Feld, das die Zeile benennt.
+  - Und „Total/Scene" passt so nicht mehr in seinen Kopf: die Schrift ist dort
+    kleiner (`.col-total`), und ein `<wbr>` nach dem Schrägstrich gibt die eine
+    Stelle vor, an der umbrochen werden darf — Chrome bricht von sich aus weder
+    nach `/` noch sinnvoll mitten im Wort.
 - **Summenzeile** direkt unter dem Set-Header: Label in der Name-Spalte, Summen in
   den jeweiligen Kategorie-Spalten, Gesamtsumme in Total. Bewusst spaltenbündig
   statt als Fließtext, damit sie unter ihrem Kategorie- und Gruppen-Header steht.
-  Sie ist die **einzige** Darstellung der Tagessumme; im Set-Kopf stand dieselbe
-  Zahl einmal zusätzlich als „Total Shoots" und ist dort entfallen.
+  Total/Scene bleibt darin leer — es summiert eine einzelne Szene, dazu hat das
+  Set nichts zu sagen. Sie ist die **einzige** Darstellung der Tagessumme; im
+  Set-Kopf stand dieselbe Zahl einmal zusätzlich als „Total Shoots" und ist dort
+  entfallen.
 
 ### Farben
 
@@ -256,12 +280,13 @@ Seiten sind unterschiedlich weit:
 | `ProjectListPage` | umgestellt (container, row-cols, card, form-control, btn) |
 | `ScheduleTable` | weitgehend umgestellt (form-control-sm, btn-group, d-flex) + eigenes CSS |
 | `ProjectSchedulePage` Header | umgestellt; Höhe/Sticky bleiben inline (Kopplung an `--app-header-height`) |
-| `ScheduleTableHead` | inline `width`-Styles je Spalte — bewusst, steuert das feste Tabellenraster |
+| `ScheduleTableHead` | inline `width` je `<col>` — bewusst, steuert das feste Tabellenraster; die Werte kommen aus `scheduleLayout.ts` |
 | `SettingsPage` | nur noch Hülle: Kopf, Reiter, `<Outlet/>`. Ein Thema je Unterseite — `SettingsCategoriesPage` und `SettingsColorsPage` (card + list-group, `form-control`/`btn`, `.row-delete`). `/settings` ohne Unterpfad leitet auf die Kategorien um, wo es vorher aufging. Ein zweiter Eintrag in der App-Navigation kam bewusst nicht dazu |
 | `SetSection` | reine Logik, kein Markup |
 
 Damit ist die Umstellung durch. Übrig sind nur noch bewusste Inline-Styles:
-die Spaltenbreiten in `ScheduleTableHead` und Höhe/Sticky des App-Headers.
+die Spaltenbreiten im `<colgroup>` von `ScheduleTableHead`, `table-layout: fixed`
+in `ProjectSchedulePage` und dort auch Höhe/Sticky des App-Headers.
 
 ### Löschen mit Kaskade
 

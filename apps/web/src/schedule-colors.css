@@ -17,6 +17,16 @@
   z-index: 2;
 }
 
+/* Both totals columns are half the width of their neighbours, and "Total/Scene"
+   does not fit that at the header's own size — an over-wide word props a column
+   open no matter what `width` says. So these two headers step down a size and
+   wrap after the slash, and the columns can actually be as narrow as they were
+   asked to be. Nothing else in them is wider than a three-digit number. */
+.schedule-table thead th.col-total {
+  font-size: 0.7rem;
+  line-height: 1.15;
+}
+
 .schedule-set-spacer td {
   border: none;
   height: 1.5rem;
@@ -297,16 +307,11 @@
 }
 
 .scene-cell-tools,
-.role-total-cell {
+.role-name-cell {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.15rem;
-}
-
-.role-total-cell {
-  justify-content: center;
-  font-weight: 400;
 }
 
 /* Total-Shoots breakdown, aligned to the category columns it sums. The row
