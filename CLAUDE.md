@@ -51,7 +51,9 @@ Spaltenzahlen sind deren Länge (`SCENE_COLUMN_COUNT`,
 `ROLE_META_COLUMN_COUNT`), daraus wiederum `COLUMNS_BEFORE_ROLE_NAME` und
 `totalColumnCount()`. **Eine neue Spalte kommt als Eintrag in eine der beiden
 Listen** — die Zahlen ziehen dann von selbst nach, und alle `colSpan`s
-(Set-Header, Synopsis, Change-Zeile, Summenzeile) bleiben heil.
+(Set-Header, Synopsis, Change-Zeile, Summenzeile) bleiben heil. Nur die
+Löschspalte steht außerhalb der Listen (`ROW_ACTION_COLUMN_*`): sie sitzt hinter
+den Kategorien, und deren Zahl hängt am Projekt.
 
 Die Tabelle ist `table-layout: fixed`. Darunter liest der Browser seine Spalten
 **allein aus der ersten Zeile** — und das ist hier der Gruppen-Header, dessen
@@ -61,7 +63,7 @@ niemand, und alle Spalten wurden gleich breit. Reicht die Tabellenbreite über d
 Summe der Spalten hinaus, verteilt der Browser den Rest **proportional** — die
 Verhältnisse der Liste bleiben also in jeder Fensterbreite erhalten.
 
-Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name | Total/Scene | Total | <Kategorien…>`
+Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name | Total/Scene | Total | <Kategorien…> | ×`
 
 - **In/Ex und Tageszeit teilen sich eine Spalte** (gestapelt, In/Ex oben) —
   `.scene-flags`. Der Spaltenkopf heißt weiterhin „In/Ex · D/N".
@@ -110,14 +112,17 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name |
   wer die Rolle ist (Fuzzle ID, Name), dann was sie zusammenzählt, und erst
   danach die Felder, in die getippt wird. Beide sind **halb so breit** wie eine
   Kategorie-Spalte (`TOTAL_COLUMN_WIDTH`), denn darin steht nur eine Zahl.
-  - Zwei Folgen daraus: Das **× zum Löschen einer Rolle sitzt neben dem Namen**
-    und nicht mehr in der Total-Spalte — als festes 1,6-rem-Quadrat hielte es die
-    halbierte Spalte allein auf. Nebenbei steht es damit dort, wo es bei Szene
-    und Set auch steht: neben dem Feld, das die Zeile benennt.
-  - Und „Total/Scene" passt so nicht mehr in seinen Kopf: die Schrift ist dort
-    kleiner (`.col-total`), und ein `<wbr>` nach dem Schrägstrich gibt die eine
-    Stelle vor, an der umbrochen werden darf — Chrome bricht von sich aus weder
-    nach `/` noch sinnvoll mitten im Wort.
+  - Eine Folge daraus: „Total/Scene" passt so nicht mehr in seinen Kopf. Die
+    Schrift ist dort kleiner (`.col-total`), und ein `<wbr>` nach dem
+    Schrägstrich gibt die eine Stelle vor, an der umbrochen werden darf — Chrome
+    bricht von sich aus weder nach `/` noch sinnvoll mitten im Wort.
+- **Das × zum Löschen einer Rolle hat eine eigene Spalte**, ganz rechts und
+  **ohne Kopf** — es ist ein Bedienelement, kein Wert, und als festes
+  1,6-rem-Quadrat hält es jede Spalte auf, die es sich mit etwas teilt (die
+  halbierte Total-Spalte zuerst). Der leere Kopf läuft als `rowSpan={2}` über
+  beide Kopfzeilen, damit ihn keine Linie zerschneidet. Szene und Set behalten
+  ihr × dagegen bei ihrem Namensfeld: sie stehen auf Zeilen, die diese Spalte
+  gar nicht erreichen.
 - **Summenzeile** direkt unter dem Set-Header: Label in der Name-Spalte, Summen in
   den jeweiligen Kategorie-Spalten, Gesamtsumme in Total. Bewusst spaltenbündig
   statt als Fließtext, damit sie unter ihrem Kategorie- und Gruppen-Header steht.

@@ -306,8 +306,7 @@
   color: #333;
 }
 
-.scene-cell-tools,
-.role-name-cell {
+.scene-cell-tools {
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -312,6 +312,8 @@ export function ScheduleTable({
             );
           }),
         )}
+        {/* Nothing to delete on this row, but the column has to be filled. */}
+        <td className="cell-set" />
       </tr>
 
       {scenes.length === 0 && (
@@ -517,28 +519,12 @@ export function ScheduleTable({
                           onChange={(e) => onFuzzleIdChange(role.id, e.target.value)}
                         />
                       </td>
-                      {/* The delete × rides with the Name rather than with the
-                          Total: the Total column is half-width now and a fixed
-                          1.6rem square would hold it open on its own. Next to
-                          the Role's name it also sits where the Scene's and the
-                          Set's do — beside the field that names the row. */}
                       <td className="cell-role">
-                        <div className="role-name-cell">
-                          <input
-                            disabled={locked}
-                            value={role.name}
-                            onChange={(e) => onRoleNameChange(role.id, e.target.value)}
-                          />
-                          <button
-                            type="button"
-                            className="row-delete"
-                            disabled={locked}
-                            title={t("grid.role.delete")}
-                            onClick={() => onRemoveRole(role.id)}
-                          >
-                            &times;
-                          </button>
-                        </div>
+                        <input
+                          disabled={locked}
+                          value={role.name}
+                          onChange={(e) => onRoleNameChange(role.id, e.target.value)}
+                        />
                       </td>
                     </>
                   ) : (
@@ -604,11 +590,26 @@ export function ScheduleTable({
                           );
                         }),
                       )}
+                      {/* The delete column, last in the row and headerless: the
+                          × is a control, not a value, and a fixed square holds
+                          open whatever column it shares. */}
+                      <td className="cell-role text-center">
+                        <button
+                          type="button"
+                          className="row-delete"
+                          disabled={locked}
+                          title={t("grid.role.delete")}
+                          onClick={() => onRemoveRole(role.id)}
+                        >
+                          &times;
+                        </button>
+                      </td>
                     </>
                   ) : (
-                    // The Role's own Total plus every category column: the
-                    // Total/Scene cell between them comes from the rowSpan above.
-                    <td className="cell-role" colSpan={categories.length + 1} />
+                    // The Role's own Total, every category column and the delete
+                    // column: the Total/Scene cell between them comes from the
+                    // rowSpan above.
+                    <td className="cell-role" colSpan={categories.length + 2} />
                   )}
                 </tr>
               );

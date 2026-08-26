@@ -5,6 +5,7 @@ import {
   groupCategories,
   ROLE_META_COLUMN_COUNT,
   ROLE_META_COLUMN_WIDTHS,
+  ROW_ACTION_COLUMN_WIDTH,
   SCENE_COLUMN_COUNT,
   SCENE_COLUMN_WIDTHS,
 } from "./scheduleLayout.js";
@@ -36,6 +37,7 @@ export function ScheduleTableHead({ categories }: { categories: Category[] }) {
         {categories.map((category) => (
           <col key={category.id} style={{ width: CATEGORY_COLUMN_WIDTH }} />
         ))}
+        <col style={{ width: ROW_ACTION_COLUMN_WIDTH }} />
       </colgroup>
       <thead className="schedule-table-head">
         <tr>
@@ -48,6 +50,10 @@ export function ScheduleTableHead({ categories }: { categories: Category[] }) {
               {group.name}
             </th>
           ))}
+          {/* The delete column carries no heading — there is nothing to name in
+              it. Across both header rows, so no rule cuts the empty cell in
+              half. */}
+          <th rowSpan={2} />
         </tr>
         <tr>
           <th>#</th>

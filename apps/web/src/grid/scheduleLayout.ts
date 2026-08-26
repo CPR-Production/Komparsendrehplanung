@@ -39,6 +39,13 @@ export const ROLE_META_COLUMN_WIDTHS = [
 export const SCENE_COLUMN_COUNT = SCENE_COLUMN_WIDTHS.length;
 export const ROLE_META_COLUMN_COUNT = ROLE_META_COLUMN_WIDTHS.length;
 
+/* The delete × has a column to itself, at the far right and without a heading:
+   it is a control, not a value, and a fixed 1.6-rem square holds open whatever
+   column it shares. It cannot join either list above — it sits behind the
+   category columns, and those are as many as the project has. */
+export const ROW_ACTION_COLUMN_WIDTH = 36;
+export const ROW_ACTION_COLUMN_COUNT = 1;
+
 export interface CategoryGroupView {
   id: string;
   name: string;
@@ -54,10 +61,10 @@ export function groupCategories(categories: Category[]): CategoryGroupView[] {
   }));
 }
 
-// Both totals columns are part of the role-meta block now, so the categories are
-// the only thing left to add — no trailing column beyond them.
 export function totalColumnCount(categories: Category[]): number {
-  return SCENE_COLUMN_COUNT + ROLE_META_COLUMN_COUNT + categories.length;
+  return (
+    SCENE_COLUMN_COUNT + ROLE_META_COLUMN_COUNT + categories.length + ROW_ACTION_COLUMN_COUNT
+  );
 }
 
 // Name is the second of the role-meta columns. The Set totals row borrows it as
