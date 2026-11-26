@@ -3,7 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/client.js";
-import { categories, categoryGroups, projects, sets } from "../db/schema.js";
+import { categories, categoryGroups, projects, schedules, sets } from "../db/schema.js";
 import { hydrateSet } from "../services/hydrate.js";
 
 export const projectsRouter = Router();
@@ -52,8 +52,10 @@ projectsRouter.get("/projects/:id", (req, res) => {
   res.json(project);
 });
 
-// Full hydration for the schedule workspace: every Set of the project, each
-// fully hydrated with its Scenes/Roles/counts (see services/hydrate.ts).
+/* Vollständige Ausgabe des Projekts: jeder Drehplan mit seinen Sets, jedes Set
+   mit Szenen, Rollen und Zählungen (siehe services/hydrate.ts). Seit der
+   Drehplan-Ebene hängen die Sets eine Stufe tiefer — die Form bildet das ab,
+   statt alle Sets des Projekts in einen Topf zu werfen. */
 projectsRouter.get("/projects/:id/full", (req, res) => {
   const project = db.select().from(projects).where(eq(projects.id, req.params.id)).get();
   if (!project) {
@@ -61,15 +63,24 @@ projectsRouter.get("/projects/:id/full", (req, res) => {
     return;
   }
 
-  const setRows = db
+  const scheduleRows = db
     .select()
-    .from(sets)
-    .where(eq(sets.projectId, project.id))
-    .orderBy(asc(sets.sortOrder))
+    .from(schedules)
+    .where(eq(schedules.projectId, project.id))
+    .orderBy(asc(schedules.sortOrder))
     .all();
 
-  const hydratedSets = setRows.map((set) => hydrateSet(set.id)!);
-  res.json({ ...project, sets: hydratedSets });
+  const hydratedSchedules = scheduleRows.map((schedule) => {
+    const setRows = db
+      .select()
+      .from(sets)
+      .where(eq(sets.scheduleId, schedule.id))
+      .orderBy(asc(sets.sortOrder))
+      .all();
+    return { ...schedule, sets: setRows.map((set) => hydrateSet(set.id)!) };
+  });
+
+  res.json({ ...project, schedules: hydratedSchedules });
 });
 
 projectsRouter.post("/projects", (req, res) => {
@@ -86,6 +97,13 @@ projectsRouter.post("/projects", (req, res) => {
     .all();
 
   seedDefaultCategories(project.id);
+  /* Wie die Standardkategorien: ein frisches Projekt soll nicht mit einer
+     leeren Mappenliste beginnen, durch die man sich erst klicken muss. Der Name
+     ist ein Anfang und umbenennbar — derselbe, den die Migration den
+     Bestandsprojekten gegeben hat. */
+  db.insert(schedules)
+    .values({ id: randomUUID(), projectId: project.id, name: "Drehplan 1", sortOrder: 0 })
+    .run();
 
   res.status(201).json(project);
 });

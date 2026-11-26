@@ -14,6 +14,7 @@ import { StripSizeProvider } from "./stripSize.js";
 import { HelpPage } from "./pages/HelpPage.js";
 import { ProjectListPage } from "./pages/ProjectListPage.js";
 import { ProjectSchedulePage } from "./pages/ProjectSchedulePage.js";
+import { ProjectSchedulesPage } from "./pages/ProjectSchedulesPage.js";
 import { SettingsCategoriesPage } from "./pages/SettingsCategoriesPage.js";
 import { SettingsColorsPage } from "./pages/SettingsColorsPage.js";
 import { SettingsPage } from "./pages/SettingsPage.js";
@@ -35,7 +36,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Routes>
               <Route path="/" element={<ProjectListPage />} />
               <Route path="/help" element={<HelpPage />} />
-              <Route path="/projects/:projectId" element={<ProjectSchedulePage />} />
+              {/* Das Projekt öffnet jetzt seine Mappen, nicht mehr direkt ein
+                  Raster — ein Projekt kann mehrere Drehpläne halten. Der Plan
+                  selbst liegt eine Stufe tiefer. */}
+              <Route path="/projects/:projectId" element={<ProjectSchedulesPage />} />
+              <Route
+                path="/projects/:projectId/schedules/:scheduleId"
+                element={<ProjectSchedulePage />}
+              />
               {/* One sub-page per topic. The bare /settings link is kept working
                   and lands on the categories, which is where it used to open. */}
               <Route path="/projects/:projectId/settings" element={<SettingsPage />}>

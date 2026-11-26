@@ -13,6 +13,7 @@ import { projectsRouter } from "./routes/projects.js";
 import { rolesRouter } from "./routes/roles.js";
 import { sceneColorsRouter } from "./routes/sceneColors.js";
 import { scenesRouter } from "./routes/scenes.js";
+import { schedulesRouter } from "./routes/schedules.js";
 import { setLocationsRouter } from "./routes/setLocations.js";
 import { setsRouter } from "./routes/sets.js";
 import { updatesRouter } from "./routes/updates.js";
@@ -34,6 +35,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api", projectsRouter);
 app.use("/api", categoryGroupsRouter);
 app.use("/api", categoriesRouter);
+app.use("/api", schedulesRouter);
 app.use("/api", setsRouter);
 app.use("/api", setLocationsRouter);
 app.use("/api", scenesRouter);

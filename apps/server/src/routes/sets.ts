@@ -3,7 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/client.js";
-import { sets } from "../db/schema.js";
+import { schedules, sets } from "../db/schema.js";
 import { hydrateSet } from "../services/hydrate.js";
 import { reorderRows } from "../services/reorder.js";
 
@@ -16,30 +16,46 @@ const createSchema = z.object({
 const updateSchema = createSchema.partial();
 const reorderSchema = z.object({ ids: z.array(z.string()) });
 
-setsRouter.get("/projects/:projectId/sets", (req, res) => {
+// Ein Set hängt am Drehplan, nicht mehr am Projekt — das Projekt erreicht es
+// nur noch über den Plan.
+setsRouter.get("/schedules/:scheduleId/sets", (req, res) => {
   const rows = db
     .select()
     .from(sets)
-    .where(eq(sets.projectId, req.params.projectId))
+    .where(eq(sets.scheduleId, req.params.scheduleId))
     .orderBy(asc(sets.sortOrder))
     .all();
   res.json(rows);
 });
 
-setsRouter.post("/projects/:projectId/sets", (req, res) => {
+setsRouter.post("/schedules/:scheduleId/sets", (req, res) => {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.flatten() });
     return;
   }
 
-  const existing = db.select().from(sets).where(eq(sets.projectId, req.params.projectId)).all();
+  // `shoot_set.project_id` lässt sich nicht entfernen, ohne die Tabelle neu zu
+  // bauen (siehe schema.ts), und die Spalte ist NOT NULL. Also wird sie aus dem
+  // Drehplan gefüllt, damit sie nicht von ihm abweicht.
+  const schedule = db
+    .select()
+    .from(schedules)
+    .where(eq(schedules.id, req.params.scheduleId))
+    .get();
+  if (!schedule) {
+    res.status(404).end();
+    return;
+  }
+
+  const existing = db.select().from(sets).where(eq(sets.scheduleId, schedule.id)).all();
 
   const [set] = db
     .insert(sets)
     .values({
       id: randomUUID(),
-      projectId: req.params.projectId,
+      projectId: schedule.projectId,
+      scheduleId: schedule.id,
       ...parsed.data,
       sortOrder: existing.length,
     })
@@ -75,16 +91,20 @@ setsRouter.delete("/sets/:id", (req, res) => {
   res.status(204).end();
 });
 
-setsRouter.post("/projects/:projectId/sets/reorder", (req, res) => {
+setsRouter.post("/schedules/:scheduleId/sets/reorder", (req, res) => {
   const parsed = reorderSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.flatten() });
     return;
   }
 
-  reorderRows(sets, sets.id, eq(sets.projectId, req.params.projectId), parsed.data.ids, (sortOrder) => ({
-    sortOrder,
-  }));
+  reorderRows(
+    sets,
+    sets.id,
+    eq(sets.scheduleId, req.params.scheduleId),
+    parsed.data.ids,
+    (sortOrder) => ({ sortOrder }),
+  );
   res.status(204).end();
 });
 

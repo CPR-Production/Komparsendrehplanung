@@ -16,13 +16,58 @@ Beide sind in `.claude/launch.json` hinterlegt.
 
 ## Domänenmodell
 
-`Project → Set → Scene → Role → RoleCategoryCount`
+`Project → Schedule → Set → Scene → Role → RoleCategoryCount`
 
 Ein **Set** ist ein Drehtag. Szenen und Sets sind per Drag & Drop sortierbar
-(`sortOrder`, Reorder-Endpunkte). **Changes** („Wechsel") hängen per
+(`sortOrder`, Reorder-Endpunkte). **Changes** („Rollenwechsel") hängen per
 `anchorAfterSceneId` hinter einer Szene. Kategorien liegen in **Kategorie-Gruppen**
 (Default beim Projektanlegen: Gruppe „Supporting artists" mit
 `normal, special, Feat., KD, Double`) und sind pro Projekt frei editierbar.
+
+### Die Drehplan-Ebene
+
+Ein **Schedule** (Drehplan) steht zwischen Projekt und Set: ein Projekt hält
+mehrere, eine Fassung je Drehbuchstand. Die Tabelle trägt außer der Zuordnung
+zum Projekt zwei Felder — `name` und `scriptRevision`, beides freier Text, weil
+jede Produktion den Drehbuchstand anders schreibt („Weiß", „Blau vom 3.4.").
+
+- **Kategorien und Farben bleiben beim Projekt.** Sie beschreiben, wie die
+  Produktion zählt und aussieht, nicht einen einzelnen Plan; zwei Fassungen
+  desselben Drehbuchs sollen nicht zwei Kategorielisten pflegen müssen. Die
+  Einstellungsseiten hängen deshalb weiter am Projekt.
+- **Die Szenen-Locations der Vervollständigung gelten projektweit.** Ein Drehort
+  taugt auch in der nächsten Fassung als Vorschlag, deshalb joint
+  `/projects/:id/scene-locations` weiter über `shoot_set.project_id`.
+- **In der Oberfläche sind es Mappen.** `/projects/:projectId` zeigt sie,
+  `/projects/:projectId/schedules/:scheduleId` den Plan. Anders als eine
+  Projektkachel ist **nicht die ganze Karte der Link**: Name und Drehbuchstand
+  werden in der Mappe bearbeitet, und ein Klick ins Feld darf nicht als
+  Navigation enden. Nur die Lasche oben öffnet.
+- **Ein neues Projekt bekommt gleich einen Drehplan** („Drehplan 1"), wie es
+  die Standardkategorien bekommt — sonst beginnt es mit einer leeren
+  Mappenliste, durch die man sich erst klicken muss.
+
+#### `shoot_set.project_id` bleibt stehen — und warum das keine Schlamperei ist
+
+Die Spalte ist durch die neue Ebene überflüssig geworden, lässt sich aber nicht
+entfernen: In SQLite heißt „Spalte weg" **Tabelle neu bauen**, und der
+`DROP TABLE` darin löscht über `ON DELETE CASCADE` jede Szene, Rolle, Location
+und jeden Rollenwechsel mit. Das übliche `PRAGMA foreign_keys = OFF` davor
+hilft nicht: Drizzles Migrator fährt in einer Transaktion, und **darin ignoriert
+SQLite das Pragma**. Nachgemessen — zwei Kindzeilen vorher, null nachher.
+
+Deshalb gilt für diese Codebasis: **Migrationen bleiben additiv.** `ADD COLUMN`,
+`CREATE TABLE`, `DROP COLUMN` auf einer Tabelle, auf die nichts mit Kaskade
+zeigt — alles andere erst nach einem Testlauf gegen eine Kopie echter Daten,
+bei dem die Zeilen vorher und nachher gezählt werden.
+
+Der Server füllt `project_id` beim Anlegen weiter aus dem Drehplan, damit sie
+nicht von ihm abweicht; gelesen wird sie nur noch von der Location-Abfrage
+oben. `shoot_set.schedule_id` ist aus demselben Grund **nullable**: ein
+`ALTER TABLE ADD COLUMN` mit `REFERENCES` verlangt in SQLite den Vorgabewert
+NULL. Die Migration füllt jede Bestandszeile, angelegt wird nie ohne — die
+Anwendung darf sie als gesetzt lesen, und der Web-Typ `ShootSet` führt sie
+deshalb gar nicht erst.
 
 ### Zählregeln (`packages/shared/src/calculations.ts`)
 

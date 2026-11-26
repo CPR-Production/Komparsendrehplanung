@@ -16,7 +16,7 @@ export function SettingsPage() {
   return (
     <main className="container py-4" style={{ maxWidth: 760 }}>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <Link to={`/projects/${projectId}`}>&larr; {t("nav.backToSchedule")}</Link>
+        <Link to={`/projects/${projectId}`}>&larr; {t("nav.backToSchedules")}</Link>
         <div className="d-flex align-items-center gap-2">
           <VersionBadge />
           <LanguageSwitcher />

@@ -22,9 +22,23 @@ export interface Project {
   updatedAt: string;
 }
 
-export interface ShootSet {
+/* Eine Ebene zwischen Projekt und Plan: ein Projekt hält mehrere Drehpläne,
+   eine Fassung je Drehbuchstand. Kategorien und Farben bleiben beim Projekt. */
+export interface Schedule {
   id: string;
   projectId: string;
+  name: string;
+  scriptRevision: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* `scheduleId` steht bewusst nicht drin: ein Set wird immer über seinen
+   Drehplan geladen, die Zuordnung ist also schon bekannt. Der Server schickt
+   sie mit, und auch das alte `projectId` — gelesen wird beides hier nicht. */
+export interface ShootSet {
+  id: string;
   sdNumber: string | null;
   shootDate: string | null;
   sortOrder: number;
@@ -115,8 +129,12 @@ export interface FullSet extends ShootSet {
   changes: ChangeRow[];
 }
 
-export interface FullProject extends Project {
+export interface FullSchedule extends Schedule {
   sets: FullSet[];
+}
+
+export interface FullProject extends Project {
+  schedules: FullSchedule[];
 }
 
 export interface UpdateStatus {
@@ -157,17 +175,27 @@ export const api = {
   getFullProject: (id: string) => request<FullProject>("GET", `/projects/${id}/full`),
   createProject: (name: string) => request<Project>("POST", "/projects", { name }),
 
-  listSets: (projectId: string) => request<ShootSet[]>("GET", `/projects/${projectId}/sets`),
-  createSet: (projectId: string, data: Partial<ShootSet>) =>
-    request<ShootSet>("POST", `/projects/${projectId}/sets`, data),
+  listSchedules: (projectId: string) =>
+    request<Schedule[]>("GET", `/projects/${projectId}/schedules`),
+  getSchedule: (scheduleId: string) => request<Schedule>("GET", `/schedules/${scheduleId}`),
+  createSchedule: (projectId: string, data: { name: string; scriptRevision?: string }) =>
+    request<Schedule>("POST", `/projects/${projectId}/schedules`, data),
+  updateSchedule: (scheduleId: string, data: Partial<Pick<Schedule, "name" | "scriptRevision">>) =>
+    request<Schedule>("PATCH", `/schedules/${scheduleId}`, data),
+  // Kaskadiert bis in die Zählungen — die Oberfläche fragt vorher nach.
+  deleteSchedule: (scheduleId: string) => request<void>("DELETE", `/schedules/${scheduleId}`),
+
+  listSets: (scheduleId: string) => request<ShootSet[]>("GET", `/schedules/${scheduleId}/sets`),
+  createSet: (scheduleId: string, data: Partial<ShootSet>) =>
+    request<ShootSet>("POST", `/schedules/${scheduleId}/sets`, data),
   updateSet: (setId: string, data: Partial<ShootSet>) =>
     request<ShootSet>("PATCH", `/sets/${setId}`, data),
   getFullSet: (setId: string) => request<FullSet>("GET", `/sets/${setId}/full`),
   // Kaskadiert serverseitig bis in die Zählungen: Szenen, Rollen, Motive,
   // Locations und Rollenwechsel des Tagteilers gehen mit.
   deleteSet: (setId: string) => request<void>("DELETE", `/sets/${setId}`),
-  reorderSets: (projectId: string, ids: string[]) =>
-    request<void>("POST", `/projects/${projectId}/sets/reorder`, { ids }),
+  reorderSets: (scheduleId: string, ids: string[]) =>
+    request<void>("POST", `/schedules/${scheduleId}/sets/reorder`, { ids }),
 
   createSetLocation: (setId: string, kind: SetPlaceKind) =>
     request<SetLocation>("POST", `/sets/${setId}/locations`, { kind }),

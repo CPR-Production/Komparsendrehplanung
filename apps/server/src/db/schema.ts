@@ -38,12 +38,45 @@ export const categories = sqliteTable("category", {
   createdAt: createdAt(),
 });
 
-// Physical table name avoids the "set" reserved keyword; exported symbol stays `sets`.
-export const sets = sqliteTable("shoot_set", {
+/* Ein Projekt hält mehrere Drehpläne — eine Fassung je Drehbuchstand, eine je
+   Block, eine zum Durchspielen. Die Ebene sitzt zwischen Projekt und Set:
+   Project → Schedule → Set → Scene → Role.
+
+   Kategorien und Farben bleiben beim Projekt. Sie beschreiben, wie die
+   Produktion zählt und aussieht, nicht einen einzelnen Plan — zwei Fassungen
+   desselben Drehbuchs sollen nicht zwei Kategorielisten pflegen müssen. */
+export const schedules = sqliteTable("schedule", {
   id: text("id").primaryKey(),
   projectId: text("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  // Der Drehbuchstand, zu dem dieser Plan gehört („Weiß", „Blau vom 3.4."):
+  // freier Text, weil jede Produktion ihn anders schreibt.
+  scriptRevision: text("script_revision"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  ...timestamps(),
+});
+
+// Physical table name avoids the "set" reserved keyword; exported symbol stays `sets`.
+export const sets = sqliteTable("shoot_set", {
+  id: text("id").primaryKey(),
+  /* `project_id` blieb beim Einzug der Drehplan-Ebene stehen, und zwar nicht
+     aus Bequemlichkeit: die Spalte wegzunehmen hieße in SQLite, die Tabelle neu
+     zu bauen, und der `DROP TABLE` darin löscht über ON DELETE CASCADE jede
+     Szene, Rolle, Location und jeden Rollenwechsel mit. Das übliche
+     `PRAGMA foreign_keys = OFF` davor hilft nicht — Drizzles Migrator fährt in
+     einer Transaktion, und darin ignoriert SQLite das Pragma (nachgemessen).
+
+     Der Server füllt sie weiter aus dem Drehplan, damit sie nicht auseinander
+     läuft. Gelesen wird sie nirgends mehr. */
+  projectId: text("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  /* Nullable, weil `ALTER TABLE ADD COLUMN` mit `REFERENCES` in SQLite einen
+     Vorgabewert von NULL verlangt. Die Migration füllt jede Bestandszeile, und
+     angelegt wird nie ohne — die Anwendung darf sie als gesetzt lesen. */
+  scheduleId: text("schedule_id").references(() => schedules.id, { onDelete: "cascade" }),
   sdNumber: text("sd_number"),
   shootDate: text("shoot_date"),
   sortOrder: integer("sort_order").notNull().default(0),

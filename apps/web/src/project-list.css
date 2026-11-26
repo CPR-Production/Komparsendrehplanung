@@ -50,3 +50,40 @@
 .project-card-name {
   overflow-wrap: anywhere;
 }
+
+/* Die Mappen eines Projekts. Anders als eine Projektkachel ist nicht die ganze
+   Karte der Link: Name und Drehbuchstand werden hier bearbeitet, und ein Klick
+   ins Feld darf nicht als Navigation enden. Also trägt nur der Kopf der Karte
+   den Link, und er sieht aus wie die Lasche einer Mappe. */
+.schedule-card-open {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  color: inherit;
+  background: linear-gradient(135deg, #f3dfae, #e2bf74);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: calc(var(--bs-card-border-radius) - 1px)
+    calc(var(--bs-card-border-radius) - 1px) 0 0;
+  transition: filter 0.12s ease;
+}
+
+.schedule-card-open:hover,
+.schedule-card-open:focus-visible {
+  filter: brightness(1.06);
+}
+
+.schedule-card-folder {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.schedule-card-open-label {
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-card-open {
+    transition: none;
+  }
+}

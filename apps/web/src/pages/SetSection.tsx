@@ -22,7 +22,11 @@ import { ScheduleTable } from "../grid/ScheduleTable.js";
 import { useDebouncedSave } from "../useDebouncedSave.js";
 
 interface SetSectionProps {
+  // Beide, und jedes für etwas anderes: die Sets hängen am Drehplan, die
+  // Vorschlagsliste der Szenen-Locations gilt projektweit — ein Drehort taugt
+  // auch in der nächsten Fassung des Drehbuchs als Vorschlag.
   projectId: string;
+  scheduleId: string;
   setId: string;
   categories: Category[];
   colors: ColorSetting[];
@@ -36,6 +40,7 @@ interface SetSectionProps {
 
 export function SetSection({
   projectId,
+  scheduleId,
   setId,
   categories,
   colors,
@@ -258,7 +263,7 @@ export function SetSection({
 
   const onSetFieldChange = (field: keyof ShootSet, value: string) => {
     setSetDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
-    queryClient.setQueryData<ShootSet[]>(["sets", projectId], (prev) =>
+    queryClient.setQueryData<ShootSet[]>(["sets", scheduleId], (prev) =>
       prev?.map((set) => (set.id === setId ? { ...set, [field]: value } : set)),
     );
     debouncedSaveSet(`${field}`, field, value);

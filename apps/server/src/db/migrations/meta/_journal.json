@@ -36,6 +36,13 @@
       "when": 1795719118996,
       "tag": "0004_productive_lorna_dane",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1795724708311,
+      "tag": "0005_wild_vampiro",
+      "breakpoints": true
     }
   ]
 }

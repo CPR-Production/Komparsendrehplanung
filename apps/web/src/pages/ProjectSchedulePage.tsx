@@ -19,7 +19,7 @@ const APP_HEADER_HEIGHT = 56;
 
 export function ProjectSchedulePage() {
   const { t } = useTranslation();
-  const { projectId } = useParams<{ projectId: string }>();
+  const { projectId, scheduleId } = useParams<{ projectId: string; scheduleId: string }>();
   const queryClient = useQueryClient();
   const { locked } = useEditLock();
   const { stripSize } = useStripSize();
@@ -29,10 +29,17 @@ export function ProjectSchedulePage() {
     queryFn: () => api.getProject(projectId!),
     enabled: !!projectId,
   });
+  const scheduleQuery = useQuery({
+    queryKey: ["schedule", scheduleId],
+    queryFn: () => api.getSchedule(scheduleId!),
+    enabled: !!scheduleId,
+  });
+  // Die Sets hängen am Drehplan, nicht mehr am Projekt — der Schlüssel folgt
+  // dem, damit zwei Pläne desselben Projekts sich keinen Cache teilen.
   const setsQuery = useQuery({
-    queryKey: ["sets", projectId],
-    queryFn: () => api.listSets(projectId!),
-    enabled: !!projectId,
+    queryKey: ["sets", scheduleId],
+    queryFn: () => api.listSets(scheduleId!),
+    enabled: !!scheduleId,
   });
   const categoriesQuery = useQuery({
     queryKey: ["categories", projectId],
@@ -83,31 +90,31 @@ export function ProjectSchedulePage() {
      auf, der keinen Platz meint, sondern einen weiteren Drehtag. */
   const createSetMutation = useMutation({
     mutationFn: async (afterSetId: string | null) => {
-      const created = await api.createSet(projectId!, {});
+      const created = await api.createSet(scheduleId!, {});
       const ids = (setsQuery.data ?? []).map((set) => set.id);
       const index = afterSetId ? ids.indexOf(afterSetId) + 1 : ids.length;
       // Hinter einen Tagteiler, den die Liste nicht kennt, kann nichts — dann
       // bleibt es beim Anhängen, statt den Neuen an Position 0 zu setzen.
       if (afterSetId && index > 0) {
-        await api.reorderSets(projectId!, [
+        await api.reorderSets(scheduleId!, [
           ...ids.slice(0, index),
           created.id,
           ...ids.slice(index),
         ]);
       }
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["sets", projectId] }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["sets", scheduleId] }),
   });
 
   const deleteSetMutation = useMutation({
     mutationFn: (setId: string) => api.deleteSet(setId),
     // Die Liste lebt hier, deshalb auch das Nachladen: das Set entfernt sich
     // nicht selbst aus einer Liste, die es nicht kennt.
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["sets", projectId] }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["sets", scheduleId] }),
   });
 
   const reorderSetsMutation = useMutation({
-    mutationFn: (ids: string[]) => api.reorderSets(projectId!, ids),
+    mutationFn: (ids: string[]) => api.reorderSets(scheduleId!, ids),
   });
 
   const moveSet = (draggedId: string, targetId: string) => {
@@ -116,7 +123,7 @@ export function ProjectSchedulePage() {
     const ids = current.map((s) => s.id);
     const nextIds = moveBefore(ids, draggedId, targetId);
     if (nextIds === ids) return;
-    queryClient.setQueryData<ShootSet[]>(["sets", projectId], () =>
+    queryClient.setQueryData<ShootSet[]>(["sets", scheduleId], () =>
       nextIds.map((id) => current.find((s) => s.id === id)!),
     );
     reorderSetsMutation.mutate(nextIds);
@@ -147,7 +154,7 @@ export function ProjectSchedulePage() {
     },
   });
 
-  if (!projectId) return null;
+  if (!projectId || !scheduleId) return null;
 
   return (
     <main
@@ -164,9 +171,25 @@ export function ProjectSchedulePage() {
         className="d-flex justify-content-between align-items-center px-3 border-bottom bg-white"
         style={{ height: APP_HEADER_HEIGHT, position: "sticky", top: 0, zIndex: 3 }}
       >
-        <Link to="/" className="h5 mb-0 link-dark text-decoration-none">
-          {projectQuery.data?.name}
-        </Link>
+        {/* Der Weg zurück führt jetzt zu den Mappen des Projekts, nicht zur
+            Projektliste — eine Stufe, nicht zwei. Welcher Plan offen ist, muss
+            dabeistehen: zwei Fassungen desselben Projekts sehen sonst gleich
+            aus. Der Drehbuchstand ist der Grund, aus dem es zwei gibt. */}
+        <div className="d-flex align-items-baseline gap-2 text-truncate">
+          <Link
+            to={`/projects/${projectId}`}
+            className="h5 mb-0 link-dark text-decoration-none text-truncate"
+          >
+            {projectQuery.data?.name}
+          </Link>
+          <span className="text-body-secondary">/</span>
+          <span className="fw-semibold text-truncate">{scheduleQuery.data?.name}</span>
+          {scheduleQuery.data?.scriptRevision && (
+            <span className="badge text-bg-light text-nowrap">
+              {scheduleQuery.data.scriptRevision}
+            </span>
+          )}
+        </div>
         <div className="d-flex align-items-center gap-2">
           <VersionBadge />
           <StripSizeSelect />
@@ -218,6 +241,7 @@ export function ProjectSchedulePage() {
             <SetSection
               key={set.id}
               projectId={projectId}
+              scheduleId={scheduleId}
               setId={set.id}
               categories={categoriesQuery.data ?? []}
               colors={colorsQuery.data ?? []}

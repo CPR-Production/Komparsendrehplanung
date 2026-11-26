@@ -31,7 +31,8 @@ const strings: Record<string, Record<Locale, string>> = {
   "nav.settings": { de: "Einstellungen", en: "Settings" },
   "nav.editing.unlock": { de: "Bearbeiten freigeben", en: "Enable editing" },
   "nav.editing.lock": { de: "Bearbeiten sperren", en: "Lock editing" },
-  "nav.backToSchedule": { de: "Zurück zum Drehplan", en: "Back to schedule" },
+  // Führt zur Mappenübersicht des Projekts, nicht in einen einzelnen Plan.
+  "nav.backToSchedules": { de: "Zurück zu den Drehplänen", en: "Back to schedules" },
   "nav.backToProjects": { de: "Zurück zu den Projekten", en: "Back to projects" },
   "nav.help": { de: "Hilfe & Feedback", en: "Help & feedback" },
 
@@ -45,6 +46,38 @@ const strings: Record<string, Record<Locale, string>> = {
   "project.list.created": { de: "Angelegt am {{date}}", en: "Created {{date}}" },
   "project.create.namePlaceholder": { de: "Projektname", en: "Project name" },
   "project.create.submit": { de: "Projekt anlegen", en: "Create project" },
+
+  /* Die Drehplan-Ebene zwischen Projekt und Raster. „Drehplan" und „Schedule"
+     sind beide der Begriff, der am Set fällt — hier gehen die Sprachen
+     auseinander, anders als bei den Spaltenköpfen. */
+  "schedule.list.title": { de: "Drehpläne", en: "Schedules" },
+  "schedule.list.intro": {
+    de: "Ein Projekt kann mehrere Drehpläne halten — eine Fassung je Drehbuchstand. Kategorien und Farben gelten für alle gemeinsam.",
+    en: "A project can hold several schedules — one per script revision. Categories and colors apply to all of them.",
+  },
+  "schedule.list.empty": {
+    de: "Noch kein Drehplan in diesem Projekt.",
+    en: "No schedule in this project yet.",
+  },
+  "schedule.list.error": {
+    de: "Drehpläne konnten nicht geladen werden.",
+    en: "Could not load the schedules.",
+  },
+  "schedule.name": { de: "Drehplan", en: "Schedule name" },
+  "schedule.scriptRevision": { de: "Drehbuchstand", en: "Script revision" },
+  "schedule.create.namePlaceholder": { de: "Name des Drehplans", en: "Schedule name" },
+  "schedule.create.revisionPlaceholder": {
+    de: "Drehbuchstand, z. B. Blau vom 3.4.",
+    en: "Script revision, e.g. Blue 3 Apr",
+  },
+  "schedule.create.submit": { de: "Drehplan anlegen", en: "Create schedule" },
+  "schedule.open": { de: "{{name}} öffnen", en: "Open {{name}}" },
+  "schedule.open.short": { de: "Öffnen", en: "Open" },
+  "schedule.delete": { de: "Drehplan löschen", en: "Delete schedule" },
+  "schedule.confirmDelete": {
+    de: "Drehplan „{{name}}“ löschen? Alle Drehtage darin gehen mit verloren, samt Szenen, Rollen und eingetragenen Zahlen.",
+    en: "Delete schedule “{{name}}”? Every shooting day in it goes with it, including scenes, roles and the numbers entered.",
+  },
 
   "settings.title": { de: "Einstellungen", en: "Settings" },
   "settings.categories": { de: "Kategorien", en: "Categories" },
