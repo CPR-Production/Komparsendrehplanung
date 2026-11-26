@@ -46,6 +46,22 @@ jede Produktion den Drehbuchstand anders schreibt („Weiß", „Blau vom 3.4.")
 - **Ein neues Projekt bekommt gleich einen Drehplan** („Drehplan 1"), wie es
   die Standardkategorien bekommt — sonst beginnt es mit einer leeren
   Mappenliste, durch die man sich erst klicken muss.
+- **Duplizieren kopiert den Plan als Ganzes**
+  (`services/duplicateSchedule.ts`, `POST /schedules/:id/duplicate`): Drehtage,
+  Motive, Locations, Szenen, Rollen, Zählungen, Rollenwechsel. Zwei Dinge
+  entscheiden darüber, ob es stimmt:
+  - **Verweise wandern mit.** Drei Maps halten alt → neu. Der stille Fall ist
+    `change.anchorAfterSceneId`: er zeigt nicht nach oben auf das Set, sondern
+    quer auf eine Szene — unbehandelt hinge jeder Rollenwechsel der Kopie an
+    der Szene des Originals. Deshalb kommen die Rollenwechsel zuletzt, wenn
+    alle neuen Szenen stehen.
+  - **Zeilen werden gespreizt, nicht aufgezählt.** Eine Rolle trägt Felder, die
+    das Raster noch gar nicht zeigt (Kostüm-, Requisiten-, Continuity-Notizen,
+    Geschlechter); eine Aufzählung vergäße beim nächsten neuen Feld still einen
+    Teil der Kopie. Nur `id` und die Zeitstempel fallen heraus.
+
+  Den Namen der Kopie gibt der **Client** vor (`schedule.copyName`), weil
+  „(Kopie)" Oberfläche ist und der Server die Sprache nicht kennt.
 
 #### `shoot_set.project_id` bleibt stehen — und warum das keine Schlamperei ist
 
@@ -68,6 +84,28 @@ oben. `shoot_set.schedule_id` ist aus demselben Grund **nullable**: ein
 NULL. Die Migration füllt jede Bestandszeile, angelegt wird nie ohne — die
 Anwendung darf sie als gesetzt lesen, und der Web-Typ `ShootSet` führt sie
 deshalb gar nicht erst.
+
+#### Und `schedule_id` trägt keine Kaskade
+
+**Drizzle schreibt beim `ADD COLUMN` die `ON DELETE`-Klausel nicht mit.** In der
+Datenbank steht `NO ACTION`, in jeder Installation gleich — eine frische läuft
+durch dieselbe Migration. In v0.6.0 ist das aufgefallen, als ein Drehplan mit
+Drehtagen sich nicht löschen ließ: `FOREIGN KEY constraint failed`, HTTP 500.
+
+Nachrüsten geht nicht, das wäre wieder der Tabellen-Neubau. Deshalb **räumt der
+`DELETE`-Handler die Sets selbst weg**, in einer Transaktion und vor dem Plan;
+ab den Sets abwärts greifen die Kaskaden aus `CREATE TABLE` wieder.
+
+Das Schema behauptet die Kaskade deshalb **nicht mehr**, und der Snapshot
+`meta/0005_snapshot.json` ist auf `no action` korrigiert — sonst hätte das
+nächste `db:generate` eine Migration erzeugen wollen, die die Tabelle neu baut.
+Wer hier eine Kaskade deklariert, die die Datenbank nie gegeben hat, legt die
+nächste Falle: der Code liest sich wie eine Zusicherung.
+
+**Daraus die allgemeine Regel:** Nach einem `ADD COLUMN` mit `REFERENCES` prüfen,
+was wirklich in der Datenbank steht — `pragma_foreign_key_list('<tabelle>')` —
+und das Löschen einmal von Hand auslösen. Die Schemadatei ist hier keine
+verlässliche Auskunft.
 
 ### Zählregeln (`packages/shared/src/calculations.ts`)
 

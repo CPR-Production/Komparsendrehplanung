@@ -75,8 +75,17 @@ export const sets = sqliteTable("shoot_set", {
     .references(() => projects.id, { onDelete: "cascade" }),
   /* Nullable, weil `ALTER TABLE ADD COLUMN` mit `REFERENCES` in SQLite einen
      Vorgabewert von NULL verlangt. Die Migration füllt jede Bestandszeile, und
-     angelegt wird nie ohne — die Anwendung darf sie als gesetzt lesen. */
-  scheduleId: text("schedule_id").references(() => schedules.id, { onDelete: "cascade" }),
+     angelegt wird nie ohne — die Anwendung darf sie als gesetzt lesen.
+
+     **Ohne Kaskade, und das ist kein Versehen.** Drizzle schreibt beim
+     `ADD COLUMN` die `ON DELETE`-Klausel nicht mit; in der Datenbank steht
+     NO ACTION, in jeder Installation gleich, auch einer frischen. Sie
+     nachzurüsten hieße, die Tabelle neu zu bauen — und genau das löscht hier
+     alle Kinder (siehe CLAUDE.md). Das Löschen eines Drehplans räumt seine
+     Sets deshalb selbst weg, in `routes/schedules.ts`. Hier `cascade` zu
+     behaupten wäre schlimmer als es wegzulassen: es las sich wie eine
+     Zusicherung, die die Datenbank nie gegeben hat. */
+  scheduleId: text("schedule_id").references(() => schedules.id),
   sdNumber: text("sd_number"),
   shootDate: text("shoot_date"),
   sortOrder: integer("sort_order").notNull().default(0),

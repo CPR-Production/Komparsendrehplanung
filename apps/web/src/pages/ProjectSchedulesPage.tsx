@@ -53,6 +53,12 @@ export function ProjectSchedulesPage() {
     onSuccess: invalidate,
   });
 
+  const duplicateMutation = useMutation({
+    mutationFn: (schedule: { id: string; name: string }) =>
+      api.duplicateSchedule(schedule.id, { name: t("schedule.copyName", { name: schedule.name }) }),
+    onSuccess: invalidate,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.deleteSchedule(id),
     onSuccess: invalidate,
@@ -182,7 +188,22 @@ export function ProjectSchedulesPage() {
                     }}
                   />
                 </label>
-                <div className="d-flex justify-content-end">
+                <div className="d-flex justify-content-end align-items-center gap-2">
+                  {/* Neben dem Löschen, weil beide dasselbe Ziel haben: diesen
+                      Plan als Ganzes. Mit Beschriftung statt als Zeichen — ein
+                      Symbol fürs Duplizieren liest niemand zuverlässig, und
+                      anders als beim × gibt es dafür keine eingeführte Form. */}
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    title={t("schedule.duplicate")}
+                    disabled={duplicateMutation.isPending}
+                    onClick={() =>
+                      duplicateMutation.mutate({ id: schedule.id, name: schedule.name })
+                    }
+                  >
+                    {t("schedule.duplicate.short")}
+                  </button>
                   <button
                     type="button"
                     className="row-delete"

@@ -182,6 +182,11 @@ export const api = {
     request<Schedule>("POST", `/projects/${projectId}/schedules`, data),
   updateSchedule: (scheduleId: string, data: Partial<Pick<Schedule, "name" | "scriptRevision">>) =>
     request<Schedule>("PATCH", `/schedules/${scheduleId}`, data),
+  /* Kopiert den Plan mit allem, was darunter hängt. Der Name kommt von hier,
+     weil „(Kopie)" Oberfläche ist und der Server die Sprache nicht kennt; ohne
+     `scriptRevision` erbt die Kopie den Stand des Originals. */
+  duplicateSchedule: (scheduleId: string, data: { name: string; scriptRevision?: string }) =>
+    request<Schedule>("POST", `/schedules/${scheduleId}/duplicate`, data),
   // Kaskadiert bis in die Zählungen — die Oberfläche fragt vorher nach.
   deleteSchedule: (scheduleId: string) => request<void>("DELETE", `/schedules/${scheduleId}`),
 

@@ -73,6 +73,11 @@ const strings: Record<string, Record<Locale, string>> = {
   "schedule.create.submit": { de: "Drehplan anlegen", en: "Create schedule" },
   "schedule.open": { de: "{{name}} öffnen", en: "Open {{name}}" },
   "schedule.open.short": { de: "Öffnen", en: "Open" },
+  "schedule.duplicate": { de: "Drehplan duplizieren", en: "Duplicate schedule" },
+  "schedule.duplicate.short": { de: "Duplizieren", en: "Duplicate" },
+  /* Der Name der Kopie. Interpoliert, nicht übersetzt: „{{name}}" ist, was der
+     Nutzer eingetippt hat, und das läuft nie durch t(). */
+  "schedule.copyName": { de: "{{name}} (Kopie)", en: "{{name}} (copy)" },
   "schedule.delete": { de: "Drehplan löschen", en: "Delete schedule" },
   "schedule.confirmDelete": {
     de: "Drehplan „{{name}}“ löschen? Alle Drehtage darin gehen mit verloren, samt Szenen, Rollen und eingetragenen Zahlen.",

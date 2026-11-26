@@ -3,7 +3,8 @@ import { asc, eq } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/client.js";
-import { schedules } from "../db/schema.js";
+import { schedules, sets } from "../db/schema.js";
+import { duplicateSchedule } from "../services/duplicateSchedule.js";
 
 export const schedulesRouter = Router();
 
@@ -14,6 +15,10 @@ const createSchema = z.object({
   scriptRevision: z.string().optional(),
 });
 const updateSchema = createSchema.partial();
+const duplicateBodySchema = z.object({
+  name: z.string().min(1),
+  scriptRevision: z.string().optional(),
+});
 
 schedulesRouter.get("/projects/:projectId/schedules", (req, res) => {
   const rows = db
@@ -82,9 +87,39 @@ schedulesRouter.patch("/schedules/:id", (req, res) => {
   res.json(schedule);
 });
 
-// Kaskadiert bis in die Zählungen: Sets, Szenen, Rollen, alles darunter. Die
-// Oberfläche fragt deshalb nach und gibt die Zahl der Drehtage dazu.
+/* Kopiert den Plan samt allem, was darunter hängt (siehe
+   services/duplicateSchedule.ts). Den Namen gibt der Client vor: er allein
+   kennt die Sprache der Oberfläche, und „(Kopie)" ist Oberfläche. Ohne Angabe
+   erbt die Kopie den Drehbuchstand des Originals. */
+schedulesRouter.post("/schedules/:id/duplicate", (req, res) => {
+  const parsed = duplicateBodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.flatten() });
+    return;
+  }
+
+  const copy = duplicateSchedule(req.params.id, parsed.data.name, parsed.data.scriptRevision);
+  if (!copy) {
+    res.status(404).end();
+    return;
+  }
+  res.status(201).json(copy);
+});
+
+/* Die Sets zuerst, dann der Plan — und beides in einer Transaktion.
+
+   Nicht aus Vorsicht, sondern weil es anders gar nicht geht: `schedule_id`
+   trägt in der Datenbank **keine** Kaskade (siehe schema.ts), ein Plan mit
+   Drehtagen ließe sich also nicht löschen und der Server antwortete mit
+   „FOREIGN KEY constraint failed". Von den Sets abwärts greifen die Kaskaden
+   wieder, die bei `CREATE TABLE` entstanden sind: Szenen, Rollen, Zählungen,
+   Motive, Locations und Rollenwechsel gehen von selbst mit.
+
+   Die Oberfläche fragt vorher nach und benennt die Folge. */
 schedulesRouter.delete("/schedules/:id", (req, res) => {
-  db.delete(schedules).where(eq(schedules.id, req.params.id)).run();
+  db.transaction((tx) => {
+    tx.delete(sets).where(eq(sets.scheduleId, req.params.id)).run();
+    tx.delete(schedules).where(eq(schedules.id, req.params.id)).run();
+  });
   res.status(204).end();
 });
