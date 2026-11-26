@@ -57,22 +57,45 @@ export function ProjectSchedulePage() {
   const colorByKey = new Map((colorsQuery.data ?? []).map((color) => [color.key, color]));
   const frameVars: Record<string, string> = {};
   const frameClasses: string[] = [];
-  for (const key of ["header", "set", "role", "count"]) {
+  for (const key of ["header", "set", "role", "count", "change"]) {
     const color = colorByKey.get(key);
     if (!color) continue;
     frameVars[`--${key}-bg`] = color.backgroundColor;
     frameVars[`--${key}-text`] = color.textColor;
     // Same reasoning as a Scene's has-dark-state: the controls in those cells
-    // carry fixed colours that a dark background swallows. Only the Set header
-    // and the Role rows hold any — the header row has none, and a count cell's
-    // only control paints its own background — so only those two get a class.
-    if ((key === "set" || key === "role") && isDarkColor(color.backgroundColor)) {
+    // carry fixed colours that a dark background swallows. The Set header, the
+    // Role rows and the Rollenwechsel row each hold a red × — the header row
+    // holds nothing, and a count cell's only control paints its own
+    // background — so only those three get a class.
+    if (
+      (key === "set" || key === "role" || key === "change") &&
+      isDarkColor(color.backgroundColor)
+    ) {
       frameClasses.push(`has-dark-${key}`);
     }
   }
 
+  /* Anlegen und danach einsortieren — denselben Weg geht `addSceneAfter` für
+     Szenen. Der Server hängt einen neuen Tagteiler immer hinten an; wohin er
+     gehört, weiß nur die Liste hier, und die kennt der Server nicht.
+
+     `afterSetId` null heißt „ans Ende": so ruft der Knopf in der Kopfleiste
+     auf, der keinen Platz meint, sondern einen weiteren Drehtag. */
   const createSetMutation = useMutation({
-    mutationFn: () => api.createSet(projectId!, {}),
+    mutationFn: async (afterSetId: string | null) => {
+      const created = await api.createSet(projectId!, {});
+      const ids = (setsQuery.data ?? []).map((set) => set.id);
+      const index = afterSetId ? ids.indexOf(afterSetId) + 1 : ids.length;
+      // Hinter einen Tagteiler, den die Liste nicht kennt, kann nichts — dann
+      // bleibt es beim Anhängen, statt den Neuen an Position 0 zu setzen.
+      if (afterSetId && index > 0) {
+        await api.reorderSets(projectId!, [
+          ...ids.slice(0, index),
+          created.id,
+          ...ids.slice(index),
+        ]);
+      }
+    },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["sets", projectId] }),
   });
 
@@ -153,7 +176,7 @@ export function ProjectSchedulePage() {
             type="button"
             className="btn btn-sm btn-outline-dark"
             disabled={locked}
-            onClick={() => createSetMutation.mutate()}
+            onClick={() => createSetMutation.mutate(null)}
           >
             {t("nav.addSet")}
           </button>
@@ -201,6 +224,7 @@ export function ProjectSchedulePage() {
               setDragHandleProps={getSetDragHandleProps(set.id)}
               setDropProps={getSetDropProps(set.id)}
               onRemoveSet={() => deleteSetMutation.mutate(set.id)}
+              onAddSetAfter={() => createSetMutation.mutate(set.id)}
             />
           ))}
         </table>

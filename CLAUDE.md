@@ -173,6 +173,12 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name |
   - Motiv, Location und Rollenwechsel behalten ihr × **beim Feld**: jedes
     trifft einen bestimmten Eintrag, und drei davon nebeneinander in einer
     Zelle sagten nicht mehr, welches welchen löscht.
+- **„+ Tagteiler" steht zweimal.** In der Kopfleiste hängt er einen weiteren
+  Drehtag hinten an; am Ende jedes Tagteilers legt er den neuen **genau dort**
+  an — dieselbe Rolle, die „+ Szene" eine Ebene tiefer spielt. Beide laufen
+  über dieselbe Mutation, `afterSetId: null` heißt „ans Ende". Der Server hängt
+  immer hinten an und sortiert erst der Reihenfolgen-Endpunkt um, denn wohin
+  der neue gehört, weiß nur die Liste im Client.
 - **Summenzeile** direkt unter dem Set-Header: Label in der Name-Spalte, Summen in
   den jeweiligen Kategorie-Spalten, Gesamtsumme in Total. Bewusst spaltenbündig
   statt als Fließtext, damit sie unter ihrem Kategorie- und Gruppen-Header steht.
@@ -185,7 +191,9 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name |
 
 **Nur Eingaben, in zwei Listen.** Links ⠿, SD und Drehdatum; daneben die Orte
 des Drehtags als Block: **Motive oben, Locations darunter**, jede Liste mit
-ihrem eigenen „+" und bis zu drei Einträgen (`MAX_PLACES_PER_KIND`).
+ihrem eigenen „+" und bis zu sechs Einträgen (`MAX_PLACES_PER_KIND`). Die
+Grenze ist eine Frage des Platzes, nicht der Daten, und steht deshalb im Grid
+und nicht im Server.
 
 **Die beiden Listen sind unabhängig** — das ist der ganze Punkt. Drei Motive
 können an einer einzigen Adresse liegen, und dieselbe Adresse trägt am nächsten
@@ -223,10 +231,18 @@ weiterhin `shoot_set_location`, obwohl sie beide Arten hält — wie
 
 ### Farben
 
-Neunzehn Ziele, alle pro Projekt einstellbar, Hintergrund und Text getrennt:
+Zwanzig Ziele, alle pro Projekt einstellbar, Hintergrund und Text getrennt:
 
-- **Vier Grundfarben** — Tabellenkopf, Set, Rolle, Anzahl. Sie tragen als
-  Vorgabe genau die Werte, auf die das Grid vorher fest verdrahtet war.
+- **Fünf Grundfarben** — Tabellenkopf, Tagteiler, Rolle, Anzahl, Rollenwechsel.
+  Sie tragen als Vorgabe genau die Werte, auf die das Grid vorher fest
+  verdrahtet war. Der Rollenwechsel kam zuletzt dazu und steht deshalb hinten,
+  obwohl seine Zeile auf dem Schirm zwischen den Szenen liegt — die Reihenfolge
+  der Einstellungsseite soll sich nicht unter denen ändern, die sie kennen.
+  **Ein neues Ziel braucht nur einen Eintrag in `CHROME_COLOR_TARGETS`**: die
+  Einstellungsseite rendert die Liste, der Server prüft gegen sie, und der
+  WCAG-Test greift von selbst. Dazu kommen nur der `colorTarget.chrome.*`-Text,
+  der Schlüssel in der Schleife von `ProjectSchedulePage` und die CSS-Regel,
+  die `--<key>-bg` liest.
 - **Fünfzehn Szenenzustände** — eine Szene wird **nach ihrem Zustand**
   eingefärbt, nicht nach ihrer Stelle in der Hierarchie: Int, Ex oder beides,
   mal fünf Tageszeiten. Ohne In/Ex oder Tageszeit bleibt das neutrale Gelb.
@@ -260,8 +276,8 @@ Fünf Kopplungen:
   Custom Properties am `<table>` (`--set-bg` und so weiter, Vorgabewerte als
   Fallback im Stylesheet); die Szenenfarbe steht am jeweiligen `<td>`, weil sie
   sich von Zeile zu Zeile unterscheidet.
-- **`has-dark-state`, `has-dark-set`, `has-dark-role` sind keine
-  Schönheitsnamen.** Die Bedienelemente in diesen Zellen tragen feste Farben,
+- **`has-dark-state`, `has-dark-set`, `has-dark-role`, `has-dark-change` sind
+  keine Schönheitsnamen.** Die Bedienelemente in diesen Zellen tragen feste Farben,
   die gegen Gelb und Orange gewählt waren: rotes ×, grauer Anfasser, dunkle
   Knopfränder, die gedämpften Hinweistexte, die Trennlinie über der Summenzeile.
   Auf einem Nachtblau verschwinden sie. Nur dann weichen sie der Textfarbe der

@@ -81,6 +81,7 @@ const strings: Record<string, Record<Locale, string>> = {
   "colorTarget.chrome.set": { de: "Tagteiler", en: "Daybreak" },
   "colorTarget.chrome.role": { de: "Rolle", en: "Role" },
   "colorTarget.chrome.count": { de: "Anzahl", en: "Count" },
+  "colorTarget.chrome.change": { de: "Rollenwechsel", en: "Costume change" },
   "settings.color.background": { de: "Hintergrund", en: "Background" },
   "settings.color.text": { de: "Text", en: "Text" },
   "settings.color.reset": { de: "Auf die Vorgabe zurücksetzen", en: "Reset to the default" },

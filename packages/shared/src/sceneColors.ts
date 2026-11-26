@@ -2,8 +2,8 @@
    hierarchy: Int, Ext or both, combined with the time of day. That makes
    fifteen states, and each carries a background and a text colour separately.
 
-   Four more colours frame those fifteen: the table header, the Set header, the
-   Role rows and the count cells. They are not states — nothing about a Scene
+   Five more colours frame those fifteen: the table header, the Set header, the
+   Role rows, the count cells and the Rollenwechsel row. They are not states — nothing about a Scene
    decides them — but to whoever sets them they are the same kind of setting, so
    they travel in the same list, the same endpoint and the same table, and they
    come first.
@@ -77,6 +77,10 @@ export const CHROME_COLOR_TARGETS: ColorTarget[] = [
   { key: "set", kind: "chrome", background: "#f4c896", textColor: "#212529" },
   { key: "role", kind: "chrome", background: "#a5c882", textColor: "#212529" },
   { key: "count", kind: "chrome", background: "#5b9bd5", textColor: "#212529" },
+  // Die Zeile des Rollenwechsels. Kam als letzte dazu und steht deshalb hinten,
+  // obwohl sie auf dem Schirm zwischen den Szenen liegt — die Reihenfolge der
+  // Einstellungsseite soll sich nicht unter denen ändern, die sie kennen.
+  { key: "change", kind: "chrome", background: "#f0e6f6", textColor: "#212529" },
 ];
 
 /* Only four of the fifteen are named in the brief — Int/Night light blue,

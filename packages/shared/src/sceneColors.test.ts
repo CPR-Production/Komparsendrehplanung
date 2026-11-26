@@ -77,14 +77,23 @@ describe("sceneColorKey", () => {
 describe("COLOR_TARGETS", () => {
   it("covers every combination once, plus the frame colours", () => {
     expect(SCENE_COLOR_STATES).toHaveLength(15);
-    expect(COLOR_TARGETS).toHaveLength(19);
-    expect(new Set(COLOR_TARGET_KEYS).size).toBe(19);
+    // 15 Szenenzustände und fünf Grundfarben. Die Zahl steht absichtlich fest
+    // ausgeschrieben da: aus der Liste abgeleitet könnte sie nichts mehr
+    // bemerken, und ein versehentlich doppelt eingetragenes Ziel soll auffallen.
+    expect(COLOR_TARGETS).toHaveLength(20);
+    expect(new Set(COLOR_TARGET_KEYS).size).toBe(20);
   });
 
   // The frame is what a reader looks at first, so it is what the settings page
   // has to offer first.
   it("puts the frame ahead of the states", () => {
-    expect(COLOR_TARGETS.slice(0, 4).map((t) => t.key)).toEqual(["header", "set", "role", "count"]);
+    expect(COLOR_TARGETS.slice(0, 5).map((t) => t.key)).toEqual([
+      "header",
+      "set",
+      "role",
+      "count",
+      "change",
+    ]);
   });
 
   // A missing default would reach the grid as `undefined` in a style attribute.

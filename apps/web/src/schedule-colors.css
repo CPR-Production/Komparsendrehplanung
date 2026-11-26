@@ -447,8 +447,17 @@
   font-weight: 400;
 }
 
+/* Eine Einstellung wie die vier anderen Grundfarben; der Wert hier ist nur
+   noch der Vorgabewert, auf den das Grid vorher fest verdrahtet war. */
 .cell-change {
-  --bs-table-bg: #f0e6f6;
+  --bs-table-bg: var(--change-bg, #f0e6f6);
+  --bs-table-color: var(--change-text, #212529);
+}
+
+/* Wie bei Set und Rolle: das rote × verschwindet auf einem dunklen Hintergrund
+   und weicht dort der Textfarbe der Zelle. */
+.has-dark-change .cell-change .row-delete:not(:disabled) {
+  color: inherit;
 }
 
 .cell-change-row {

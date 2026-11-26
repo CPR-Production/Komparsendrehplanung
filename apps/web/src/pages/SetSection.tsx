@@ -31,6 +31,7 @@ interface SetSectionProps {
   // Gehört der Seite, nicht dem Set: die Liste der Tagteiler liegt dort, und
   // nur sie kann den gelöschten aus ihr entfernen.
   onRemoveSet: () => void;
+  onAddSetAfter: () => void;
 }
 
 export function SetSection({
@@ -41,6 +42,7 @@ export function SetSection({
   setDragHandleProps,
   setDropProps,
   onRemoveSet,
+  onAddSetAfter,
 }: SetSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -329,6 +331,7 @@ export function SetSection({
       setDragHandleProps={setDragHandleProps}
       setDropProps={setDropProps}
       onRemoveSet={onRemoveSet}
+      onAddSetAfter={onAddSetAfter}
       getSceneDragHandleProps={getSceneDragHandleProps}
       getSceneDropProps={getSceneDropProps}
       draggedSceneId={draggedSceneId}

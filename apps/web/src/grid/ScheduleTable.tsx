@@ -51,6 +51,7 @@ interface ScheduleTableProps {
   onAddLocation: (kind: SetPlaceKind) => void;
   onRemoveLocation: (locationId: string) => void;
   onRemoveSet: () => void;
+  onAddSetAfter: () => void;
   onAddSceneAfter: (sceneId: string | null) => void;
   onCountChange: (roleId: string, categoryId: string, count: number) => void;
   onToggleIsNew: (roleId: string, categoryId: string) => void;
@@ -136,9 +137,11 @@ function CheckboxGroup<T extends string>({
    Beide sehen gleich aus und verhalten sich gleich — sie unterscheiden sich nur
    in Beschriftung und `kind`, also steht das hier einmal.
 
-   Drei je Liste: mehr als drei Motive oder Adressen beschreiben keinen Drehtag
-   mehr, sondern zwei. */
-const MAX_PLACES_PER_KIND = 3;
+   Sechs je Liste — so viele Motive bekommt ein voller Drehtag zusammen. Eine
+   Grenze bleibt es, weil die Zeile sonst den halben Set-Kopf füllt; sie steht
+   hier und nicht im Server, denn sie ist eine Frage des Platzes, nicht der
+   Daten. */
+const MAX_PLACES_PER_KIND = 6;
 
 function SetPlaceList({
   kind,
@@ -231,6 +234,7 @@ export function ScheduleTable({
   onAddLocation,
   onRemoveLocation,
   onRemoveSet,
+  onAddSetAfter,
   onAddSceneAfter,
   onCountChange,
   onToggleIsNew,
@@ -737,6 +741,24 @@ export function ScheduleTable({
           </Fragment>
         );
       })}
+
+      {/* Am Ende jedes Tagteilers, vor dem Abstand zum nächsten: hier gedrückt
+          entsteht der neue genau an dieser Stelle. Der Knopf in der Kopfleiste
+          hängt weiter hinten an — er meint keinen Platz, sondern einen
+          weiteren Drehtag. Wie bei „+ Szene", das dieselbe Rolle eine Ebene
+          tiefer spielt. */}
+      <tr className="set-add-row">
+        <td colSpan={totalColumns} className="text-center">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            disabled={locked}
+            onClick={onAddSetAfter}
+          >
+            {t("nav.addSet")}
+          </button>
+        </td>
+      </tr>
 
       <tr className="schedule-set-spacer">
         <td colSpan={totalColumns} />
