@@ -6,6 +6,63 @@
    Header, Set, Role and count are settings now. All four arrive as inherited
    custom properties set once on the <table>; the values below are the
    fallbacks, and they are what the grid was hard-wired to before. */
+/* Strip Size — wie viel Plan auf einen Schirm passt. Vier Stufen, die
+   Schriftgröße und Zellpolsterung gemeinsam skalieren: die Polsterung macht den
+   größeren Teil einer Zeilenhöhe aus, eine kleinere Schrift allein brächte also
+   kaum mehr Zeilen ins Bild. XL ist die Größe, auf die das Grid vorher fest
+   verdrahtet war.
+
+   --head-group-row-height gehört dazu, weil es dieselbe Schrift bemisst: die
+   zweite Kopfzeile klebt um die Höhe der ersten versetzt (siehe unten), und
+   diese Höhe ist mit der Schrift zu klein oder zu groß geworden. Ein Wert pro
+   Stufe, an einer Stelle mit ihr zusammen gesetzt. */
+.schedule-table {
+  --strip-font-size: 0.85rem;
+  --strip-cell-padding-y: 0.2rem;
+  --strip-cell-padding-x: 0.25rem;
+  --head-group-row-height: 1.9rem;
+  font-size: var(--strip-font-size);
+}
+
+.schedule-table.strip-size-xs {
+  --strip-font-size: 0.65rem;
+  --strip-cell-padding-y: 0.05rem;
+  --strip-cell-padding-x: 0.15rem;
+  --head-group-row-height: 1.4rem;
+}
+
+.schedule-table.strip-size-s {
+  --strip-font-size: 0.75rem;
+  --strip-cell-padding-y: 0.1rem;
+  --strip-cell-padding-x: 0.2rem;
+  --head-group-row-height: 1.6rem;
+}
+
+.schedule-table.strip-size-xl {
+  --strip-font-size: 1rem;
+  --strip-cell-padding-y: 0.25rem;
+  --strip-cell-padding-x: 0.25rem;
+  --head-group-row-height: 2.2rem;
+}
+
+/* Bootstrap schreibt die Polsterung von `.table-sm` direkt hin, nicht über eine
+   Variable — zwei Klassen sind nötig, um dagegen anzukommen. */
+.schedule-table.table-sm > :not(caption) > * > * {
+  padding: var(--strip-cell-padding-y) var(--strip-cell-padding-x);
+}
+
+/* Die Knöpfe im Raster gehen mit. Bootstraps `-sm` setzt eine feste Größe, und
+   „+ Szene / + Rollenwechsel" hielte bei XS genau die Zeile auf, die die Stufe
+   einsparen soll. */
+.schedule-table .btn-sm,
+.schedule-table .btn-group-sm > .btn {
+  font-size: inherit;
+  /* Die Polsterung macht bei einem kleinen Knopf mehr aus als die Schrift: die
+     Int/Ex-Leiste mit der Tageszeit darunter ist die höchste Zelle einer
+     Szenenzeile, und fest in rem bliebe sie bei XS so hoch wie bei XL. */
+  padding: 0.2em 0.45em;
+}
+
 .schedule-table thead th {
   --bs-table-bg: var(--header-bg, #000);
   background-color: var(--header-bg, #000);
@@ -13,8 +70,25 @@
   vertical-align: middle;
   text-align: center;
   position: sticky;
-  top: var(--app-header-height, 56px);
   z-index: 2;
+}
+
+/* Beide Kopfzeilen bleiben stehen. Vorher klebten sie an derselben Linie, und
+   die Spaltenzeile legte sich einfach über die Gruppenzeile — also über „Scene"
+   und die Namen der Kategorie-Gruppen, genau die Beschriftung, die beim Scrollen
+   am meisten fehlt.
+
+   Der Versatz lässt sich nicht aus der Zeile darüber messen, deshalb bekommt die
+   Gruppenzeile eine gesetzte Höhe und die Spaltenzeile rechnet mit derselben
+   Zahl. Beide Werte hängen an --head-group-row-height und damit an der Strip
+   Size: wer eine Stufe ändert, ändert die Höhe mit. */
+.schedule-table thead tr:first-child th {
+  top: var(--app-header-height, 56px);
+  height: var(--head-group-row-height);
+}
+
+.schedule-table thead tr:nth-child(2) th {
+  top: calc(var(--app-header-height, 56px) + var(--head-group-row-height));
 }
 
 /* Both totals columns are half the width of their neighbours, and "Total/Scene"
@@ -23,7 +97,9 @@
    wrap after the slash, and the columns can actually be as narrow as they were
    asked to be. Nothing else in them is wider than a three-digit number. */
 .schedule-table thead th.col-total {
-  font-size: 0.7rem;
+  /* In em, nicht rem: die Kopfzeile folgt der Strip Size, und ein fester Wert
+     wäre bei XS größer als die Spalten neben sich. */
+  font-size: 0.82em;
   line-height: 1.15;
 }
 
@@ -50,6 +126,20 @@
   vertical-align: top;
 }
 
+/* Der Rollenname bricht um, statt an der Spaltenkante abzuschneiden — gesperrt
+   lässt sich ein Feld nicht scrollen, der Rest wäre also gar nicht lesbar. Die
+   Höhe setzt das Feld selbst (AutoGrowTextarea), deshalb hier kein Scrollbalken
+   und kein Anfasser: beides würde eine Höhe anbieten, die es nicht gibt.
+
+   Die Zeile bekommt ihre Höhe von diesem Feld, also muss die Zeilenhöhe hier
+   knapp stehen — die Zellen daneben füllen auf. */
+.schedule-table td.cell-role-name textarea {
+  resize: none;
+  overflow: hidden;
+  min-height: 0;
+  line-height: 1.25;
+}
+
 .cell-count {
   --bs-table-bg: var(--count-bg, #5b9bd5);
   --bs-table-color: var(--count-text, #212529);
@@ -61,6 +151,10 @@
   background: transparent;
   border: 1px solid transparent;
   width: 100%;
+  /* Form fields do not inherit the font size, so without this the strip size
+     would shrink the headings and leave every typed-in value where it was. */
+  font-size: inherit;
+  font-family: inherit;
   /* The Scene's text colour is set on the cell; form fields do not inherit a
      colour on their own and would fall back to the browser default. */
   color: inherit;
@@ -156,7 +250,7 @@
   color: #555;
   padding: 0.2rem 0.4rem;
   margin-right: 0.25rem;
-  font-size: 1.1rem;
+  font-size: 1.1em;
   line-height: 1;
   border-radius: 3px;
   user-select: none;
@@ -190,8 +284,8 @@
 
 .scene-flags .btn {
   flex: 1 1 0;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
 }
 
 /* A Scene coloured by its state can be anything from white to night blue, and
@@ -253,32 +347,42 @@
   border-color: currentColor;
 }
 
-/* Von and Bis sit side by side in the merged Script Time column. The native
-   picker indicator is hidden so two time inputs plus the dash fit the width. */
-.scene-time-range {
-  display: flex;
-  align-items: center;
-  gap: 0.15rem;
-}
-
-.schedule-table td .scene-time-range input {
-  width: auto;
+/* Script Time holds one start time now, so the field gets the column to itself
+   — the picker indicator included, which had to be hidden while two inputs and
+   a dash shared the width. At XS the column is narrower than the indicator
+   wants, so it may not fit and the field simply clips it; the value stays
+   typeable either way. */
+.schedule-table td input[type="time"] {
   min-width: 0;
-  flex: 1 1 0;
 }
 
-.schedule-table td .scene-time-range input::-webkit-calendar-picker-indicator {
-  display: none;
-}
-
-.scene-time-separator {
-  color: inherit;
-}
-
-/* Needs to outrank the `.schedule-table td input { width: 100% }` rule above. */
+/* Needs to outrank the `.schedule-table td input { width: 100% }` rule above.
+   Motiv and Location sit on the Set's own line beside SD and the date, so both
+   need a width of their own — left to stretch, each would push the line into a
+   second row, which is exactly what this layout got rid of. */
 .schedule-table td input.set-date-input {
   width: 9.5rem;
 }
+
+/* Motive oben, Locations darunter — zwei Listen, kein Paar. Der Block steht
+   als eigene Spalte neben SD und Datum, damit die beiden Zeilen linksbündig
+   untereinander anfangen und sich als Listen lesen. */
+.set-places {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Die Zeile hält ihre Höhe auch leer, sonst springt der Set-Kopf beim Anlegen
+   des ersten Eintrags. */
+.set-place-row {
+  min-height: 1.9em;
+}
+
+.schedule-table td.cell-set input.set-place-input {
+  width: 14rem;
+}
+
 
 .cell-count {
   text-align: center;
@@ -290,9 +394,9 @@
   margin-top: 0.15rem;
   border: none;
   border-radius: 3px;
-  font-size: 0.65rem;
+  font-size: 0.78em;
   line-height: 1;
-  padding: 0.2rem 0.35rem;
+  padding: 0.2em 0.35em;
   cursor: pointer;
 }
 
@@ -306,10 +410,11 @@
   color: #333;
 }
 
+/* Hält nur noch den Anfasser: das × der Szene ist in die Löschspalte gezogen,
+   wo auch das der Rolle steht. */
 .scene-cell-tools {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.15rem;
 }
 
@@ -322,7 +427,7 @@
 
 .set-totals-label {
   text-align: right;
-  font-size: 0.78rem;
+  font-size: 0.9em;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;

@@ -6,6 +6,7 @@ import {
   isDarkColor,
   parseIntExt,
   sceneColorKey,
+  type SetPlaceKind,
   TIME_OF_DAY_VALUES,
 } from "@komparsen/shared";
 import { Fragment, type CSSProperties, type HTMLAttributes, type TdHTMLAttributes } from "react";
@@ -20,6 +21,7 @@ import type {
   ShootSet,
 } from "../api.js";
 import { useEditLock } from "../editLock.js";
+import { AutoGrowTextarea } from "./AutoGrowTextarea.js";
 import {
   COLUMNS_BEFORE_ROLE_NAME,
   groupCategories,
@@ -45,9 +47,10 @@ interface ScheduleTableProps {
   getSceneDropProps: (sceneId: string) => TdHTMLAttributes<HTMLTableCellElement>;
   draggedSceneId: string | null;
   onSetFieldChange: (field: keyof ShootSet, value: string) => void;
-  onLocationFieldChange: (locationId: string, field: "name" | "address", value: string) => void;
-  onAddLocation: () => void;
+  onLocationFieldChange: (locationId: string, value: string) => void;
+  onAddLocation: (kind: SetPlaceKind) => void;
   onRemoveLocation: (locationId: string) => void;
+  onRemoveSet: () => void;
   onAddSceneAfter: (sceneId: string | null) => void;
   onCountChange: (roleId: string, categoryId: string, count: number) => void;
   onToggleIsNew: (roleId: string, categoryId: string) => void;
@@ -129,6 +132,72 @@ function CheckboxGroup<T extends string>({
   );
 }
 
+/* Eine der beiden Listen eines Sets, als eigene Zeile mit ihrem eigenen „+".
+   Beide sehen gleich aus und verhalten sich gleich — sie unterscheiden sich nur
+   in Beschriftung und `kind`, also steht das hier einmal.
+
+   Drei je Liste: mehr als drei Motive oder Adressen beschreiben keinen Drehtag
+   mehr, sondern zwei. */
+const MAX_PLACES_PER_KIND = 3;
+
+function SetPlaceList({
+  kind,
+  places,
+  label,
+  addLabel,
+  deleteLabel,
+  locked,
+  onFieldChange,
+  onAdd,
+  onRemove,
+}: {
+  kind: SetPlaceKind;
+  places: SetLocation[];
+  label: string;
+  addLabel: string;
+  deleteLabel: string;
+  locked: boolean;
+  onFieldChange: (placeId: string, value: string) => void;
+  onAdd: (kind: SetPlaceKind) => void;
+  onRemove: (placeId: string) => void;
+}) {
+  return (
+    <div className="d-flex flex-wrap gap-1 align-items-center set-place-row">
+      {places.map((place) => (
+        <div key={place.id} className="d-flex gap-1 align-items-center">
+          <input
+            className="form-control form-control-sm set-place-input"
+            placeholder={label}
+            aria-label={label}
+            disabled={locked}
+            value={place.name ?? ""}
+            onChange={(e) => onFieldChange(place.id, e.target.value)}
+          />
+          <button
+            type="button"
+            className="row-delete"
+            disabled={locked}
+            title={deleteLabel}
+            onClick={() => onRemove(place.id)}
+          >
+            &times;
+          </button>
+        </div>
+      ))}
+      {places.length < MAX_PLACES_PER_KIND && (
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-secondary"
+          disabled={locked}
+          onClick={() => onAdd(kind)}
+        >
+          {addLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function sceneTotal(scene: SceneRow): number {
   return calcSceneTotal({
     id: scene.id,
@@ -141,11 +210,6 @@ function sceneTotal(scene: SceneRow): number {
 
 function roleTotal(role: RoleRow): number {
   return role.counts.reduce((sum, c) => sum + c.count, 0);
-}
-
-function distinctSceneLocations(scenes: SceneRow[]): string[] {
-  const values = scenes.map((s) => s.location?.trim()).filter((v): v is string => !!v);
-  return [...new Set(values)];
 }
 
 export function ScheduleTable({
@@ -166,6 +230,7 @@ export function ScheduleTable({
   onLocationFieldChange,
   onAddLocation,
   onRemoveLocation,
+  onRemoveSet,
   onAddSceneAfter,
   onCountChange,
   onToggleIsNew,
@@ -196,27 +261,33 @@ export function ScheduleTable({
     value,
     label: t(`sceneState.timeOfDay.${value}`),
   }));
-  const sceneLocations = distinctSceneLocations(scenes);
+  // Zwei Listen, eine Tabelle: `kind` trennt sie. Hier und nicht im Server,
+  // weil der Set-Kopf beide ohnehin zusammen lädt.
+  const motifs = locations.filter((place) => place.kind === "motif");
+  const shootLocations = locations.filter((place) => place.kind === "location");
   // Only the per-Scene colours are looked up here; the frame colours ride on
   // the table element and reach these cells by inheritance.
   const colorByKey = new Map(colors.map((color) => [color.key, color]));
 
-  // Drehzeit is derived, not entered directly on the Set: "Von" comes from the
-  // first Scene's Script Time, "Bis" from the last Scene's own end time (the
-  // scenes in between don't need one — they can be inferred from the schedule).
-  const firstShootTime = scenes[0]?.scriptTime;
-  const lastScene = scenes[scenes.length - 1];
-  const lastShootTime = lastScene?.endTime || lastScene?.scriptTime;
-
   return (
     <tbody>
       <tr>
-        <td colSpan={totalColumns} className="cell-set" {...setDropProps}>
-          <div className="d-flex flex-wrap gap-3 align-items-end mb-2">
+        <td colSpan={totalColumns - 1} className="cell-set" {...setDropProps}>
+          {/* SD and the date at the left, the day's places beside them. Two
+              derived readouts used to stand here as well — the shoot time taken
+              from the first and last Scene, and the Locations collected from the
+              Scenes; both are gone. The day's times are entered per Scene, and
+              the Set names its own places. */}
+          <div className="d-flex flex-wrap gap-3 align-items-start">
             <span className="drag-handle" title={t("grid.set.move")} {...setDragHandleProps}>
               ⠿
             </span>
-            <label className="mb-0">
+            {/* Beschriftung neben das Feld, nicht darüber: dann ist jeder Block
+                dieser Reihe genau eine Feldhöhe hoch, und die erste Ortszeile
+                steht ohne gerechneten Versatz auf einer Linie mit SD und
+                Datum — die Zeilenhöhe schwankt sonst damit, ob die Liste schon
+                Einträge hat oder nur ihren „+"-Knopf. */}
+            <label className="mb-0 d-flex align-items-center gap-1">
               {t("grid.set.sd")}
               <input
                 className="form-control form-control-sm"
@@ -234,58 +305,54 @@ export function ScheduleTable({
               value={set.shootDate ?? ""}
               onChange={(e) => onSetFieldChange("shootDate", e.target.value)}
             />
-            <div>
-              <strong>
-                {firstShootTime || "?"} &ndash; {lastShootTime || "?"}
-              </strong>
-              <div className="form-text mb-0">{t("grid.set.shootTimeHint")}</div>
+            {/* Motive above, Locations below — two lists, not pairs. Three
+                Motive can share a single address, and the same address carries
+                a different Motiv on another day; a row holding both would have
+                forced one to be invented whenever only the other was known. */}
+            <div className="set-places">
+              <SetPlaceList
+                kind="motif"
+                places={motifs}
+                label={t("grid.set.motif")}
+                addLabel={t("grid.set.addMotif")}
+                deleteLabel={t("grid.set.deleteMotif")}
+                locked={locked}
+                onFieldChange={onLocationFieldChange}
+                onAdd={onAddLocation}
+                onRemove={onRemoveLocation}
+              />
+              <SetPlaceList
+                kind="location"
+                places={shootLocations}
+                label={t("grid.set.location")}
+                addLabel={t("grid.set.addLocation")}
+                deleteLabel={t("grid.set.deleteLocation")}
+                locked={locked}
+                onFieldChange={onLocationFieldChange}
+                onAdd={onAddLocation}
+                onRemove={onRemoveLocation}
+              />
             </div>
-            {sceneLocations.length > 0 && (
-              <div>
-                <strong>{sceneLocations.join(" · ")}</strong>
-                <div className="form-text mb-0">{t("grid.set.sceneLocationsHint")}</div>
-              </div>
-            )}
           </div>
+        </td>
+        {/* Dieselbe Spalte wie bei Szene und Rolle — alle drei Löschknöpfe
+            stehen an einer Kante.
 
-          {locations.map((location, i) => (
-            <div key={location.id} className="d-flex gap-2 mb-1">
-              <input
-                className="form-control form-control-sm"
-                style={{ maxWidth: 200 }}
-                placeholder={t("grid.set.namePlaceholder", { index: i + 1 })}
-                disabled={locked}
-                value={location.name ?? ""}
-                onChange={(e) => onLocationFieldChange(location.id, "name", e.target.value)}
-              />
-              <input
-                className="form-control form-control-sm"
-                placeholder={t("grid.set.addressPlaceholder")}
-                disabled={locked}
-                value={location.address ?? ""}
-                onChange={(e) => onLocationFieldChange(location.id, "address", e.target.value)}
-              />
-              <button
-                type="button"
-                className="row-delete"
-                disabled={locked}
-                title={t("grid.set.deleteName")}
-                onClick={() => onRemoveLocation(location.id)}
-              >
-                &times;
-              </button>
-            </div>
-          ))}
-          {locations.length < 3 && (
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              disabled={locked}
-              onClick={onAddLocation}
-            >
-              {t("grid.set.addName")}
-            </button>
-          )}
+            Gesperrt, solange der Tagteiler Szenen hält: genau die Regel, die
+            eine Szene vor ihren Rollen schützt, eine Ebene höher. Ein Fehlklick
+            nähme hier einen ganzen Drehtag mit, Besetzung inbegriffen. Ein
+            versehentlich angelegter, noch leerer Tagteiler lässt sich dagegen
+            sofort wieder wegklicken. */}
+        <td className="cell-set text-center" {...setDropProps}>
+          <button
+            type="button"
+            className="row-delete"
+            disabled={locked || scenes.length > 0}
+            title={scenes.length > 0 ? t("grid.set.deleteBlocked") : t("grid.set.delete")}
+            onClick={onRemoveSet}
+          >
+            &times;
+          </button>
         </td>
       </tr>
 
@@ -331,11 +398,10 @@ export function ScheduleTable({
         </tr>
       )}
 
-      {scenes.map((scene, sceneIndex) => {
+      {scenes.map((scene) => {
         const roleCount = scene.roles.length;
         const sceneRowSpan = roleCount + 1; // +1 for the trailing "+ Rolle" row
         const total = sceneTotal(scene);
-        const isLastScene = sceneIndex === scenes.length - 1;
         const sceneChanges = changes.filter((c) => c.anchorAfterSceneId === scene.id);
         // Every Scene cell accepts the drop, so the drop zone is the whole
         // Scene block rather than just the drag handle glyph.
@@ -383,15 +449,6 @@ export function ScheduleTable({
                   >
                     ⠿
                   </span>
-                  <button
-                    type="button"
-                    className="row-delete"
-                    disabled={locked || roleCount > 0}
-                    title={roleCount > 0 ? t("grid.scene.deleteBlocked") : t("grid.scene.delete")}
-                    onClick={() => onRemoveScene(scene.id)}
-                  >
-                    &times;
-                  </button>
                 </div>
                 <input
                   placeholder={t("grid.scene.numberPlaceholder")}
@@ -432,35 +489,24 @@ export function ScheduleTable({
                   </select>
                 </div>
               </td>
-              {/* Von and Bis share one column; Bis only applies to the last
-                  Scene, which is what closes out the shooting day. */}
+              {/* One time, the Scene's start. The column used to hold a second
+                  field on the last Scene and feed a Von–Bis readout in the Set
+                  header; nothing is computed from these times any more, so an
+                  empty Scene reads --:-- and means exactly that. */}
               <td className={sceneCellClass} style={sceneCellStyle} {...dropProps}>
-                <div className="scene-time-range">
-                  <input
-                    type="time"
-                    aria-label={t("grid.scene.scriptTimeFrom")}
-                    disabled={locked}
-                    value={scene.scriptTime ?? ""}
-                    onChange={(e) => onSceneFieldChange(scene.id, "scriptTime", e.target.value)}
-                  />
-                  {isLastScene && (
-                    <>
-                      <span className="scene-time-separator">&ndash;</span>
-                      <input
-                        type="time"
-                        aria-label={t("grid.scene.scriptTimeTo")}
-                        disabled={locked}
-                        value={scene.endTime ?? ""}
-                        onChange={(e) => onSceneFieldChange(scene.id, "endTime", e.target.value)}
-                      />
-                    </>
-                  )}
-                </div>
+                <input
+                  type="time"
+                  aria-label={t("grid.head.scriptTime")}
+                  disabled={locked}
+                  value={scene.scriptTime ?? ""}
+                  onChange={(e) => onSceneFieldChange(scene.id, "scriptTime", e.target.value)}
+                />
               </td>
-              {/* Its own column plus every column after it: the three Scene
-                  columns to the left are the only ones this row still needs. */}
+              {/* Its own column plus everything after it, bar the last: the
+                  stretch above the Roles would otherwise stay empty, and an
+                  address is regularly longer than its column. */}
               <td
-                colSpan={totalColumns - (SCENE_COLUMN_COUNT - 1)}
+                colSpan={totalColumns - SCENE_COLUMN_COUNT}
                 className={sceneCellClass}
                 style={sceneCellStyle}
                 {...dropProps}
@@ -472,6 +518,26 @@ export function ScheduleTable({
                   value={scene.location ?? ""}
                   onChange={(e) => onSceneFieldChange(scene.id, "location", e.target.value)}
                 />
+              </td>
+              {/* Deleting sits in one column for the whole grid — the Role's ×
+                  is already there, and an eye running down that edge finds
+                  every delete in the plan at the same place. The Scene used to
+                  keep its × beside the Scene number, where it shared a corner
+                  with the drag handle. */}
+              <td
+                className={`${sceneCellClass} text-center`}
+                style={sceneCellStyle}
+                {...dropProps}
+              >
+                <button
+                  type="button"
+                  className="row-delete"
+                  disabled={locked || roleCount > 0}
+                  title={roleCount > 0 ? t("grid.scene.deleteBlocked") : t("grid.scene.delete")}
+                  onClick={() => onRemoveScene(scene.id)}
+                >
+                  &times;
+                </button>
               </td>
             </tr>
 
@@ -519,10 +585,19 @@ export function ScheduleTable({
                           onChange={(e) => onFuzzleIdChange(role.id, e.target.value)}
                         />
                       </td>
-                      <td className="cell-role">
-                        <input
+                      {/* The name wraps and the row grows with it: a Role is
+                          found by its name, and a name cut off at the column
+                          edge cannot be read back at all once the grid is
+                          locked. Enter is swallowed — the break comes from the
+                          width, and a stored newline would be invisible. */}
+                      <td className="cell-role cell-role-name">
+                        <AutoGrowTextarea
+                          aria-label={t("grid.head.name")}
                           disabled={locked}
                           value={role.name}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.preventDefault();
+                          }}
                           onChange={(e) => onRoleNameChange(role.id, e.target.value)}
                         />
                       </td>

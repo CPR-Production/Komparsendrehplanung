@@ -6,11 +6,13 @@ import { Link, useParams } from "react-router-dom";
 import { api, type ShootSet } from "../api.js";
 import { EditLockToggle } from "../components/EditLockToggle.js";
 import { LanguageSwitcher } from "../components/LanguageSwitcher.js";
+import { StripSizeSelect } from "../components/StripSizeSelect.js";
 import { VersionBadge } from "../components/VersionBadge.js";
 import { moveBefore, SET_DRAG_TYPE } from "../dragReorder.js";
 import { useEditLock } from "../editLock.js";
 import { SCENE_LOCATIONS_DATALIST_ID } from "../grid/ScheduleTable.js";
 import { ScheduleTableHead } from "../grid/ScheduleTableHead.js";
+import { useStripSize } from "../stripSize.js";
 import { SetSection } from "./SetSection.js";
 
 const APP_HEADER_HEIGHT = 56;
@@ -20,6 +22,7 @@ export function ProjectSchedulePage() {
   const { projectId } = useParams<{ projectId: string }>();
   const queryClient = useQueryClient();
   const { locked } = useEditLock();
+  const { stripSize } = useStripSize();
 
   const projectQuery = useQuery({
     queryKey: ["project", projectId],
@@ -70,6 +73,13 @@ export function ProjectSchedulePage() {
 
   const createSetMutation = useMutation({
     mutationFn: () => api.createSet(projectId!, {}),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["sets", projectId] }),
+  });
+
+  const deleteSetMutation = useMutation({
+    mutationFn: (setId: string) => api.deleteSet(setId),
+    // Die Liste lebt hier, deshalb auch das Nachladen: das Set entfernt sich
+    // nicht selbst aus einer Liste, die es nicht kennt.
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["sets", projectId] }),
   });
 
@@ -136,6 +146,7 @@ export function ProjectSchedulePage() {
         </Link>
         <div className="d-flex align-items-center gap-2">
           <VersionBadge />
+          <StripSizeSelect />
           <LanguageSwitcher />
           <EditLockToggle />
           <button
@@ -166,7 +177,15 @@ export function ProjectSchedulePage() {
 
       <div style={{ padding: "0 1rem" }}>
         <table
-          className={["schedule-table table table-bordered table-sm mb-4", locked ? "is-locked" : "", ...frameClasses]
+          /* The strip size rides on the table, not on <main>: it scales the
+             plan's own type and cell padding, and the sticky offset of the
+             second header row is derived from the same class. */
+          className={[
+            "schedule-table table table-bordered table-sm mb-4",
+            `strip-size-${stripSize}`,
+            locked ? "is-locked" : "",
+            ...frameClasses,
+          ]
             .filter(Boolean)
             .join(" ")}
           style={{ tableLayout: "fixed", ...frameVars } as CSSProperties}
@@ -181,6 +200,7 @@ export function ProjectSchedulePage() {
               colors={colorsQuery.data ?? []}
               setDragHandleProps={getSetDragHandleProps(set.id)}
               setDropProps={getSetDropProps(set.id)}
+              onRemoveSet={() => deleteSetMutation.mutate(set.id)}
             />
           ))}
         </table>

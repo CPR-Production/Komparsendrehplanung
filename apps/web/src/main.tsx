@@ -10,6 +10,7 @@ import "./settings.css";
 import "./i18n/index.js";
 import { UpdateBanner } from "./components/UpdateBanner.js";
 import { EditLockProvider } from "./editLock.js";
+import { StripSizeProvider } from "./stripSize.js";
 import { HelpPage } from "./pages/HelpPage.js";
 import { ProjectListPage } from "./pages/ProjectListPage.js";
 import { ProjectSchedulePage } from "./pages/ProjectSchedulePage.js";
@@ -25,21 +26,26 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       {/* Above the routes: the lock is app state, and a trip to the settings
           and back should not quietly re-open the grid. */}
       <EditLockProvider>
-        <BrowserRouter>
-          <UpdateBanner />
-          <Routes>
-            <Route path="/" element={<ProjectListPage />} />
-            <Route path="/help" element={<HelpPage />} />
-            <Route path="/projects/:projectId" element={<ProjectSchedulePage />} />
-            {/* One sub-page per topic. The bare /settings link is kept working
-                and lands on the categories, which is where it used to open. */}
-            <Route path="/projects/:projectId/settings" element={<SettingsPage />}>
-              <Route index element={<Navigate to="categories" replace />} />
-              <Route path="categories" element={<SettingsCategoriesPage />} />
-              <Route path="colors" element={<SettingsColorsPage />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+        {/* Ebenso oben wie die Sperre: die Strip Size ist eine Einstellung der
+            App, nicht eines Drehplans, und soll einen Abstecher in die
+            Einstellungen überleben. */}
+        <StripSizeProvider>
+          <BrowserRouter>
+            <UpdateBanner />
+            <Routes>
+              <Route path="/" element={<ProjectListPage />} />
+              <Route path="/help" element={<HelpPage />} />
+              <Route path="/projects/:projectId" element={<ProjectSchedulePage />} />
+              {/* One sub-page per topic. The bare /settings link is kept working
+                  and lands on the categories, which is where it used to open. */}
+              <Route path="/projects/:projectId/settings" element={<SettingsPage />}>
+                <Route index element={<Navigate to="categories" replace />} />
+                <Route path="categories" element={<SettingsCategoriesPage />} />
+                <Route path="colors" element={<SettingsColorsPage />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </StripSizeProvider>
       </EditLockProvider>
     </QueryClientProvider>
   </React.StrictMode>,

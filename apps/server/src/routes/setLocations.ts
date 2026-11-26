@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { asc, eq } from "drizzle-orm";
+import { SET_PLACE_KINDS } from "@komparsen/shared";
+import { and, asc, eq } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/client.js";
@@ -7,7 +8,15 @@ import { setLocations } from "../db/schema.js";
 
 export const setLocationsRouter = Router();
 
-const upsertSchema = z.object({ name: z.string().optional(), address: z.string().optional() });
+// Zwei Listen in einer Tabelle: `kind` entscheidet, in welche die Zeile
+// gehört, `name` trägt in beiden den Text. Geprüft wird gegen die Liste aus
+// @komparsen/shared, dieselbe, aus der das Grid seine beiden Zeilen baut.
+const createSchema = z.object({
+  kind: z.enum(SET_PLACE_KINDS).default("motif"),
+  name: z.string().optional(),
+});
+
+const updateSchema = z.object({ name: z.string().optional() });
 
 setLocationsRouter.get("/sets/:setId/locations", (req, res) => {
   const rows = db
@@ -20,17 +29,27 @@ setLocationsRouter.get("/sets/:setId/locations", (req, res) => {
 });
 
 setLocationsRouter.post("/sets/:setId/locations", (req, res) => {
-  const parsed = upsertSchema.safeParse(req.body);
+  const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.flatten() });
     return;
   }
 
+  /* Die Reihenfolge zählt je Liste: ein zweites Motiv steht hinter dem ersten
+     Motiv, nicht hinter der letzten Location.
+
+     Hinter den höchsten bisherigen Wert, nicht auf die Anzahl der Zeilen: nach
+     einem Löschen ist die Anzahl wieder kleiner als ein schon vergebener Wert,
+     und der neue Eintrag bekäme dieselbe Position wie ein bestehender — welcher
+     der beiden dann zuerst steht, entscheidet nichts mehr. */
   const existing = db
     .select()
     .from(setLocations)
-    .where(eq(setLocations.setId, req.params.setId))
+    .where(
+      and(eq(setLocations.setId, req.params.setId), eq(setLocations.kind, parsed.data.kind)),
+    )
     .all();
+  const nextSortOrder = existing.reduce((max, row) => Math.max(max, row.sortOrder + 1), 0);
 
   const [location] = db
     .insert(setLocations)
@@ -38,7 +57,7 @@ setLocationsRouter.post("/sets/:setId/locations", (req, res) => {
       id: randomUUID(),
       setId: req.params.setId,
       ...parsed.data,
-      sortOrder: existing.length,
+      sortOrder: nextSortOrder,
     })
     .returning()
     .all();
@@ -46,8 +65,10 @@ setLocationsRouter.post("/sets/:setId/locations", (req, res) => {
   res.status(201).json(location);
 });
 
+// Die Art einer Zeile ändert sich nie — ein Motiv wird nicht zur Location.
+// Deshalb nimmt PATCH nur den Text entgegen.
 setLocationsRouter.patch("/set-locations/:id", (req, res) => {
-  const parsed = upsertSchema.safeParse(req.body);
+  const parsed = updateSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.flatten() });
     return;

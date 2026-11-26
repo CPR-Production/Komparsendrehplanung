@@ -50,14 +50,20 @@ export const sets = sqliteTable("shoot_set", {
   ...timestamps(),
 });
 
+/* Eine Zeile ist ein Motiv ODER eine Location, nicht beides: die beiden Listen
+   sind voneinander unabhängig, weil drei Motive an einer einzigen Adresse
+   liegen können. Vorher trug jede Zeile ein Paar aus `name` und `address`, was
+   genau das verbot — `kind` sagt jetzt, was die Zeile ist, und `name` trägt in
+   beiden Fällen den Text. Die Tabelle heißt weiter `shoot_set_location`, wie
+   `scene.day_night`: eine Umbenennung wäre eine Migration ohne Gegenwert. */
 export const setLocations = sqliteTable("shoot_set_location", {
   id: text("id").primaryKey(),
   setId: text("set_id")
     .notNull()
     .references(() => sets.id, { onDelete: "cascade" }),
   sortOrder: integer("sort_order").notNull().default(0),
+  kind: text("kind").notNull().default("motif"),
   name: text("name"),
-  address: text("address"),
 });
 
 export const scenes = sqliteTable("scene", {

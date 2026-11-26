@@ -1,272 +1,249 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
-// Placeholder resources until the DB-backed /api/translations endpoint
-// (Phase 5) replaces this with editable, redeploy-free translations.
-// Covers the app chrome (nav, project list, settings headings) only — the
-// schedule grid itself still carries hardcoded German labels.
-const resources = {
-  de: {
-    translation: {
-      "nav.language": "Sprache",
-      "nav.version": "App-Version {{version}}",
-      "nav.addSet": "+ Set",
-      "nav.settings": "Einstellungen",
-      "nav.editing.unlock": "Bearbeiten freigeben",
-      "nav.editing.lock": "Bearbeiten sperren",
-      "nav.backToSchedule": "Zurück zum Drehplan",
-      "project.list.title": "Projekte",
-      "project.list.empty": "Noch keine Projekte angelegt.",
-      "project.list.loading": "Lädt…",
-      "project.list.error": "Projekte konnten nicht geladen werden.",
-      "project.list.created": "Angelegt am {{date}}",
-      "project.create.namePlaceholder": "Projektname",
-      "project.create.submit": "Projekt anlegen",
-      "settings.title": "Einstellungen",
-      "settings.categories": "Kategorien",
-      "settings.group.name": "Gruppenname",
-      "settings.group.delete": "Gruppe löschen",
-      "settings.group.newPlaceholder": "Neue Kategorie-Gruppe (z. B. Drivers)",
-      "settings.group.add": "+ Gruppe",
-      "settings.group.confirmDelete":
-        "Gruppe „{{name}}“ mit allen ihren Kategorien löschen? Die dafür im Drehplan eingetragenen Zahlen gehen mit verloren.",
-      "settings.category.name": "Kategoriename",
-      "settings.category.delete": "Kategorie löschen",
-      "settings.category.newPlaceholder": "Neue Kategorie",
-      "settings.category.add": "+ Kategorie",
-      "settings.category.confirmDelete":
-        "Kategorie „{{name}}“ löschen? Die dafür im Drehplan eingetragenen Zahlen gehen mit verloren.",
-      "settings.category.empty": "Noch keine Kategorien in dieser Gruppe.",
-      "settings.colors": "Farben",
-      "settings.color.intro":
-        "Zuerst die Grundfarben des Rasters, dann die Szenen: eine Szene wird nach ihrem Zustand eingefärbt — intern oder extern, zusammen mit der Tageszeit. Hintergrund und Text lassen sich überall getrennt einstellen. Was hier nicht geändert wird, folgt weiter der Vorgabe.",
-      "settings.color.chrome": "Grundfarben",
-      "colorTarget.chrome.header": "Tabellenkopf",
-      "colorTarget.chrome.set": "Set",
-      "colorTarget.chrome.role": "Rolle",
-      "colorTarget.chrome.count": "Anzahl",
-      "settings.color.background": "Hintergrund",
-      "settings.color.text": "Text",
-      "settings.color.reset": "Auf die Vorgabe zurücksetzen",
-      "settings.color.resetShort": "Vorgabe",
-      "settings.color.resetAll": "Alle Farben auf die Vorgaben zurücksetzen",
-      "settings.color.resetAllConfirm":
-        "Alle geänderten Farben (aktuell {{amount}}) auf die Vorgaben zurücksetzen?",
-      "settings.color.error": "Farben konnten nicht geladen werden.",
-      "sceneState.intExt.intern": "Intern",
-      "sceneState.intExt.extern": "Extern",
-      "sceneState.timeOfDay.tag": "Tag",
-      "sceneState.timeOfDay.nacht": "Nacht",
-      "sceneState.timeOfDay.morgen": "Morgen",
-      "sceneState.timeOfDay.dim": "Dim",
-      "sceneState.timeOfDay.abend": "Abend",
-      "nav.backToProjects": "Zurück zu den Projekten",
-      "nav.help": "Hilfe & Feedback",
-      "update.available": "Version {{version}} ist verfügbar (installiert: {{current}}).",
-      "update.action": "Update ansehen",
-      "update.dismiss": "Später",
-      "update.start": "Jetzt installieren",
-      "update.retry": "Erneut versuchen",
-      "update.phase.downloading": "Lädt herunter…",
-      "update.phase.verifying": "Prüft die Datei…",
-      "update.phase.installing": "Installiert…",
-      "update.phase.restarting": "Startet neu…",
-      "update.failed": "Update fehlgeschlagen: {{error}}",
-      "update.failedUnknown": "unbekannter Fehler",
-      "update.hintContainer": "Im Docker-Betrieb: docker compose up -d --build",
-      "help.title": "Hilfe & Feedback",
-      "help.intro":
-        "Feedback läuft über die Issues des Projekts auf GitHub. Das Formular bereitet die Meldung vor und öffnet sie auf GitHub — abgeschickt wird sie erst dort von dir, unter deinem eigenen Konto.",
-      "help.noRepo":
-        "Für diese Installation ist kein GitHub-Repository hinterlegt. Ohne die Einstellung GITHUB_REPO gibt es kein Ziel für Meldungen.",
-      "help.kindLabel": "Art der Meldung",
-      "help.kind.bug": "Fehler",
-      "help.kind.idea": "Idee oder Wunsch",
-      "help.kind.question": "Frage",
-      "help.titleLabel": "Titel",
-      "help.titlePlaceholder": "Kurz in einem Satz",
-      "help.descriptionLabel": "Beschreibung",
-      "help.descriptionPlaceholder":
-        "Was hast du gemacht, was ist passiert, was hättest du erwartet?",
-      "help.attachedLabel": "Wird mit angehängt",
-      "help.attachedHint":
-        "Ein GitHub-Issue ist öffentlich sichtbar. Auf GitHub kannst du alles noch ändern, bevor du absendest.",
-      "help.submit": "Auf GitHub melden",
-      "help.submitHint": "Öffnet GitHub mit vorausgefülltem Formular.",
-      "help.browseIssues": "Bereits gemeldete Punkte ansehen",
-      "help.version": "Installierte Version: {{version}}",
-      /* Das Drehplan-Grid. Die Spaltenköpfe tragen in beiden Sprachen die
-         Begriffe der Vorlage — sie sind der Wortschatz, in dem am Set geredet
-         wird, und eine deutsche Fassung stünde neben der Vorlage, nicht in
-         ihr. Alles, was der Nutzer selbst eintippt (Projekt-, Set-, Rollen-,
-         Kategorienamen, Synopsis, Wechseltext), läuft nirgends durch t(). */
-      "grid.head.scene": "Scene",
-      "grid.head.intExtDayNight": "In/Ex · D/N",
-      "grid.head.scriptTime": "Script Time",
-      "grid.head.location": "Location",
-      "grid.head.totalPerScene": "Total/Scene",
-      "grid.head.fuzzleId": "Fuzzle ID",
-      "grid.head.name": "Name",
-      "grid.head.total": "Total",
-      "grid.set.sd": "SD",
-      "grid.set.move": "Set verschieben",
-      "grid.set.shootDate": "Drehdatum",
-      "grid.set.shootTimeHint": "aus erster/letzter Szene",
-      "grid.set.sceneLocationsHint": "Locations aus Szenen",
-      "grid.set.namePlaceholder": "Set-Name {{index}}",
-      "grid.set.addressPlaceholder": "Adresse",
-      "grid.set.deleteName": "Set-Name löschen",
-      "grid.set.addName": "+ Set-Name",
-      "grid.set.totalsLabel": "Summe neu",
-      "grid.scene.add": "+ Szene",
-      "grid.scene.move": "Szene verschieben",
-      "grid.scene.delete": "Szene löschen",
-      "grid.scene.deleteBlocked": "Erst alle Rollen dieser Szene löschen",
-      "grid.scene.numberPlaceholder": "#",
-      "grid.scene.synopsis": "Synopsis",
-      "grid.scene.timeOfDay": "Tageszeit",
-      "grid.scene.scriptTimeFrom": "Script Time von",
-      "grid.scene.scriptTimeTo": "Script Time bis",
-      "grid.role.add": "+ Rolle",
-      "grid.role.delete": "Rolle löschen",
-      "grid.role.namePrompt": "Rollenname?",
-      "grid.count.new": "neu",
-      "grid.count.reused": "wdh.",
-      "grid.count.toggleToReused": "neu – klicken für wiederverwendet",
-      "grid.count.toggleToNew": "wiederverwendet – klicken für neu",
-      "grid.change.label": "Change",
-      "grid.change.add": "+ Wechsel",
-      "grid.change.delete": "Wechsel löschen",
-    },
+/* Die angebotenen Sprachen — die einzige Liste, die eine neue erweitert. Sie
+   steht hier und nicht im LanguageSwitcher, weil die Übersetzungen hier liegen:
+   ein Locale, das in der Auswahl auftaucht, aber in `strings` fehlt, wäre eine
+   Sprache ohne Wörter. */
+export const LOCALES = [
+  { code: "de", label: "DE" },
+  { code: "en", label: "EN" },
+] as const;
+
+export type Locale = (typeof LOCALES)[number]["code"];
+
+/* Alle Sprachen stehen pro Schlüssel nebeneinander, nicht als ein Block je
+   Sprache. Das ist der Punkt: so lässt sich zeilenweise abgleichen, was die
+   Fassungen sagen, und `Record<Locale, string>` macht jede Lücke zu einem
+   Compilerfehler — ein neues Locale in LOCALES verlangt damit genau eine
+   Zeichenkette pro Zeile, und TypeScript nennt jede, die noch fehlt.
+
+   Platzhalter, bis der DB-gestützte Endpunkt `/api/translations` (Phase 5) das
+   hier durch redeploy-freie, editierbare Übersetzungen ersetzt. */
+const strings: Record<string, Record<Locale, string>> = {
+  "nav.language": { de: "Sprache", en: "Language" },
+  "nav.version": { de: "App-Version {{version}}", en: "App version {{version}}" },
+  /* „Set" heißt in der Oberfläche jetzt Tagteiler — ein Set ist ein Drehtag,
+     und der Knopf legt die Trennung zwischen zwei Drehtagen an, genau wie der
+     Daybreak-Streifen in der Vorlage. */
+  "nav.addSet": { de: "+ Tagteiler", en: "+ Daybreak" },
+  "nav.stripSize": { de: "Strip Size", en: "Strip Size" },
+  "nav.settings": { de: "Einstellungen", en: "Settings" },
+  "nav.editing.unlock": { de: "Bearbeiten freigeben", en: "Enable editing" },
+  "nav.editing.lock": { de: "Bearbeiten sperren", en: "Lock editing" },
+  "nav.backToSchedule": { de: "Zurück zum Drehplan", en: "Back to schedule" },
+  "nav.backToProjects": { de: "Zurück zu den Projekten", en: "Back to projects" },
+  "nav.help": { de: "Hilfe & Feedback", en: "Help & feedback" },
+
+  "project.list.title": { de: "Projekte", en: "Projects" },
+  "project.list.empty": { de: "Noch keine Projekte angelegt.", en: "No projects yet." },
+  "project.list.loading": { de: "Lädt…", en: "Loading…" },
+  "project.list.error": {
+    de: "Projekte konnten nicht geladen werden.",
+    en: "Could not load projects.",
   },
-  en: {
-    translation: {
-      "nav.language": "Language",
-      "nav.version": "App version {{version}}",
-      "nav.addSet": "+ Set",
-      "nav.settings": "Settings",
-      "nav.editing.unlock": "Enable editing",
-      "nav.editing.lock": "Lock editing",
-      "nav.backToSchedule": "Back to schedule",
-      "project.list.title": "Projects",
-      "project.list.empty": "No projects yet.",
-      "project.list.loading": "Loading…",
-      "project.list.error": "Could not load projects.",
-      "project.list.created": "Created {{date}}",
-      "project.create.namePlaceholder": "Project name",
-      "project.create.submit": "Create project",
-      "settings.title": "Settings",
-      "settings.categories": "Categories",
-      "settings.group.name": "Group name",
-      "settings.group.delete": "Delete group",
-      "settings.group.newPlaceholder": "New category group (e.g. Drivers)",
-      "settings.group.add": "+ Group",
-      "settings.group.confirmDelete":
-        "Delete group “{{name}}” and all its categories? The numbers entered for them in the schedule will go with it.",
-      "settings.category.name": "Category name",
-      "settings.category.delete": "Delete category",
-      "settings.category.newPlaceholder": "New category",
-      "settings.category.add": "+ Category",
-      "settings.category.confirmDelete":
-        "Delete category “{{name}}”? The numbers entered for it in the schedule will go with it.",
-      "settings.category.empty": "No categories in this group yet.",
-      "settings.colors": "Colors",
-      "settings.color.intro":
-        "The grid's base colors first, then the scenes: a scene is coloured by its state — interior or exterior, together with the time of day. Background and text are set separately throughout. Anything left alone here keeps following the default.",
-      "settings.color.chrome": "Base colors",
-      "colorTarget.chrome.header": "Table header",
-      "colorTarget.chrome.set": "Set",
-      "colorTarget.chrome.role": "Role",
-      "colorTarget.chrome.count": "Count",
-      "settings.color.background": "Background",
-      "settings.color.text": "Text",
-      "settings.color.reset": "Reset to the default",
-      "settings.color.resetShort": "Default",
-      "settings.color.resetAll": "Reset all colors to the defaults",
-      "settings.color.resetAllConfirm":
-        "Reset all changed colors ({{amount}} at the moment) to the defaults?",
-      "settings.color.error": "Could not load the colors.",
-      "sceneState.intExt.intern": "Interior",
-      "sceneState.intExt.extern": "Exterior",
-      "sceneState.timeOfDay.tag": "Day",
-      "sceneState.timeOfDay.nacht": "Night",
-      "sceneState.timeOfDay.morgen": "Morn",
-      "sceneState.timeOfDay.dim": "Dim",
-      "sceneState.timeOfDay.abend": "Eve",
-      "nav.backToProjects": "Back to projects",
-      "nav.help": "Help & feedback",
-      "update.available": "Version {{version}} is available (installed: {{current}}).",
-      "update.action": "View update",
-      "update.dismiss": "Later",
-      "update.start": "Install now",
-      "update.retry": "Try again",
-      "update.phase.downloading": "Downloading…",
-      "update.phase.verifying": "Verifying the file…",
-      "update.phase.installing": "Installing…",
-      "update.phase.restarting": "Restarting…",
-      "update.failed": "Update failed: {{error}}",
-      "update.failedUnknown": "unknown error",
-      "update.hintContainer": "In Docker: docker compose up -d --build",
-      "help.title": "Help & feedback",
-      "help.intro":
-        "Feedback goes through the project's GitHub issues. This form prepares the report and opens it on GitHub — you submit it there yourself, under your own account.",
-      "help.noRepo":
-        "No GitHub repository is configured for this installation. Without the GITHUB_REPO setting there is nowhere to send reports.",
-      "help.kindLabel": "Type of report",
-      "help.kind.bug": "Bug",
-      "help.kind.idea": "Idea or request",
-      "help.kind.question": "Question",
-      "help.titleLabel": "Title",
-      "help.titlePlaceholder": "One short sentence",
-      "help.descriptionLabel": "Description",
-      "help.descriptionPlaceholder": "What did you do, what happened, what did you expect?",
-      "help.attachedLabel": "Attached to the report",
-      "help.attachedHint":
-        "A GitHub issue is publicly visible. You can still edit everything on GitHub before submitting.",
-      "help.submit": "Report on GitHub",
-      "help.submitHint": "Opens GitHub with the form prefilled.",
-      "help.browseIssues": "Browse reports already filed",
-      "help.version": "Installed version: {{version}}",
-      "grid.head.scene": "Scene",
-      "grid.head.intExtDayNight": "In/Ex · D/N",
-      "grid.head.scriptTime": "Script Time",
-      "grid.head.location": "Location",
-      "grid.head.totalPerScene": "Total/Scene",
-      "grid.head.fuzzleId": "Fuzzle ID",
-      "grid.head.name": "Name",
-      "grid.head.total": "Total",
-      "grid.set.sd": "SD",
-      "grid.set.move": "Move set",
-      "grid.set.shootDate": "Shoot date",
-      "grid.set.shootTimeHint": "from the first/last scene",
-      "grid.set.sceneLocationsHint": "Locations from scenes",
-      "grid.set.namePlaceholder": "Set name {{index}}",
-      "grid.set.addressPlaceholder": "Address",
-      "grid.set.deleteName": "Delete set name",
-      "grid.set.addName": "+ Set name",
-      "grid.set.totalsLabel": "Total new",
-      "grid.scene.add": "+ Scene",
-      "grid.scene.move": "Move scene",
-      "grid.scene.delete": "Delete scene",
-      "grid.scene.deleteBlocked": "Delete all roles of this scene first",
-      "grid.scene.numberPlaceholder": "#",
-      "grid.scene.synopsis": "Synopsis",
-      "grid.scene.timeOfDay": "Time of day",
-      "grid.scene.scriptTimeFrom": "Script Time from",
-      "grid.scene.scriptTimeTo": "Script Time to",
-      "grid.role.add": "+ Role",
-      "grid.role.delete": "Delete role",
-      "grid.role.namePrompt": "Role name?",
-      "grid.count.new": "new",
-      "grid.count.reused": "reu.",
-      "grid.count.toggleToReused": "new – click for reused",
-      "grid.count.toggleToNew": "reused – click for new",
-      "grid.change.label": "Change",
-      "grid.change.add": "+ Change",
-      "grid.change.delete": "Delete change",
-    },
+  "project.list.created": { de: "Angelegt am {{date}}", en: "Created {{date}}" },
+  "project.create.namePlaceholder": { de: "Projektname", en: "Project name" },
+  "project.create.submit": { de: "Projekt anlegen", en: "Create project" },
+
+  "settings.title": { de: "Einstellungen", en: "Settings" },
+  "settings.categories": { de: "Kategorien", en: "Categories" },
+  "settings.group.name": { de: "Gruppenname", en: "Group name" },
+  "settings.group.delete": { de: "Gruppe löschen", en: "Delete group" },
+  "settings.group.newPlaceholder": {
+    de: "Neue Kategorie-Gruppe (z. B. Drivers)",
+    en: "New category group (e.g. Drivers)",
   },
+  "settings.group.add": { de: "+ Gruppe", en: "+ Group" },
+  "settings.group.confirmDelete": {
+    de: "Gruppe „{{name}}“ mit allen ihren Kategorien löschen? Die dafür im Drehplan eingetragenen Zahlen gehen mit verloren.",
+    en: "Delete group “{{name}}” and all its categories? The numbers entered for them in the schedule will go with it.",
+  },
+  "settings.category.name": { de: "Kategoriename", en: "Category name" },
+  "settings.category.delete": { de: "Kategorie löschen", en: "Delete category" },
+  "settings.category.newPlaceholder": { de: "Neue Kategorie", en: "New category" },
+  "settings.category.add": { de: "+ Kategorie", en: "+ Category" },
+  "settings.category.confirmDelete": {
+    de: "Kategorie „{{name}}“ löschen? Die dafür im Drehplan eingetragenen Zahlen gehen mit verloren.",
+    en: "Delete category “{{name}}”? The numbers entered for it in the schedule will go with it.",
+  },
+  "settings.category.empty": {
+    de: "Noch keine Kategorien in dieser Gruppe.",
+    en: "No categories in this group yet.",
+  },
+  "settings.colors": { de: "Farben", en: "Colors" },
+  "settings.color.intro": {
+    de: "Zuerst die Grundfarben des Rasters, dann die Szenen: eine Szene wird nach ihrem Zustand eingefärbt — intern oder extern, zusammen mit der Tageszeit. Hintergrund und Text lassen sich überall getrennt einstellen. Was hier nicht geändert wird, folgt weiter der Vorgabe.",
+    en: "The grid's base colors first, then the scenes: a scene is coloured by its state — interior or exterior, together with the time of day. Background and text are set separately throughout. Anything left alone here keeps following the default.",
+  },
+  "settings.color.chrome": { de: "Grundfarben", en: "Base colors" },
+  "colorTarget.chrome.header": { de: "Tabellenkopf", en: "Table header" },
+  "colorTarget.chrome.set": { de: "Tagteiler", en: "Daybreak" },
+  "colorTarget.chrome.role": { de: "Rolle", en: "Role" },
+  "colorTarget.chrome.count": { de: "Anzahl", en: "Count" },
+  "settings.color.background": { de: "Hintergrund", en: "Background" },
+  "settings.color.text": { de: "Text", en: "Text" },
+  "settings.color.reset": { de: "Auf die Vorgabe zurücksetzen", en: "Reset to the default" },
+  "settings.color.resetShort": { de: "Vorgabe", en: "Default" },
+  "settings.color.resetAll": {
+    de: "Alle Farben auf die Vorgaben zurücksetzen",
+    en: "Reset all colors to the defaults",
+  },
+  "settings.color.resetAllConfirm": {
+    de: "Alle geänderten Farben (aktuell {{amount}}) auf die Vorgaben zurücksetzen?",
+    en: "Reset all changed colors ({{amount}} at the moment) to the defaults?",
+  },
+  "settings.color.error": {
+    de: "Farben konnten nicht geladen werden.",
+    en: "Could not load the colors.",
+  },
+
+  /* Grid und Einstellungen beschriften dieselben Szenenzustände, deshalb teilen
+     sie sich diese Schlüssel — zwei Sätze wären zwei Schreibweisen. */
+  "sceneState.intExt.intern": { de: "Intern", en: "Interior" },
+  "sceneState.intExt.extern": { de: "Extern", en: "Exterior" },
+  "sceneState.timeOfDay.tag": { de: "Tag", en: "Day" },
+  "sceneState.timeOfDay.nacht": { de: "Nacht", en: "Night" },
+  "sceneState.timeOfDay.morgen": { de: "Morgen", en: "Morn" },
+  "sceneState.timeOfDay.dim": { de: "Dim", en: "Dim" },
+  "sceneState.timeOfDay.abend": { de: "Abend", en: "Eve" },
+
+  "update.available": {
+    de: "Version {{version}} ist verfügbar (installiert: {{current}}).",
+    en: "Version {{version}} is available (installed: {{current}}).",
+  },
+  "update.action": { de: "Update ansehen", en: "View update" },
+  "update.dismiss": { de: "Später", en: "Later" },
+  "update.start": { de: "Jetzt installieren", en: "Install now" },
+  "update.retry": { de: "Erneut versuchen", en: "Try again" },
+  "update.phase.downloading": { de: "Lädt herunter…", en: "Downloading…" },
+  "update.phase.verifying": { de: "Prüft die Datei…", en: "Verifying the file…" },
+  "update.phase.installing": { de: "Installiert…", en: "Installing…" },
+  "update.phase.restarting": { de: "Startet neu…", en: "Restarting…" },
+  "update.failed": { de: "Update fehlgeschlagen: {{error}}", en: "Update failed: {{error}}" },
+  "update.failedUnknown": { de: "unbekannter Fehler", en: "unknown error" },
+  "update.hintContainer": {
+    de: "Im Docker-Betrieb: docker compose up -d --build",
+    en: "In Docker: docker compose up -d --build",
+  },
+
+  "help.title": { de: "Hilfe & Feedback", en: "Help & feedback" },
+  "help.intro": {
+    de: "Feedback läuft über die Issues des Projekts auf GitHub. Das Formular bereitet die Meldung vor und öffnet sie auf GitHub — abgeschickt wird sie erst dort von dir, unter deinem eigenen Konto.",
+    en: "Feedback goes through the project's GitHub issues. This form prepares the report and opens it on GitHub — you submit it there yourself, under your own account.",
+  },
+  "help.noRepo": {
+    de: "Für diese Installation ist kein GitHub-Repository hinterlegt. Ohne die Einstellung GITHUB_REPO gibt es kein Ziel für Meldungen.",
+    en: "No GitHub repository is configured for this installation. Without the GITHUB_REPO setting there is nowhere to send reports.",
+  },
+  "help.kindLabel": { de: "Art der Meldung", en: "Type of report" },
+  "help.kind.bug": { de: "Fehler", en: "Bug" },
+  "help.kind.idea": { de: "Idee oder Wunsch", en: "Idea or request" },
+  "help.kind.question": { de: "Frage", en: "Question" },
+  "help.titleLabel": { de: "Titel", en: "Title" },
+  "help.titlePlaceholder": { de: "Kurz in einem Satz", en: "One short sentence" },
+  "help.descriptionLabel": { de: "Beschreibung", en: "Description" },
+  "help.descriptionPlaceholder": {
+    de: "Was hast du gemacht, was ist passiert, was hättest du erwartet?",
+    en: "What did you do, what happened, what did you expect?",
+  },
+  "help.attachedLabel": { de: "Wird mit angehängt", en: "Attached to the report" },
+  "help.attachedHint": {
+    de: "Ein GitHub-Issue ist öffentlich sichtbar. Auf GitHub kannst du alles noch ändern, bevor du absendest.",
+    en: "A GitHub issue is publicly visible. You can still edit everything on GitHub before submitting.",
+  },
+  "help.submit": { de: "Auf GitHub melden", en: "Report on GitHub" },
+  "help.submitHint": {
+    de: "Öffnet GitHub mit vorausgefülltem Formular.",
+    en: "Opens GitHub with the form prefilled.",
+  },
+  "help.browseIssues": {
+    de: "Bereits gemeldete Punkte ansehen",
+    en: "Browse reports already filed",
+  },
+  "help.version": { de: "Installierte Version: {{version}}", en: "Installed version: {{version}}" },
+
+  /* Das Drehplan-Grid. Die Spaltenköpfe tragen in beiden Sprachen die Begriffe
+     der Vorlage — sie sind der Wortschatz, in dem am Set geredet wird, und eine
+     deutsche Fassung stünde neben der Vorlage, nicht in ihr. Dass `de` und `en`
+     hier gleich lauten, ist Absicht und keine vergessene Zeile; nebeneinander
+     ist das jetzt auch zu sehen. Alles, was der Nutzer selbst eintippt
+     (Projekt-, Set-, Rollen-, Kategorienamen, Synopsis, Wechseltext), läuft
+     nirgends durch t(). */
+  "grid.head.scene": { de: "Scene", en: "Scene" },
+  "grid.head.intExtDayNight": { de: "In/Ex · D/N", en: "In/Ex · D/N" },
+  "grid.head.scriptTime": { de: "Script Time", en: "Script Time" },
+  "grid.head.location": { de: "Location", en: "Location" },
+  "grid.head.totalPerScene": { de: "Total/Scene", en: "Total/Scene" },
+  "grid.head.fuzzleId": { de: "Fuzzle ID", en: "Fuzzle ID" },
+  "grid.head.name": { de: "Name", en: "Name" },
+  "grid.head.total": { de: "Total", en: "Total" },
+
+  "grid.set.sd": { de: "SD", en: "SD" },
+  "grid.set.move": { de: "Tagteiler verschieben", en: "Move daybreak" },
+  "grid.set.delete": { de: "Tagteiler löschen", en: "Delete daybreak" },
+  "grid.set.deleteBlocked": {
+    de: "Erst alle Szenen dieses Tagteilers löschen",
+    en: "Delete all scenes of this daybreak first",
+  },
+  "grid.set.shootDate": { de: "Drehdatum", en: "Shoot date" },
+  /* Motiv ist das Inhaltliche („Küche Weber"), Location der Drehort
+     („Industriestr. 4"). Der deutsche Zusatz steht in Klammern dahinter; im
+     Englischen bleibt der nackte Begriff stehen. Zwei unabhängige Listen mit je
+     eigenem „+", weil drei Motive an derselben Adresse liegen können. */
+  "grid.set.motif": { de: "Motiv (Inhaltlich)", en: "Motiv" },
+  "grid.set.location": { de: "Location (Drehort)", en: "Location" },
+  "grid.set.addMotif": { de: "+ Motiv", en: "+ Motiv" },
+  "grid.set.deleteMotif": { de: "Motiv löschen", en: "Delete motiv" },
+  "grid.set.addLocation": { de: "+ Location", en: "+ Location" },
+  "grid.set.deleteLocation": { de: "Location löschen", en: "Delete location" },
+  "grid.set.totalsLabel": { de: "Summe neu", en: "Total new" },
+
+  "grid.scene.add": { de: "+ Szene", en: "+ Scene" },
+  "grid.scene.move": { de: "Szene verschieben", en: "Move scene" },
+  "grid.scene.delete": { de: "Szene löschen", en: "Delete scene" },
+  "grid.scene.deleteBlocked": {
+    de: "Erst alle Rollen dieser Szene löschen",
+    en: "Delete all roles of this scene first",
+  },
+  "grid.scene.numberPlaceholder": { de: "#", en: "#" },
+  "grid.scene.synopsis": { de: "Synopsis", en: "Synopsis" },
+  "grid.scene.timeOfDay": { de: "Tageszeit", en: "Time of day" },
+
+  "grid.role.add": { de: "+ Rolle", en: "+ Role" },
+  "grid.role.delete": { de: "Rolle löschen", en: "Delete role" },
+  "grid.role.namePrompt": { de: "Rollenname?", en: "Role name?" },
+
+  "grid.count.new": { de: "neu", en: "new" },
+  "grid.count.reused": { de: "wdh.", en: "reu." },
+  "grid.count.toggleToReused": {
+    de: "neu – klicken für wiederverwendet",
+    en: "new – click for reused",
+  },
+  "grid.count.toggleToNew": {
+    de: "wiederverwendet – klicken für neu",
+    en: "reused – click for new",
+  },
+
+  /* Ein „Change" ist am Set der Kostümwechsel einer Rolle, nicht irgendein
+     Wechsel — beide Sprachen benennen jetzt genau das. */
+  "grid.change.label": { de: "Rollenwechsel", en: "Costume change" },
+  "grid.change.add": { de: "+ Rollenwechsel", en: "+ Costume change" },
+  "grid.change.delete": { de: "Rollenwechsel löschen", en: "Delete costume change" },
 };
+
+// i18next will seine Ressourcen nach Sprache sortiert; die Liste oben steht
+// nach Schlüssel. Umgedreht wird das hier, an genau einer Stelle.
+const resources = Object.fromEntries(
+  LOCALES.map(({ code }) => [
+    code,
+    {
+      translation: Object.fromEntries(
+        Object.entries(strings).map(([key, byLocale]) => [key, byLocale[code]]),
+      ),
+    },
+  ]),
+);
 
 const STORAGE_KEY = "komparsen.language";
 

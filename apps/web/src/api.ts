@@ -1,3 +1,5 @@
+import type { SetPlaceKind } from "@komparsen/shared";
+
 const API_BASE = "/api";
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -88,12 +90,15 @@ export interface SceneRow {
   roles: RoleRow[];
 }
 
+/* Eine Zeile ist ein Motiv oder eine Location, nie beides — die beiden Listen
+   eines Sets sind unabhängig voneinander. `name` trägt in beiden Fällen den
+   Text; welche Liste gemeint ist, sagt `kind`. */
 export interface SetLocation {
   id: string;
   setId: string;
   sortOrder: number;
+  kind: SetPlaceKind;
   name: string | null;
-  address: string | null;
 }
 
 export interface ChangeRow {
@@ -158,13 +163,16 @@ export const api = {
   updateSet: (setId: string, data: Partial<ShootSet>) =>
     request<ShootSet>("PATCH", `/sets/${setId}`, data),
   getFullSet: (setId: string) => request<FullSet>("GET", `/sets/${setId}/full`),
+  // Kaskadiert serverseitig bis in die Zählungen: Szenen, Rollen, Motive,
+  // Locations und Rollenwechsel des Tagteilers gehen mit.
+  deleteSet: (setId: string) => request<void>("DELETE", `/sets/${setId}`),
   reorderSets: (projectId: string, ids: string[]) =>
     request<void>("POST", `/projects/${projectId}/sets/reorder`, { ids }),
 
-  createSetLocation: (setId: string) =>
-    request<SetLocation>("POST", `/sets/${setId}/locations`, {}),
-  updateSetLocation: (locationId: string, data: Partial<SetLocation>) =>
-    request<SetLocation>("PATCH", `/set-locations/${locationId}`, data),
+  createSetLocation: (setId: string, kind: SetPlaceKind) =>
+    request<SetLocation>("POST", `/sets/${setId}/locations`, { kind }),
+  updateSetLocation: (locationId: string, name: string) =>
+    request<SetLocation>("PATCH", `/set-locations/${locationId}`, { name }),
   deleteSetLocation: (locationId: string) => request<void>("DELETE", `/set-locations/${locationId}`),
 
   listCategories: (projectId: string) => request<Category[]>("GET", `/projects/${projectId}/categories`),

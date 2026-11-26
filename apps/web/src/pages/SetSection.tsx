@@ -1,4 +1,8 @@
-import { calcSetNewCountsByCategory, calcSetTotalShoots } from "@komparsen/shared";
+import {
+  calcSetNewCountsByCategory,
+  calcSetTotalShoots,
+  type SetPlaceKind,
+} from "@komparsen/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { HTMLAttributes, TdHTMLAttributes } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -24,6 +28,9 @@ interface SetSectionProps {
   colors: ColorSetting[];
   setDragHandleProps: HTMLAttributes<HTMLSpanElement>;
   setDropProps: TdHTMLAttributes<HTMLTableCellElement>;
+  // Gehört der Seite, nicht dem Set: die Liste der Tagteiler liegt dort, und
+  // nur sie kann den gelöschten aus ihr entfernen.
+  onRemoveSet: () => void;
 }
 
 export function SetSection({
@@ -33,6 +40,7 @@ export function SetSection({
   colors,
   setDragHandleProps,
   setDropProps,
+  onRemoveSet,
 }: SetSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -254,19 +262,18 @@ export function SetSection({
     debouncedSaveSet(`${field}`, field, value);
   };
 
-  const debouncedSaveLocation = useDebouncedSave(
-    (locationId: string, field: "name" | "address", value: string) => {
-      void api.updateSetLocation(locationId, { [field]: value });
-    },
-  );
+  const debouncedSaveLocation = useDebouncedSave((locationId: string, value: string) => {
+    void api.updateSetLocation(locationId, value);
+  });
 
-  const onLocationFieldChange = (locationId: string, field: "name" | "address", value: string) => {
-    setLocations((prev) => prev.map((loc) => (loc.id === locationId ? { ...loc, [field]: value } : loc)));
-    debouncedSaveLocation(`${locationId}:${field}`, locationId, field, value);
+  // Eine Zeile trägt nur noch einen Text — Motiv oder Location, je nach `kind`.
+  const onLocationFieldChange = (locationId: string, value: string) => {
+    setLocations((prev) => prev.map((loc) => (loc.id === locationId ? { ...loc, name: value } : loc)));
+    debouncedSaveLocation(locationId, locationId, value);
   };
 
   const addLocationMutation = useMutation({
-    mutationFn: () => api.createSetLocation(setId),
+    mutationFn: (kind: SetPlaceKind) => api.createSetLocation(setId, kind),
     onSuccess: (location) => setLocations((prev) => [...prev, location]),
   });
 
@@ -321,12 +328,13 @@ export function SetSection({
       newCountsByCategory={newCountsByCategory}
       setDragHandleProps={setDragHandleProps}
       setDropProps={setDropProps}
+      onRemoveSet={onRemoveSet}
       getSceneDragHandleProps={getSceneDragHandleProps}
       getSceneDropProps={getSceneDropProps}
       draggedSceneId={draggedSceneId}
       onSetFieldChange={onSetFieldChange}
       onLocationFieldChange={onLocationFieldChange}
-      onAddLocation={() => addLocationMutation.mutate()}
+      onAddLocation={(kind) => addLocationMutation.mutate(kind)}
       onRemoveLocation={(id) => void removeLocation(id)}
       onAddSceneAfter={(sceneId) => void addSceneAfter(sceneId)}
       onCountChange={onCountChange}

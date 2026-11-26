@@ -1,11 +1,5 @@
 import { useTranslation } from "react-i18next";
-
-// Single source of truth for the offered locales — adding one means adding it
-// here and to the i18n resources, nowhere else.
-export const LANGUAGES = [
-  { code: "de", label: "DE" },
-  { code: "en", label: "EN" },
-];
+import { LOCALES } from "../i18n/index.js";
 
 export function LanguageSwitcher({ className = "" }: { className?: string }) {
   const { i18n, t } = useTranslation();
@@ -20,9 +14,11 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
       value={i18n.resolvedLanguage ?? i18n.language}
       onChange={(e) => void i18n.changeLanguage(e.target.value)}
     >
-      {LANGUAGES.map((language) => (
-        <option key={language.code} value={language.code}>
-          {language.label}
+      {/* LOCALES lives next to the strings, not here: a language in this list
+          without a column in that one would be a language without words. */}
+      {LOCALES.map((locale) => (
+        <option key={locale.code} value={locale.code}>
+          {locale.label}
         </option>
       ))}
     </select>

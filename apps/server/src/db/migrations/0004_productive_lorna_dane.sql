@@ -1,0 +1,1 @@
+ALTER TABLE `shoot_set_location` DROP COLUMN `address`;

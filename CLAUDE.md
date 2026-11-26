@@ -63,6 +63,34 @@ niemand, und alle Spalten wurden gleich breit. Reicht die Tabellenbreite über d
 Summe der Spalten hinaus, verteilt der Browser den Rest **proportional** — die
 Verhältnisse der Liste bleiben also in jeder Fensterbreite erhalten.
 
+**Beide Kopfzeilen kleben.** Die Gruppenzeile hält `--app-header-height`, die
+Spaltenzeile sitzt eine Gruppenzeile tiefer. Vorher klebten beide an derselben
+Linie, und die Spaltenzeile legte sich über die Gruppenzeile — also über „Scene"
+und die Kategorie-Gruppen. Ein Sticky-Versatz lässt sich nicht aus der Zeile
+darüber messen, deshalb hat die Gruppenzeile eine gesetzte Höhe
+(`--head-group-row-height`) und die zweite rechnet mit derselben Zahl. Die Höhe
+gehört zur Strip Size und steht pro Stufe neben deren Schriftgröße.
+
+**Strip Size** (`stripSize.tsx`, `components/StripSizeSelect.tsx`) skaliert das
+Raster in vier Stufen — XS, S, M, XL, Vorgabe M, XL ist die Größe, auf die das
+Grid vorher fest verdrahtet war. Umgeschaltet wird in der Kopfleiste des
+Drehplans, gemerkt in `localStorage` unter `komparsen.stripSize`, wie Sprache
+und Sperre. Drei Dinge gehen gemeinsam: Schriftgröße, Zellpolsterung und die
+Höhe der Gruppen-Kopfzeile.
+
+- **Die Klasse `strip-size-*` sitzt am `<table>`**, nicht am `<main>`: der
+  Sticky-Versatz der zweiten Kopfzeile liest `--head-group-row-height` aus
+  derselben Klasse.
+- **Die Polsterung zählt mehr als die Schrift.** Bootstrap schreibt die
+  Polsterung von `.table-sm` direkt hin, nicht über eine Variable — es braucht
+  zwei Klassen, um dagegen anzukommen (`.schedule-table.table-sm > … > *`).
+  Die Int/Ex-Leiste mit der Tageszeit darunter ist die höchste Zelle einer
+  Szenenzeile, deshalb skalieren auch die Knöpfe mit (`padding` in `em`).
+- **Alles, was sich an der Zellschrift ausrichtet, steht in `em`** — die
+  Summenzeile, `neu/wdh.`, der Anfasser, „Total/Scene". Fest in `rem` bliebe es
+  beim Umschalten stehen. Formularfelder erben keine Schriftgröße, die bekommen
+  sie ausdrücklich (`font-size: inherit`).
+
 Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name | Total/Scene | Total | <Kategorien…> | ×`
 
 - **In/Ex und Tageszeit teilen sich eine Spalte** (gestapelt, In/Ex oben) —
@@ -105,9 +133,24 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name |
     Zelle. Der Selektor muss dafür `.schedule-table td.cell-synopsis textarea`
     heißen — schwächer geschrieben gewinnt das `width: 100%` der allgemeinen
     Feldregel gegen den rechten Versatz.
-- **Script Time** führt Von und Bis in einer Spalte; Bis erscheint nur bei der
-  letzten Szene, weil sie den Drehtag abschließt. Die Drehzeit im Set-Header ist
-  daraus abgeleitet, kein eigenes Feld.
+- **Script Time ist eine reine Eingabe**: die Startzeit der Szene, sonst
+  nichts. Früher stand in derselben Spalte bei der letzten Szene ein zweites
+  Feld für das Ende des Drehtags, und daraus rechnete der Set-Kopf eine Drehzeit
+  „Von – Bis"; beides ist weg, also auch jede Ableitung aus Zeiten. Eine leere
+  Szene zeigt `--:--` und meint genau das. Die Spalte `scene.end_time` bleibt in
+  Schema und API-Typ stehen — sie zu entfernen wäre eine Migration ohne
+  Gegenwert, wie bei `scene.day_night`; die Oberfläche schreibt sie nicht mehr.
+- **Der Rollenname bricht um und die Zeile wächst mit.** Deshalb ein
+  `<textarea>` statt einer Eingabezeile (`AutoGrowTextarea`): ein `<input>`
+  bricht grundsätzlich nicht um, und ein **gesperrtes Feld lässt sich nicht
+  scrollen** — der Rest eines langen Namens wäre also gar nicht erreichbar,
+  dieselbe Überlegung wie bei der Synopsis. Das Feld misst sich selbst, weil in
+  der Kette sonst niemand eine Höhe kennt: die Zeilenhöhe kommt von der Zelle,
+  die Zelle vom Feld. Erst `height: auto`, dann `scrollHeight` plus Ränder
+  (`box-sizing: border-box` liest die gesetzte Höhe als Außenmaß). Die Strip
+  Size steht mit in den Abhängigkeiten — sie ändert, wie viele Zeilen derselbe
+  Text braucht. Enter wird geschluckt: der Umbruch kommt aus der Breite, ein
+  gespeicherter Zeilenumbruch wäre unsichtbar.
 - **Die beiden Total-Spalten stehen vor den Kategorien**, nicht dahinter: erst
   wer die Rolle ist (Fuzzle ID, Name), dann was sie zusammenzählt, und erst
   danach die Felder, in die getippt wird. Beide sind **halb so breit** wie eine
@@ -116,13 +159,20 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name |
     Schrift ist dort kleiner (`.col-total`), und ein `<wbr>` nach dem
     Schrägstrich gibt die eine Stelle vor, an der umbrochen werden darf — Chrome
     bricht von sich aus weder nach `/` noch sinnvoll mitten im Wort.
-- **Das × zum Löschen einer Rolle hat eine eigene Spalte**, ganz rechts und
-  **ohne Kopf** — es ist ein Bedienelement, kein Wert, und als festes
-  1,6-rem-Quadrat hält es jede Spalte auf, die es sich mit etwas teilt (die
-  halbierte Total-Spalte zuerst). Der leere Kopf läuft als `rowSpan={2}` über
-  beide Kopfzeilen, damit ihn keine Linie zerschneidet. Szene und Set behalten
-  ihr × dagegen bei ihrem Namensfeld: sie stehen auf Zeilen, die diese Spalte
-  gar nicht erreichen.
+- **Löschen hat eine eigene Spalte**, ganz rechts und **ohne Kopf** — es ist
+  ein Bedienelement, kein Wert, und als festes 1,6-rem-Quadrat hält es jede
+  Spalte auf, die es sich mit etwas teilt (die halbierte Total-Spalte zuerst).
+  Der leere Kopf läuft als `rowSpan={2}` über beide Kopfzeilen, damit ihn keine
+  Linie zerschneidet.
+  - **Tagteiler, Szene und Rolle löschen an derselben Kante.** Das kostet
+    beide Zeilen, die vorher bis zum Rand durchliefen, ihre letzte Spalte: der
+    Set-Kopf spannt `totalColumns - 1`, die Location der Szene
+    `totalColumns - SCENE_COLUMN_COUNT`. Die Szene trug ihr × früher neben der
+    Szenennummer, wo es sich die Ecke mit dem Anfasser teilte; der Tagteiler
+    hatte überhaupt keins — anlegen ging, löschen nicht.
+  - Motiv, Location und Rollenwechsel behalten ihr × **beim Feld**: jedes
+    trifft einen bestimmten Eintrag, und drei davon nebeneinander in einer
+    Zelle sagten nicht mehr, welches welchen löscht.
 - **Summenzeile** direkt unter dem Set-Header: Label in der Name-Spalte, Summen in
   den jeweiligen Kategorie-Spalten, Gesamtsumme in Total. Bewusst spaltenbündig
   statt als Fließtext, damit sie unter ihrem Kategorie- und Gruppen-Header steht.
@@ -130,6 +180,46 @@ Spalten aktuell: `# | In/Ex · D/N | Script Time | Location | Fuzzle ID | Name |
   Set nichts zu sagen. Sie ist die **einzige** Darstellung der Tagessumme; im
   Set-Kopf stand dieselbe Zahl einmal zusätzlich als „Total Shoots" und ist dort
   entfallen.
+
+### Der Set-Kopf
+
+**Nur Eingaben, in zwei Listen.** Links ⠿, SD und Drehdatum; daneben die Orte
+des Drehtags als Block: **Motive oben, Locations darunter**, jede Liste mit
+ihrem eigenen „+" und bis zu drei Einträgen (`MAX_PLACES_PER_KIND`).
+
+**Die beiden Listen sind unabhängig** — das ist der ganze Punkt. Drei Motive
+können an einer einzigen Adresse liegen, und dieselbe Adresse trägt am nächsten
+Tag ein anderes Motiv. Früher war eine Zeile ein **Paar** aus `name` und
+`address`, was jedes Mal die jeweils andere Hälfte zu erfinden zwang. Jetzt
+sagt `shoot_set_location.kind` (`motif` | `location`, Liste in
+`packages/shared`), was eine Zeile ist, und `name` trägt in beiden Fällen den
+Text. Migration `0003` spaltet die Bestandspaare auf: aus jeder Zeile mit
+Adresse wird eine zweite Zeile, und Zeilen, die nur eine Adresse trugen,
+hinterlassen kein leeres Motiv. `0004` lässt `address` fallen.
+
+- **Die Reihenfolge zählt je Liste.** `POST …/locations` setzt `sortOrder` auf
+  die Zahl der vorhandenen Zeilen **derselben Art** — ein zweites Motiv steht
+  hinter dem ersten Motiv, nicht hinter der letzten Location.
+- **`PATCH` nimmt nur den Text.** Die Art einer Zeile ändert sich nie; ein
+  Motiv wird nicht zur Location.
+- **Das SD-Feld trägt seine Beschriftung daneben, nicht darüber.** Nur so ist
+  jeder Block dieser Reihe genau eine Feldhöhe hoch und die erste Ortszeile
+  steht ohne gerechneten Versatz auf einer Linie mit SD und Datum. Mit „SD"
+  über dem Feld bräuchte es einen Versatz, und der träfe nie: die Höhe einer
+  Listenzeile hängt davon ab, ob sie schon Einträge hat oder nur ihren Knopf.
+- Die Feldbreiten stehen in `schedule-colors.css` und nicht auf `100%` — sonst
+  drückte ein Feld die Zeile allein um.
+
+Zwei abgeleitete Anzeigen sind ersatzlos entfallen: die Drehzeit aus erster und
+letzter Szene (siehe Script Time) und die Sammlung der Szenen-Locations. Die
+zweite stand neben dem neuen Location-Feld und hätte zweimal dasselbe Wort
+gezeigt. Die Datalist der Szenen-Locations bleibt davon unberührt — sie ist die
+Vervollständigung der Location-**Spalte**, nicht die Zusammenfassung im Kopf.
+
+Benannt nach dem, was am Set gesagt wird: **Motiv** ist das Inhaltliche
+(„Küche Weber"), **Location** der Drehort („Industriestr. 4"). Die Tabelle heißt
+weiterhin `shoot_set_location`, obwohl sie beide Arten hält — wie
+`scene.day_night` eine Umbenennung ohne Gegenwert.
 
 ### Farben
 
@@ -206,7 +296,12 @@ Ein erneutes Sync bei jedem Background-Refetch würde Edits zerstören, die noch
 Debounce-Fenster hängen. Schreibende Felder laufen über `useDebouncedSave`.
 
 Szenen lassen sich erst löschen, wenn ihre Rollen weg sind — ein Fehlklick soll
-keine ganze Besetzungsliste mitnehmen.
+keine ganze Besetzungsliste mitnehmen. **Dieselbe Regel eine Ebene höher**: ein
+Tagteiler lässt sich erst löschen, wenn seine Szenen weg sind, sonst nähme ein
+Fehlklick einen ganzen Drehtag samt Besetzung mit. Ein versehentlich angelegter,
+noch leerer Tagteiler verschwindet dagegen mit einem Klick. Das Löschen selbst
+kaskadiert serverseitig bis in `role_category_count` — die Sperre ist das
+Einzige, was davor steht.
 
 ## Bearbeitungssperre
 
@@ -244,6 +339,17 @@ gehört und sonst durch `SetSection` hindurchgereicht werden müsste.
 redeploy-freie, editierbare Übersetzungen — die `translation`-Tabelle steht im
 Schema bereits bereit.
 
+**Alle Sprachen stehen pro Schlüssel nebeneinander**, nicht als ein Block je
+Sprache: `strings` ist eine Liste von Schlüsseln, jeder mit einer Zeichenkette
+pro Locale. So lässt sich zeilenweise abgleichen, was die Fassungen sagen, und
+`Record<Locale, string>` macht jede Lücke zu einem **Compilerfehler** — eine
+neue Sprache in `LOCALES` nennt TypeScript dann Zeile für Zeile, bis sie
+vollständig ist. Nach Sprache sortiert werden die Ressourcen an genau einer
+Stelle, in der Schleife unter der Liste, weil i18next sie so erwartet.
+
+`LOCALES` steht **dort und nicht im `LanguageSwitcher`**: eine Sprache in der
+Auswahl ohne Spalte in der Liste wäre eine Sprache ohne Wörter.
+
 Abgedeckt ist die ganze Oberfläche, das Drehplan-Grid eingeschlossen
 (`grid.*`). Drei Regeln, die dort gelten:
 
@@ -265,9 +371,22 @@ Abgedeckt ist die ganze Oberfläche, das Drehplan-Grid eingeschlossen
 
 Der `LanguageSwitcher` (`components/LanguageSwitcher.tsx`) steht in der Header-Nav
 aller Seiten, daneben der `VersionBadge` — die Seiten teilen sich keine
-Kopfleiste, eine neue Seite braucht beide also selbst. `LANGUAGES` dort ist die
-einzige Liste, die um ein Locale zu erweitern ist; dazu kommt nur der
-Ressourcenblock in `i18n/index.ts`.
+Kopfleiste, eine neue Seite braucht beide also selbst. Eine neue Sprache
+erweitert `LOCALES` in `i18n/index.ts` und bekommt dort ihre Zeichenketten;
+anderswo ist nichts einzutragen.
+
+### Benennungen aus der Vorlage
+
+Drei Begriffe sind bewusst gewählt und sollten nicht wieder auseinanderlaufen:
+
+- **Set heißt in der Oberfläche Tagteiler / Daybreak.** Ein Set ist ein Drehtag,
+  und was der Knopf anlegt, ist die Trennung zwischen zwei Drehtagen — der
+  Daybreak-Streifen der Vorlage. Betroffen sind `nav.addSet`, `grid.set.move`
+  und das Farbziel `colorTarget.chrome.set`. Code, Tabellen und Endpunkte heißen
+  weiter `set`.
+- **Change heißt Rollenwechsel / Costume change.** Gemeint ist der Kostümwechsel
+  einer Rolle, nicht irgendein Wechsel.
+- **Motiv und Location** für die beiden Felder des Set-Kopfs, siehe dort.
 
 Die Auswahl liegt in `localStorage` unter `komparsen.language`, und
 **`<html lang>` folgt ihr** — gesetzt beim Start *und* im
@@ -398,11 +517,35 @@ Phase 6 = Backup-Job), `i18n/index.ts` auf Phase 5 (DB-gestützte Übersetzungen
 Phasen kennt, sollte es ablegen — bis dahin sind die beiden Verweise ins Leere
 gerichtet und die Phasennummern nicht überprüfbar.
 
+## Versionsnummer
+
+**Jede Änderung hebt die Version an**, mindestens die letzte Stelle
+(`0.5.0` → `0.5.1`). Das passiert **vor** dem Commit, nicht erst beim Release:
+die Nummer steht in der Kopfleiste jeder Seite, und sie ist das Einzige, woran
+sich im Betrieb ablesen lässt, welcher Stand gerade läuft.
+
+**Zwei Dateien tragen sie, und sie müssen übereinstimmen:**
+
+| Datei | treibt |
+| --- | --- |
+| `package.json` (Wurzel) | den Release — `scripts/build-release.mjs` liest sie und stempelt sie per `__APP_VERSION__` in die Binary |
+| `apps/server/package.json` | den Dev-Betrieb — `resolveVersion()` in `config.ts` liest sie über `../package.json`, wenn weder `APP_VERSION` noch `__APP_VERSION__` gesetzt ist |
+
+Laufen die beiden auseinander, zeigt die entwickelte App eine andere Nummer als
+die ausgelieferte — und genau dann ist die Anzeige wertlos.
+
+`apps/web` und `packages/shared` haben eigene, niedrigere Nummern (`0.2.2`).
+Die sind **interne Paketversionen** und treiben nichts; wer „die Version"
+anhebt, fasst sie nicht an. In `package-lock.json` stehen dieselben Nummern
+noch einmal — mit anzuheben, sonst hinkt sie hinterher, wie sie es bis 0.5.0
+tat.
+
 ## Konventionen
 
 - ESM durchgehend, Imports mit `.js`-Endung (auch aus `.ts`/`.tsx`).
 - Kommentare erklären **warum**, nicht was — bestehende Dichte und Ton beibehalten.
 - UI-Sprache ist Deutsch, Code und Bezeichner sind Englisch.
-- Vor dem Abschluss: `npx tsc -p apps/web/tsconfig.json --noEmit` und
+- Vor dem Abschluss: Version anheben (siehe oben),
+  `npx tsc -p apps/web/tsconfig.json --noEmit` und
   `npm run test --workspace packages/shared`.
   (`npm test` auf Root-Ebene schlägt fehl, weil `apps/server` keine Testdateien hat.)

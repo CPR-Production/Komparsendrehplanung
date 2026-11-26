@@ -25,12 +25,16 @@ export const TOTAL_COLUMN_WIDTH = CATEGORY_COLUMN_WIDTH / 2;
 export const SCENE_COLUMN_WIDTHS = [
   SCENE_NUMBER_COLUMN_WIDTH, // #
   130, // In/Ex + time of day, stacked
-  140, // Script Time, von–bis
+  // Script Time holds one start time and nothing else — the column used to
+  // carry a second field for the end of the shooting day and was twice as wide.
+  100, // Script Time
   160, // Location
 ] as const;
 
 export const ROLE_META_COLUMN_WIDTHS = [
   80, // Fuzzle ID
+  // The Role name wraps instead of running out of its column (see
+  // AutoGrowTextarea), so this width is a line length, not a cut-off point.
   260, // Name
   TOTAL_COLUMN_WIDTH, // Total/Scene
   TOTAL_COLUMN_WIDTH, // Total
